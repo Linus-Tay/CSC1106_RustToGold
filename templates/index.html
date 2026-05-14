@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Askama template: index.html -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Secure Digital Banking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <nav class="c-navbar" aria-label="Primary navigation">
+    <div class="u-container c-navbar__inner">
+      <a class="c-navbar__brand" href="/" data-route="/">
+        <span class="c-navbar__logo-wrap" aria-hidden="true">
+          <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
+        </span>
+        <span>RustToGold</span>
+      </a>
+      <ul class="c-navbar__links">
+        <li><a class="c-navbar__link" href="/#accounts" data-route="/#accounts">Accounts</a></li>
+        <li><a class="c-navbar__link" href="/#transfers" data-route="/#transfers">Transfers</a></li>
+        <li><a class="c-navbar__link" href="/#savings" data-route="/#savings">Savings</a></li>
+        <li><a class="c-navbar__link" href="/#loans" data-route="/#loans">Loans</a></li>
+        <li><a class="c-navbar__link" href="/#security" data-route="/#security">Security</a></li>
+        <li><a class="c-navbar__link" href="/#help" data-route="/#help">Help</a></li>
+      </ul>
+      <div class="c-navbar__actions">
+        <a class="c-navbar__login " href="/login" data-route="/login">Login</a>
+        <a class="c-button c-button--gold" href="/signup" data-route="/signup"><i data-lucide="user-plus"></i> Open Account</a>
+      </div>
+    </div>
+  </nav>
+
+
+  <main>
+    <section class="landing-hero" id="hero">
+      <div class="u-container landing-hero__grid">
+        <div class="landing-hero__content">
+          <div class="c-kicker">Digital Banking Portal</div>
+          <h1 class="landing-hero__title"><span>Banking Made Simple, Secure, and Accessible</span></h1>
+          <p class="landing-hero__description">
+            Manage your money with RustToGold — view your account, transfer funds, track transactions, apply for loans,
+            and grow your savings through fixed deposits, all from one secure online banking portal.
+          </p>
+          <div class="landing-hero__actions">
+            <a class="c-button c-button--primary" href="/signup" data-route="/signup"><i data-lucide="user-plus"></i> Open Account</a>
+            <a class="c-button c-button--secondary" href="/login" data-route="/login"><i data-lucide="log-in"></i> Login</a>
+          </div>
+          <div class="landing-hero__trust-line">
+            <span><i data-lucide="shield-check"></i> Secure access</span>
+            <span><i data-lucide="receipt-text"></i> Clear transactions</span>
+            <span><i data-lucide="wallet-cards"></i> Better control over your money</span>
+          </div>
+        </div>
+
+        <div class="landing-preview" aria-hidden="true">
+          <div class="landing-preview__card">
+            <div class="landing-preview__top">
+              <div class="landing-preview__bank">RustToGold Bank</div>
+              <div class="landing-preview__chip"></div>
+            </div>
+            <div class="landing-preview__label">Available Balance</div>
+            <div class="landing-preview__amount">$12,480.55</div>
+            <div class="landing-preview__meta">
+              <span>•••• 4821</span>
+              <span>Everyday Account</span>
+            </div>
+          </div>
+          <div class="landing-preview__mini">
+            <div class="landing-preview__mini-label"><i data-lucide="lock-keyhole"></i> Account Protection</div>
+            <h2 class="landing-preview__mini-title">Secure session active</h2>
+            <p class="landing-preview__mini-text">Important actions are protected with login checks, OTP confirmation, and activity tracking.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="c-section" id="services">
+      <div class="u-container">
+        <div class="c-section-header">
+          <div class="c-kicker">Core Services</div>
+          <h2 class="c-section-title">A clearer way to manage everyday banking</h2>
+          <p class="c-section-description">
+            RustToGold brings the main customer banking actions into one organised portal, from viewing accounts to moving funds, placing deposits, and managing loan applications.
+          </p>
+        </div>
+
+        <div class="c-feature-grid">
+          <article class="c-feature-card" id="accounts">
+            <div class="c-feature-card__icon"><i data-lucide="landmark"></i></div>
+            <h2 class="c-feature-card__title">Your Account, Clearly Organised</h2>
+            <p class="c-feature-card__text">View your account balance, account number, account status, and recent banking activity from a simple dashboard.</p>
+            <a class="c-feature-card__link" href="/customer/dashboard" data-route="/customer/dashboard">View customer dashboard <i data-lucide="arrow-right"></i></a>
+          </article>
+          <article class="c-feature-card" id="transfers">
+            <div class="c-feature-card__icon"><i data-lucide="send"></i></div>
+            <h2 class="c-feature-card__title">Transfer Money with Confidence</h2>
+            <p class="c-feature-card__text">Send money through a guided process that helps customers review details and confirm approval before funds are moved.</p>
+            <a class="c-feature-card__link" href="/customer/transfer" data-route="/customer/transfer">Start transfer <i data-lucide="arrow-right"></i></a>
+          </article>
+          <article class="c-feature-card c-feature-card--gold" id="savings">
+            <div class="c-feature-card__icon"><i data-lucide="piggy-bank"></i></div>
+            <h2 class="c-feature-card__title">Grow Your Savings with Fixed Deposits</h2>
+            <p class="c-feature-card__text">Place funds into fixed deposits and view maturity dates, rates, and estimated returns before confirming.</p>
+            <a class="c-feature-card__link" href="/customer/fixed-deposits" data-route="/customer/fixed-deposits">Explore deposits <i data-lucide="arrow-right"></i></a>
+          </article>
+          <article class="c-feature-card" id="loans">
+            <div class="c-feature-card__icon"><i data-lucide="file-signature"></i></div>
+            <h2 class="c-feature-card__title">Apply for Loans Online</h2>
+            <p class="c-feature-card__text">Submit loan details through the portal and track the application from review to outcome.</p>
+            <a class="c-feature-card__link" href="/customer/loans" data-route="/customer/loans">View loans <i data-lucide="arrow-right"></i></a>
+          </article>
+          <article class="c-feature-card c-feature-card--green" id="security">
+            <div class="c-feature-card__icon"><i data-lucide="shield-check"></i></div>
+            <h2 class="c-feature-card__title">Designed to Keep Your Account Protected</h2>
+            <p class="c-feature-card__text">Secure login, protected sessions, OTP verification, and account activity monitoring support safer banking.</p>
+            <a class="c-feature-card__link" href="/login" data-route="/login">Access securely <i data-lucide="arrow-right"></i></a>
+          </article>
+          <article class="c-feature-card" id="help">
+            <div class="c-feature-card__icon"><i data-lucide="circle-help"></i></div>
+            <h2 class="c-feature-card__title">Need Help Managing Your Account?</h2>
+            <p class="c-feature-card__text">Navigate accounts, transfers, transactions, loans, and fixed deposits from one clear dashboard.</p>
+            <a class="c-feature-card__link" href="/">View all previews <i data-lucide="arrow-right"></i></a>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <footer class="c-footer">
+    <div class="u-container c-footer__inner">
+      <div>
+        <div class="c-footer__brand"><span class="c-footer__dot"></span> RustToGold</div>
+        <p class="c-footer__note">Secure digital banking for accounts, transfers, savings, loans, and customer support.</p>
+      </div>
+      <div class="c-footer__links">
+        <a href="/#security">Security</a>
+        <a href="/#help">Help</a>
+        <a href="/login">Login</a>
+      </div>
+    </div>
+  </footer>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
