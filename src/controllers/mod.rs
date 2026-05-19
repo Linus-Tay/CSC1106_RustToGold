@@ -1,9 +1,11 @@
+pub mod account_controller;
 pub mod auth_controller;
 pub mod customer_controller;
 pub mod error_controller;
 pub mod public_controller;
 pub mod session_guard;
 
+pub use self::account_controller::{create, create_page, display_product};
 pub use self::auth_controller::{login, login_page, logout, signup, signup_page};
 pub use self::customer_controller::{
     dashboard, deposit, deposit_page, fixed_deposit_new_page, fixed_deposits_page,

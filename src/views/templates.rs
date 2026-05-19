@@ -6,6 +6,20 @@ use askama::Template;
 pub struct HomeTemplate;
 
 #[derive(Template)]
+#[template(path = "onboarding.html")]
+pub struct OnboardingTemplate {
+    pub product_available: bool,
+    pub product_id: String,
+    pub channel: String,
+    pub product_name: String,
+    pub product_summary: String,
+    pub product_rate: String,
+    pub product_minimum: String,
+    pub product_features: Vec<String>,
+    pub action_url: String,
+}
+
+#[derive(Template)]
 #[template(path = "auth/login.html")]
 pub struct LoginTemplate {
     pub error: String,

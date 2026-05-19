@@ -1,8 +1,16 @@
 use crate::controllers;
-use actix_web::web;
+use actix_web::{web, guard};
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
-    cfg.route("/", web::get().to(controllers::home))
+    cfg
+    .service(
+        web::scope("")
+        .guard(guard::Host("apply.localhost"))
+        .route("/onboarding/init", web::get().to(controllers::display_product))
+    )
+    .service(
+        web::scope("")
+        .route("/", web::get().to(controllers::home))
         .route("/login", web::get().to(controllers::login_page))
         .route("/login", web::post().to(controllers::login))
         .route("/signup", web::get().to(controllers::signup_page))
@@ -22,5 +30,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                 .route("/fixed-deposits/new", web::get().to(controllers::fixed_deposit_new_page))
                 .route("/profile", web::get().to(controllers::profile_page))
                 .route("/profile", web::post().to(controllers::update_profile)),
-        );
+        )
+    );
+
 }
