@@ -1168,6 +1168,39 @@ i[data-lucide] {
   background: var(--tint-blue);
 }
 
+.skeleton {
+  background: linear-gradient(90deg, rgba(248,250,252,1) 0%, rgba(236,241,248,1) 50%, rgba(248,250,252,1) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s infinite ease-in-out;
+  border-radius: 12px;
+}
+
+.skeleton--title {
+  height: 2.4rem;
+  width: 60%;
+  margin-bottom: 1rem;
+}
+
+.skeleton--line {
+  height: 1rem;
+  width: 100%;
+  margin-bottom: 0.9rem;
+}
+
+.skeleton-card {
+  display: grid;
+  gap: 1rem;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 /* Success and error panels */
 
 .success-panel,
