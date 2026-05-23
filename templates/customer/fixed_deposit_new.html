@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Create Fixed Deposit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <nav class="c-navbar" aria-label="Customer navigation"><div class="u-container c-navbar__inner"><a class="c-navbar__brand" href="/customer/dashboard">RustToGold</a><div class="c-navbar__actions"><a class="c-navbar__login" href="/logout">Logout</a></div></div></nav>
+  <main class="app-main">
+    <div class="u-container" style="max-width: 860px;">
+      <header class="app-page-header">
+        <div><h1 class="app-page-title">Create Fixed Deposit</h1><p class="app-page-description">Choose a plan and place funds from your savings account.</p></div>
+        <a class="c-button c-button--secondary" href="/customer/fixed-deposits">Back to Fixed Deposits</a>
+      </header>
+
+      <section class="c-card">
+        <div class="c-card__header"><div><h2 class="c-card__title">Placement Details</h2><p class="c-card__subtitle">Account {{ account_number }} available balance: ${{ balance }}</p></div></div>
+        <div class="c-card__body">
+          {% if has_error %}<div class="alert alert--error"><i data-lucide="alert-circle"></i> {{ error }}</div><br>{% endif %}
+          <form class="form-grid" method="post" action="/customer/fixed-deposits">
+            <label class="form-field"><span>FD Plan</span>
+              <select name="plan_id" required>
+                {% for plan in plans %}
+                <option value="{{ plan.id }}">{{ plan.name }} - {{ plan.duration_months }} months - {{ plan.interest_rate_display() }} p.a. - min {{ plan.minimum_amount_display() }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label class="form-field"><span>Amount</span><input type="text" name="amount" placeholder="Example: 5000.00" required /></label>
+            <div class="alert alert--info"><i data-lucide="info"></i> Interest is calculated by the backend using simple interest: principal × annual rate × duration / 12 months.</div>
+            <button class="c-button c-button--primary" type="submit"><i data-lucide="piggy-bank"></i> Create Fixed Deposit</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
+</body>
+</html>

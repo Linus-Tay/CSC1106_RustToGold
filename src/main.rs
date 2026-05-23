@@ -29,6 +29,10 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Could not connect to PostgreSQL. Check DATABASE_URL in .env.");
 
+    repositories::fixed_deposit_repository::seed_default_plans(&pool)
+        .await
+        .expect("Could not seed default fixed deposit plans.");
+
     let state = AppState { db: pool };
     let session_key = Key::from(config.session_secret.as_bytes());
     let bind_address = config.bind_address();
