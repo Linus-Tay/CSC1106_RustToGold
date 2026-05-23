@@ -22,6 +22,9 @@ impl Transaction {
             "withdrawal" => "Withdrawal".to_string(),
             "transfer_in" => "Transfer In".to_string(),
             "transfer_out" => "Transfer Out".to_string(),
+            "fixed_deposit_opening" => "Fixed Deposit Opening".to_string(),
+            "fixed_deposit_payout" => "Fixed Deposit Payout".to_string(),
+            "fixed_deposit_early_withdrawal" => "Fixed Deposit Early Withdrawal".to_string(),
             value => title_case_code(value),
         }
     }

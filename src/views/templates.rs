@@ -1,4 +1,4 @@
-use crate::models::Transaction;
+use crate::models::{FixedDeposit, FixedDepositPlan, FixedDepositSummary, Transaction};
 use askama::Template;
 
 #[derive(Template)]
@@ -59,6 +59,47 @@ pub struct DepositTemplate {
 pub struct TransactionsTemplate {
     pub transactions: Vec<Transaction>,
     pub has_transactions: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/fixed_deposits.html")]
+pub struct FixedDepositDashboardTemplate {
+    pub account_number: String,
+    pub balance: String,
+    pub summary: FixedDepositSummary,
+    pub fixed_deposits: Vec<FixedDeposit>,
+    pub has_fixed_deposits: bool,
+    pub success: String,
+    pub has_success: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/fixed_deposit_new.html")]
+pub struct FixedDepositCreateTemplate {
+    pub account_number: String,
+    pub balance: String,
+    pub plans: Vec<FixedDepositPlan>,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/fixed_deposits.html")]
+pub struct AdminFixedDepositsTemplate {
+    pub fixed_deposits: Vec<FixedDeposit>,
+    pub has_fixed_deposits: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/fixed_deposit_plans.html")]
+pub struct AdminFixedDepositPlansTemplate {
+    pub plans: Vec<FixedDepositPlan>,
+    pub error: String,
+    pub has_error: bool,
+    pub success: String,
+    pub has_success: bool,
 }
 
 #[derive(Template)]

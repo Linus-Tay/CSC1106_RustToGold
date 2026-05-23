@@ -28,8 +28,17 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                 .route("/loans/apply", web::get().to(controllers::loan_apply_page))
                 .route("/fixed-deposits", web::get().to(controllers::fixed_deposits_page))
                 .route("/fixed-deposits/new", web::get().to(controllers::fixed_deposit_new_page))
+                .route("/fixed-deposits", web::post().to(controllers::create_fixed_deposit))
+                .route("/fixed-deposits/{id}/withdraw", web::post().to(controllers::withdraw_fixed_deposit))
                 .route("/profile", web::get().to(controllers::profile_page))
                 .route("/profile", web::post().to(controllers::update_profile)),
+        )
+        .service(
+            web::scope("/admin")
+                .route("/fixed-deposits", web::get().to(controllers::admin_fixed_deposits_page))
+                .route("/fixed-deposit-plans", web::get().to(controllers::admin_fixed_deposit_plans_page))
+                .route("/fixed-deposit-plans", web::post().to(controllers::create_fixed_deposit_plan))
+                .route("/fixed-deposit-plans/{id}", web::post().to(controllers::update_fixed_deposit_plan)),
         )
     );
 
