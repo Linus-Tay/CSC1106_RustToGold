@@ -2,6 +2,8 @@ use crate::models::{BankAccount, Transaction};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
+pub async fn create_customer_profile(db: &PgPool) -> Result<>
+
 pub async fn create_primary_account(db: &PgPool, user_id: i64) -> Result<BankAccount, sqlx::Error> {
     let account_number = format!("RTG-{}", Uuid::new_v4().simple());
 

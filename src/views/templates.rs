@@ -6,7 +6,7 @@ use askama::Template;
 pub struct HomeTemplate;
 
 #[derive(Template)]
-#[template(path = "onboarding.html")]
+#[template(path = "onboarding/onboarding.html")]
 pub struct OnboardingTemplate {
     pub product_available: bool,
     pub product_id: String,
@@ -16,7 +16,18 @@ pub struct OnboardingTemplate {
     pub product_rate: String,
     pub product_minimum: String,
     pub product_features: Vec<String>,
-    pub action_url: String,
+}
+
+#[derive(Template)]
+#[template(path= "onboarding/forms/onboarding_form1.html")]
+pub struct OnboardingFormTemplate {
+    pub test: bool
+}
+
+#[derive(Template)]
+#[template(path= "onboarding/forms/onboarding_form2.html")]
+pub struct OnboardingFormTemplate1 {
+    pub test: bool
 }
 
 #[derive(Template)]

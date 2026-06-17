@@ -2,6 +2,23 @@ DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS bank_accounts;
 DROP TABLE IF EXISTS users;
 
+CREATE TYPE residency_status AS ENUM ('CITIZEN', 'PR', 'FOREIGNER');
+CREATE TYPE kyc_status_type AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+
+CREATE TABLE customers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone_number VARCHAR(20),
+    date_of_birth DATE NOT NULL,
+    residency residency_status NOT NULL,
+    nric VARCHAR(20) UNIQUE NOT NULL,
+    kyc_status kyc_status_type DEFAULT 'PENDING',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     full_name VARCHAR(120) NOT NULL,

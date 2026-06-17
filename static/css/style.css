@@ -1519,7 +1519,193 @@ i[data-lucide] {
     justify-content: flex-start;
   }
 }
+/* ── Sidebar ── */
+aside {
+  width: 240px;
+  background: #ffffff;
+  padding: 32px 20px;
+  flex-shrink: 0;
+}
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 28px;
+  opacity: 0.45;
+}
+.step-item.active { opacity: 1; }
+.step-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: #aaa;
+}
+.step-item.active .step-circle {
+  background: #c0392b;
+  border-color: #c0392b;
+  color: #000000;
+}
+.step-label {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.step-item.active .step-label { color: #c0392b; }
+.step-name {
+  font-size: 0.88rem;
+  color: #000000;
+  font-weight: 500;
+}
+.step-item.active .step-name { color: #000000; }
 
+/* ── Main Content ── */
+main {
+  flex: 1;
+  padding: 40px 48px;
+  overflow-y: auto;
+}
+main h1 {
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.required-note {
+  font-size: 0.82rem;
+  color: #bbb;
+  margin-bottom: 24px;
+}
+
+/* ── Singpass Card ── */
+.singpass-card {
+  background: #5a1a0f;
+  border-radius: 6px;
+  padding: 24px 28px;
+  margin-bottom: 28px;
+}
+.singpass-logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #e74c3c;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.singpass-logo span { color: #fff; }
+.singpass-notice {
+  font-size: 0.82rem;
+  color: #ccc;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 16px;
+}
+.singpass-notice a { color: #e74c3c; text-decoration: underline; cursor: pointer; }
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 40px;
+}
+.info-field label {
+  display: block;
+  font-size: 0.78rem;
+  color: #bbb;
+  margin-bottom: 4px;
+}
+.info-field .value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+}
+.info-field .value.empty { color: #777; font-weight: 400; }
+
+/* ── Input row ── */
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 40px;
+  margin-top: 24px;
+}
+.form-group label {
+  display: block;
+  font-size: 0.78rem;
+  color: #bbb;
+  margin-bottom: 6px;
+}
+.form-group label span { color: #e74c3c; }
+.input-with-prefix {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #888;
+}
+.prefix-select {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 0.95rem;
+  padding: 6px 8px 6px 0;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.prefix-arrow {
+  color: #bbb;
+  margin-right: 8px;
+  font-size: 0.75rem;
+}
+.prefix-divider {
+  width: 1px;
+  height: 18px;
+  background: #666;
+  margin-right: 10px;
+}
+.form-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #888;
+  color: #fff;
+  font-size: 0.95rem;
+  padding: 6px 0;
+  width: 100%;
+  outline: none;
+}
+.form-input:focus { border-bottom-color: #e74c3c; }
+.input-with-prefix .form-input { border: none; flex: 1; }
+
+/* ── Footer note ── */
+.footer-note {
+  font-size: 0.78rem;
+  color: #aaa;
+  line-height: 1.6;
+  margin-top: 32px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 16px;
+}
+
+/* ── Action button ── */
+.btn-next {
+  margin-top: 24px;
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  padding: 12px 40px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+}
+.btn-next:hover { background: #a93226; }
 
 /* App shell fix: keep footer at bottom when page content is short */
 body {

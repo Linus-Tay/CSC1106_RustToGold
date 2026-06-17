@@ -7,3 +7,7 @@ pub fn render<T: Template>(template: T) -> Result<HttpResponse> {
         .content_type("text/html; charset=utf-8")
         .body(html))
 }
+
+pub fn render_html(html: String) -> Result<HttpResponse> {
+    Ok(HttpResponse::Ok().content_type("text/html").body(html))
+}

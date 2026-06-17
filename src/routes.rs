@@ -6,7 +6,13 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
     .service(
         web::scope("")
         .guard(guard::Host("apply.localhost"))
-        .route("/onboarding/init", web::get().to(controllers::display_product))
+        .route("/onboarding/{path}", web::get().to(controllers::onboarding))
+        .service(web::scope("/api")
+            .route("/onboarding/actions/submit", web::post().to(controllers::step1_post))
+        )
+        //.route("/onboarding/product-information", web::get().to(controllers::display_product))
+        //.route("/onboarding/init", web::get().to(controllers::redirect_to_product_information))
+        //.route("/onboarding/primary-contact-details", web::get().to(controllers::show_form))
     )
     .service(
         web::scope("")
