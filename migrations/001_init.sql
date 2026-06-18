@@ -1,8 +1,11 @@
+DROP TABLE IF EXISTS home_loan_applications;
+DROP TABLE IF EXISTS loans;
 DROP TABLE IF EXISTS fixed_deposits;
 DROP TABLE IF EXISTS fixed_deposit_plans;
 DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS bank_accounts;
 DROP TABLE IF EXISTS users;
+
 
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
@@ -13,6 +16,7 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL,
     role VARCHAR(30) NOT NULL DEFAULT 'customer',
     status VARCHAR(30) NOT NULL DEFAULT 'active',
+    monthly_income_cents BIGINT NOT NULL DEFAULT 0, -- For salary to calculate x4
     last_login_at TIMESTAMP NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -80,10 +84,67 @@ CREATE TABLE transactions (
     balance_after_cents BIGINT NOT NULL,
     description TEXT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT transactions_type_check CHECK (transaction_type IN ('deposit', 'withdrawal', 'transfer_in', 'transfer_out', 'fixed_deposit_opening', 'fixed_deposit_payout', 'fixed_deposit_early_withdrawal')),
+    CONSTRAINT transactions_type_check CHECK (transaction_type IN ('deposit', 'withdrawal', 'transfer_in', 'transfer_out', 'fixed_deposit_opening', 'fixed_deposit_payout', 'fixed_deposit_early_withdrawal', 'loan_disbursement', 'loan_repayment')),
     CONSTRAINT transactions_amount_positive CHECK (amount_cents > 0),
     CONSTRAINT transactions_balance_after_non_negative CHECK (balance_after_cents >= 0)
 );
+
+CREATE TABLE IF NOT EXISTS loans (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    account_id BIGINT NOT NULL REFERENCES bank_accounts(id) ON DELETE CASCADE,
+    principal_cents BIGINT NOT NULL,
+    interest_rate_bps INTEGER NOT NULL,
+    interest_cents BIGINT NOT NULL,
+    total_repayment_cents BIGINT NOT NULL,
+    remaining_cents BIGINT NOT NULL,
+    monthly_payment_cents BIGINT NOT NULL,
+    term_months INTEGER NOT NULL,
+    next_due_date DATE NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE home_loan_applications (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    account_id BIGINT NOT NULL REFERENCES bank_accounts(id) ON DELETE CASCADE,
+
+    house_type VARCHAR(40) NOT NULL,
+    requested_amount_cents BIGINT NOT NULL,
+    interest_rate_bps INTEGER NOT NULL,
+    term_months INTEGER NOT NULL,
+
+    approved_amount_cents BIGINT NULL,
+    approved_by BIGINT NULL REFERENCES users(id),
+    approved_at TIMESTAMP NULL,
+
+    total_repayment_cents BIGINT NULL,
+    remaining_cents BIGINT NULL,
+    monthly_payment_cents BIGINT NULL,
+    next_due_date DATE NULL,
+
+    status VARCHAR(30) NOT NULL DEFAULT 'pending_review',
+    staff_remarks TEXT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT home_loan_house_type_check CHECK (
+        house_type IN ('hdb_1_2_room', 'hdb_3_plus', 'condo', 'landed')
+    ),
+    CONSTRAINT home_loan_status_check CHECK (
+        status IN ('pending_review', 'approved', 'rejected', 'completed')
+    ),
+    CONSTRAINT home_loan_amount_positive CHECK (requested_amount_cents > 0)
+);
+
+CREATE INDEX idx_home_loan_applications_user_id_created_at
+ON home_loan_applications(user_id, created_at DESC);
+
+CREATE INDEX idx_home_loan_applications_status
+ON home_loan_applications(status);
 
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_bank_accounts_user_id ON bank_accounts(user_id);

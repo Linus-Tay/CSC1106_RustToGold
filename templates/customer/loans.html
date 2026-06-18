@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RustToGold | Loans</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <main class="app-main">
+    <div class="u-container">
+      <header class="app-page-header">
+        <div>
+          <h1 class="app-page-title">My Loans</h1>
+          <p class="app-page-description">Apply for loans, track repayment, and monitor loan status.</p>
+        </div>
+        <div>
+          <a class="c-button c-button--secondary" href="/customer/dashboard">Back to Dashboard</a>
+          <a class="c-button c-button--primary" href="/customer/loans/apply">Apply Personal Loan</a>
+          <a class="c-button c-button--secondary" href="/customer/home-loans/apply">Apply Home Loan</a>
+        </div>
+      </header>
+
+      {% if has_success %}
+      <div class="alert alert--success">{{ success }}</div><br>
+      {% endif %}
+
+      <section class="c-card">
+        <div class="c-card__header">
+          <div>
+            <h2 class="c-card__title">Personal Loan Records</h2>
+            <p class="c-card__subtitle">Personal loans are automatically approved if all eligibility checks pass.</p>
+          </div>
+        </div>
+        <div class="c-card__body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Principal</th>
+                  <th>Interest</th>
+                  <th>Remaining</th>
+                  <th>Monthly Payment</th>
+                  <th>Next Due Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if has_personal_loans %}
+                {% for loan in loans %}
+                <tr>
+                  <td>#{{ loan.id }}</td>
+                  <td>{{ loan.principal_display() }}</td>
+                  <td>{{ loan.interest_display() }}</td>
+                  <td>{{ loan.remaining_display() }}</td>
+                  <td>{{ loan.monthly_payment_display() }}</td>
+                  <td>{{ loan.next_due_date_display() }}</td>
+                  <td><span class="badge badge--success">{{ loan.display_status() }}</span></td>
+                  <td>
+                    {% if loan.can_pay() %}
+                    <form method="post" action="/customer/loans/{{ loan.id }}/pay" style="display:flex;align-items:center;gap:10px;">
+                      <span><strong>{{ loan.monthly_payment_display() }}</strong></span>
+                      <button class="c-button c-button--secondary" type="submit">Pay</button>
+                    </form>
+                    {% else %}
+                    Completed
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr><td colspan="8">No personal loans found.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <br><br>
+
+      <section class="c-card">
+        <div class="c-card__header">
+          <div>
+            <h2 class="c-card__title">Home Loan Applications</h2>
+            <p class="c-card__subtitle">Home loans require staff approval before funds are released.</p>
+          </div>
+        </div>
+        <div class="c-card__body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Property</th>
+                  <th>Approved Amount</th>
+                  <th>Remaining</th>
+                  <th>Monthly Payment</th>
+                  <th>Next Due Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if has_home_loans %}
+                {% for loan in home_applications %}
+                <tr>
+                  <td>#{{ loan.id }}</td>
+                  <td>{{ loan.house_type_display() }}</td>
+                  <td>{{ loan.approved_amount_display() }}</td>
+                  <td>{{ loan.remaining_display() }}</td>
+                  <td>{{ loan.monthly_payment_display() }}</td>
+                  <td>{{ loan.next_due_date_display() }}</td>
+                  <td><span class="badge badge--success">{{ loan.status_display() }}</span></td>
+                  <td>
+                    {% if loan.can_pay() %}
+                    <form method="post" action="/customer/home-loans/{{ loan.id }}/pay" style="display:flex;align-items:center;gap:10px;">
+                      <span><strong>{{ loan.monthly_payment_display() }}</strong></span>
+                      <button class="c-button c-button--secondary" type="submit">Pay</button>
+                    </form>
+                    {% else %}
+                    -
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr><td colspan="8">No home loan applications found.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RustToGold | Apply for Loan</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <main class="app-main">
+    <div class="u-container" style="max-width: 860px;">
+      <header class="app-page-header">
+        <div>
+          <h1 class="app-page-title">Apply for Personal Loan</h1>
+          <p class="app-page-description">Enter your loan amount and repayment term.</p>
+        </div>
+        <a class="c-button c-button--secondary" href="/customer/loans">Back to Loans</a>
+      </header>
+
+      <section class="c-card">
+        <div class="c-card__header">
+          <h2 class="c-card__title">Loan Details</h2>
+        </div>
+        <div class="c-card__body">
+          {% if has_error %}
+          <div class="alert alert--error">{{ error }}</div><br>
+          {% endif %}
+
+          <form class="form-grid" method="post" action="/customer/loans/apply">
+            <label class="form-field">
+              <span>Amount</span>
+              <input type="text" name="amount" placeholder="Example: 15000" required />
+            </label>
+
+            <label class="form-field">
+              <span>Term</span>
+              <select name="term_months" required>
+                <option value="6">6 months</option>
+                <option value="12">12 months</option>
+                <option value="24">24 months</option>
+                <option value="36">36 months</option>
+              </select>
+            </label>
+
+            <button class="c-button c-button--primary" type="submit">Apply for Loan</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

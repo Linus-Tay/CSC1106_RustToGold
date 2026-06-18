@@ -4,7 +4,8 @@ use crate::forms::{DepositForm, ProfileForm};
 use crate::repositories::account_repository;
 use crate::services;
 use crate::views::{
-    render, CustomerPageTemplate, DashboardTemplate, DepositTemplate, ProfileTemplate,
+    render, CustomerPageTemplate, DashboardTemplate, DepositTemplate,  LoanApplyTemplate,
+    LoansTemplate, ProfileTemplate,
     TransactionsTemplate,
 };
 use crate::AppState;
@@ -204,18 +205,28 @@ pub async fn transfer_page(data: web::Data<AppState>, session: Session) -> Resul
 }
 
 pub async fn loans_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
-    if let Err(response) = require_customer(&data, &session).await {
-        return Ok(response);
-    }
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
 
-    render(CustomerPageTemplate {
-        title: "RustToGold | Loans",
-        active_nav: "loans",
-        heading: "Loan Applications",
-        description: "Apply for loans and track application status from the customer portal.",
-        message: "The loan module route is connected for Phase 1. The next phase can add loan application forms, approval statuses, staff review, and admin reporting.",
-        primary_label: "Apply for Loan",
-        primary_href: "/customer/loans/apply",
+    let personal_dashboard = match services::load_loan_dashboard(&data.db, user.id).await {
+        Ok(dashboard) => dashboard,
+        Err(message) => return render_error("Loans unavailable", message),
+    };
+
+    let home_applications = match services::list_home_loan_applications(&data.db, user.id).await {
+        Ok(applications) => applications,
+        Err(message) => return render_error("Home loans unavailable", message),
+    };
+
+    render(LoansTemplate {
+        has_personal_loans: !personal_dashboard.loans.is_empty(),
+        has_home_loans: !home_applications.is_empty(),
+        loans: personal_dashboard.loans,
+        home_applications,
+        success: String::new(),
+        has_success: false,
     })
 }
 
@@ -224,16 +235,14 @@ pub async fn loan_apply_page(data: web::Data<AppState>, session: Session) -> Res
         return Ok(response);
     }
 
-    render(CustomerPageTemplate {
-        title: "RustToGold | Apply for Loan",
-        active_nav: "loans",
-        heading: "Apply for Loan",
-        description: "A placeholder for the loan application workflow.",
-        message: "This page is intentionally prepared as a Phase 1 placeholder so the dashboard link works. Add the application form and loan repository in the next module.",
-        primary_label: "Back to Loans",
-        primary_href: "/customer/loans",
+    render(LoanApplyTemplate {
+        error: String::new(),
+        has_error: false,
     })
 }
+
+
+
 
 pub async fn fixed_deposits_page(
     data: web::Data<AppState>,

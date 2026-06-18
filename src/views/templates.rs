@@ -1,4 +1,4 @@
-use crate::models::{FixedDeposit, FixedDepositPlan, FixedDepositSummary, Transaction};
+use crate::models::{FixedDeposit, FixedDepositPlan, FixedDepositSummary, Loan, HomeLoanApplication, Transaction};
 use askama::Template;
 
 #[derive(Template)]
@@ -112,6 +112,33 @@ pub struct ProfileTemplate {
     pub account_number: String,
     pub created_at: String,
     pub last_login: String,
+}
+
+#[derive(Template)]
+#[template(path = "customer/loans.html")]
+pub struct LoansTemplate {
+    pub loans: Vec<Loan>,
+    pub home_applications: Vec<HomeLoanApplication>,
+    pub has_personal_loans: bool,
+    pub has_home_loans: bool,
+    pub success: String,
+    pub has_success: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/loan_apply.html")]
+pub struct LoanApplyTemplate {
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/home_loan_apply.html")]
+pub struct HomeLoanApplyTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub success: String,
+    pub has_success: bool,
 }
 
 #[derive(Template)]

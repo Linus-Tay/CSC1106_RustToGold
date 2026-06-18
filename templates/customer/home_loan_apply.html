@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RustToGold | Apply for Home Loan</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <main class="app-main">
+    <div class="u-container" style="max-width: 860px;">
+      <header class="app-page-header">
+        <div>
+          <h1 class="app-page-title">Apply for Home Loan</h1>
+          <p class="app-page-description">Submit a home loan application for staff review and approval.</p>
+        </div>
+        <a class="c-button c-button--secondary" href="/customer/loans">Back to Loans</a>
+      </header>
+
+      <section class="c-card">
+        <div class="c-card__header">
+          <div>
+            <h2 class="c-card__title">Home Loan Details</h2>
+            <p class="c-card__subtitle">Loan duration and maximum amount depend on the selected property type.</p>
+          </div>
+        </div>
+
+        <div class="c-card__body">
+          {% if has_error %}
+          <div class="alert alert--error">{{ error }}</div><br>
+          {% endif %}
+
+          <form class="form-grid" method="post" action="/customer/home-loans/apply">
+            <label class="form-field">
+              <span>Property Type</span>
+              <select name="house_type" id="house_type" required>
+                <option value="hdb_1_2_room">HDB 1- to 2-Room Flat</option>
+                <option value="hdb_3_plus">HDB 3-Room or Larger Flat</option>
+                <option value="condo">Private Condominium</option>
+                <option value="landed">Landed Property</option>
+              </select>
+            </label>
+
+            <label class="form-field">
+              <span>Requested Amount</span>
+              <input type="text" name="amount" placeholder="Example: 200000" required />
+            </label>
+
+            <label class="form-field">
+              <span>Loan Term</span>
+              <select name="term_years" id="term_years" required></select>
+            </label>
+
+            <div class="alert alert--info" id="selected_rule"></div>
+
+            <button class="c-button c-button--primary" type="submit">Submit for Staff Review</button>
+          </form>
+        </div>
+      </section>
+
+      <br>
+
+      <details style="font-size: 0.9rem; color: #64748b;">
+        <summary>View home loan eligibility guide</summary>
+        <ul>
+          <li><strong>HDB 1- to 2-Room Flat:</strong> Max $200,000. Terms: 5, 10, 15 years.</li>
+          <li><strong>HDB 3-Room or Larger Flat:</strong> Max $500,000. Terms: 10, 15, 20, 25 years.</li>
+          <li><strong>Private Condominium:</strong> Max $1,000,000. Terms: 10, 15, 20, 25, 30 years.</li>
+          <li><strong>Landed Property:</strong> Max $2,000,000. Terms: 15, 20, 25, 30, 35 years.</li>
+        </ul>
+      </details>
+    </div>
+  </main>
+
+  <script>
+    const rules = {
+      hdb_1_2_room: { label: "HDB 1- to 2-Room Flat", max: "$200,000", terms: [5, 10, 15] },
+      hdb_3_plus: { label: "HDB 3-Room or Larger Flat", max: "$500,000", terms: [10, 15, 20, 25] },
+      condo: { label: "Private Condominium", max: "$1,000,000", terms: [10, 15, 20, 25, 30] },
+      landed: { label: "Landed Property", max: "$2,000,000", terms: [15, 20, 25, 30, 35] }
+    };
+
+    const houseTypeSelect = document.getElementById("house_type");
+    const termSelect = document.getElementById("term_years");
+    const selectedRule = document.getElementById("selected_rule");
+
+    function updateTermOptions() {
+      const rule = rules[houseTypeSelect.value];
+      termSelect.innerHTML = "";
+
+      rule.terms.forEach(function(year) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year + " years";
+        termSelect.appendChild(option);
+      });
+
+      selectedRule.textContent = rule.label + " allows up to " + rule.max + " with terms of " + rule.terms.join(", ") + " years.";
+    }
+
+    houseTypeSelect.addEventListener("change", updateTermOptions);
+    updateTermOptions();
+  </script>
+</body>
+</html>

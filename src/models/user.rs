@@ -11,6 +11,7 @@ pub struct User {
     pub password_hash: String,
     pub role: String,
     pub status: String,
+    pub monthly_income_cents: i64, //added for loan&salary cap
     pub last_login_at: Option<NaiveDateTime>,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
