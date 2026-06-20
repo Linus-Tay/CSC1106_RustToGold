@@ -1,6 +1,8 @@
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_admin, require_customer};
-use crate::forms::{CreateFixedDepositForm, FixedDepositPlanForm};
+use crate::forms::{
+    CreateFixedDepositForm, FixedDepositMessageQuery, FixedDepositPlanForm,
+};
 use crate::services;
 use crate::views::render;
 use crate::views::templates::{
@@ -18,6 +20,7 @@ fn display_money_without_symbol(value: String) -> String {
 pub async fn fixed_deposits_page(
     data: web::Data<AppState>,
     session: Session,
+    query: web::Query<FixedDepositMessageQuery>,
 ) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -25,20 +28,33 @@ pub async fn fixed_deposits_page(
     };
 
     match services::load_fixed_deposit_dashboard(&data.db, user.id).await {
-        Ok(view_data) => {
-            let has_fixed_deposits = !view_data.fixed_deposits.is_empty();
+        Ok(dashboard) => {
+            let has_fixed_deposits = !dashboard.fixed_deposits.is_empty();
+            let account_number = dashboard.account.account_number.clone();
+            let balance = display_money_without_symbol(dashboard.account.balance_display());
 
-            let account_number = view_data.account.account_number.clone();
-            let balance = display_money_without_symbol(view_data.account.balance_display());
+            let (success, has_success) = if query.created.as_deref() == Some("1") {
+                ("Fixed deposit created successfully.".to_string(), true)
+            } else if query.paid_out.as_deref() == Some("1") {
+                ("Matured fixed deposit payout completed.".to_string(), true)
+            } else if query.withdrawn.as_deref() == Some("1") {
+                (
+                    "Early withdrawal completed. The expected interest was forfeited."
+                        .to_string(),
+                    true,
+                )
+            } else {
+                (String::new(), false)
+            };
 
             render(FixedDepositDashboardTemplate {
                 account_number,
                 balance,
-                summary: view_data.summary,
-                fixed_deposits: view_data.fixed_deposits,
+                summary: dashboard.summary,
+                fixed_deposits: dashboard.fixed_deposits,
                 has_fixed_deposits,
-                success: String::new(),
-                has_success: false,
+                success,
+                has_success,
                 error: String::new(),
                 has_error: false,
             })
@@ -60,11 +76,13 @@ pub async fn fixed_deposit_new_page(
         Ok((account, plans)) => {
             let account_number = account.account_number.clone();
             let balance = display_money_without_symbol(account.balance_display());
+            let has_plans = !plans.is_empty();
 
             render(FixedDepositCreateTemplate {
                 account_number,
                 balance,
                 plans,
+                has_plans,
                 error: String::new(),
                 has_error: false,
             })
@@ -89,11 +107,13 @@ pub async fn create_fixed_deposit(
             Ok((account, plans)) => {
                 let account_number = account.account_number.clone();
                 let balance = display_money_without_symbol(account.balance_display());
+                let has_plans = !plans.is_empty();
 
                 render(FixedDepositCreateTemplate {
                     account_number,
                     balance,
                     plans,
+                    has_plans,
                     error,
                     has_error: true,
                 })
@@ -114,6 +134,9 @@ pub async fn withdraw_fixed_deposit(
     };
 
     match services::withdraw_fixed_deposit(&data.db, user.id, path.into_inner()).await {
+        Ok(fixed_deposit) if fixed_deposit.status == "paid_out" => {
+            Ok(redirect("/customer/fixed-deposits?paid_out=1"))
+        }
         Ok(_) => Ok(redirect("/customer/fixed-deposits?withdrawn=1")),
         Err(message) => render_error("Fixed deposit withdrawal failed", message),
     }
@@ -127,13 +150,12 @@ pub async fn admin_fixed_deposits_page(
         return Ok(response);
     }
 
-    match services::list_all_fixed_deposits(&data.db).await {
-        Ok(fixed_deposits) => {
-            let has_fixed_deposits = !fixed_deposits.is_empty();
-
+    match services::list_all_fixed_deposit_records(&data.db).await {
+        Ok(records) => {
+            let has_records = !records.is_empty();
             render(AdminFixedDepositsTemplate {
-                fixed_deposits,
-                has_fixed_deposits,
+                records,
+                has_records,
             })
         }
         Err(message) => render_error("Admin fixed deposits unavailable", message),
@@ -143,19 +165,30 @@ pub async fn admin_fixed_deposits_page(
 pub async fn admin_fixed_deposit_plans_page(
     data: web::Data<AppState>,
     session: Session,
+    query: web::Query<FixedDepositMessageQuery>,
 ) -> Result<HttpResponse> {
     if let Err(response) = require_admin(&data, &session).await {
         return Ok(response);
     }
 
     match services::list_all_fixed_deposit_plans(&data.db).await {
-        Ok(plans) => render(AdminFixedDepositPlansTemplate {
-            plans,
-            error: String::new(),
-            has_error: false,
-            success: String::new(),
-            has_success: false,
-        }),
+        Ok(plans) => {
+            let (success, has_success) = if query.created.as_deref() == Some("1") {
+                ("Fixed deposit plan created successfully.".to_string(), true)
+            } else if query.updated.as_deref() == Some("1") {
+                ("Fixed deposit plan updated successfully.".to_string(), true)
+            } else {
+                (String::new(), false)
+            };
+
+            render(AdminFixedDepositPlansTemplate {
+                plans,
+                error: String::new(),
+                has_error: false,
+                success,
+                has_success,
+            })
+        }
         Err(message) => render_error("Admin fixed deposit plans unavailable", message),
     }
 }
@@ -191,7 +224,10 @@ pub async fn update_fixed_deposit_plan(
     }
 }
 
-async fn render_plan_error(data: &web::Data<AppState>, error: String) -> Result<HttpResponse> {
+async fn render_plan_error(
+    data: &web::Data<AppState>,
+    error: String,
+) -> Result<HttpResponse> {
     match services::list_all_fixed_deposit_plans(&data.db).await {
         Ok(plans) => render(AdminFixedDepositPlansTemplate {
             plans,
