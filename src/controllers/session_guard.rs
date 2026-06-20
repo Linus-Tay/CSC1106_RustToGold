@@ -25,9 +25,9 @@ pub async fn require_customer(
         return Err(redirect("/login"));
     }
 
-    if !user.is_customer() {
+    /*if !user.is_customer() {
         return Err(redirect("/403"));
-    }
+    }*/
 
     Ok(user)
 }

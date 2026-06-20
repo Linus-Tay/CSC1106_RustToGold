@@ -1,4 +1,4 @@
-use crate::models::{FixedDeposit, FixedDepositPlan, FixedDepositSummary, Transaction};
+use crate::models::{FixedDeposit, FixedDepositPlan, FixedDepositSummary, StaffUser, Transaction};
 use askama::Template;
 
 #[derive(Template)]
@@ -137,3 +137,22 @@ pub struct NotFoundTemplate;
 #[derive(Template)]
 #[template(path = "errors/error.html")]
 pub struct ErrorTemplate;
+
+#[derive(Template)]
+#[template(path = "admin/staff.html")]
+pub struct AdminStaffDashboardTemplate {
+    pub staff_users: Vec<StaffUser>,
+    pub has_staff: bool,
+    pub success: String,
+    pub has_success: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/staff_edit.html")]
+pub struct AdminStaffEditTemplate {
+    pub staff: Option<StaffUser>,
+    pub error: String,
+    pub has_error: bool,
+}

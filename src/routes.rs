@@ -35,6 +35,28 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         )
         .service(
             web::scope("/admin")
+                //.route("/dashboard", web::get().to(controllers::admin_dashboard))
+                .service(
+                    web::resource("/staff")
+                        .route(web::get().to(controllers::staff_controller::admin_staff_page))
+                        .route(web::post().to(controllers::staff_controller::create_staff)),
+                )
+                .service(
+                    web::resource("/staff/new")
+                        .route(web::get().to(controllers::staff_controller::admin_staff_new_page)),
+                )
+                .service(
+                    web::resource("/staff/{id}/edit")
+                        .route(web::get().to(controllers::staff_controller::admin_staff_edit_page)),
+                )
+                .service(
+                    web::resource("/staff/{id}")
+                        .route(web::post().to(controllers::staff_controller::update_staff)),
+                )
+                .service(
+                    web::resource("/staff/{id}/delete")
+                        .route(web::post().to(controllers::staff_controller::delete_staff)),
+                )
                 .route("/fixed-deposits", web::get().to(controllers::admin_fixed_deposits_page))
                 .route("/fixed-deposit-plans", web::get().to(controllers::admin_fixed_deposit_plans_page))
                 .route("/fixed-deposit-plans", web::post().to(controllers::create_fixed_deposit_plan))

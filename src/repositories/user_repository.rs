@@ -55,6 +55,7 @@ pub async fn create_customer(
     .await
 }
 
+
 pub async fn update_last_login(db: &PgPool, user_id: i64) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1")
         .bind(user_id)

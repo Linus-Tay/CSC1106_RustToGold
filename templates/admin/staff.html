@@ -1,0 +1,51 @@
+{% block content %}
+<div class="page-header">
+  <h1>Staff Users</h1>
+  <a href="/admin/staff/new" class="btn btn-primary">+ New Staff Member</a>
+</div>
+
+{% if has_success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
+
+{% if has_error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+{% if has_staff %}
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Status</th>
+      <th>Last Login</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in staff_users %}
+    <tr>
+      <td>{{ user.full_name }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ user.phone_number }}</td>
+      <td>{{ user.status_display() }}</td>
+      <td>{{ user.last_login_display() }}</td>
+      <td>{{ user.created_at_display() }}</td>
+      <td>
+        <a href="/admin/staff/{{ user.id }}/edit">Edit</a>
+        <form method="POST" action="/admin/staff/{{ user.id }}/delete"
+              onsubmit="return confirm('Delete {{ user.full_name }}?')">
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No staff members found.</p>
+{% endif %}
+{% endblock %}

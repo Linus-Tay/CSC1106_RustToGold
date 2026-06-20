@@ -85,6 +85,34 @@ CREATE TABLE transactions (
     CONSTRAINT transactions_balance_after_non_negative CHECK (balance_after_cents >= 0)
 );
 
+CREATE TABLE audit_log (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    action VARCHAR(80) NOT NULL,
+    entity_type VARCHAR(50) NOT NULL,
+    entity_id BIGINT NULL,
+    old_value JSONB NULL,
+    new_value JSONB NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'success',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT audit_log_action_check CHECK (
+        action IN (
+            'create_staff',
+            'update_staff',
+            'delete_staff',
+            'freeze_account',
+            'create_fixed_deposit',
+            'update_fixed_deposit',
+            'delete_fixed_deposit'
+        )
+    ),
+    CONSTRAINT audit_log_status_check CHECK (
+        status IN ('success', 'failed', 'unauthorized')
+    )
+);
+
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_bank_accounts_user_id ON bank_accounts(user_id);
 CREATE INDEX idx_transactions_user_id_created_at ON transactions(user_id, created_at DESC);

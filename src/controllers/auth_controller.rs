@@ -25,8 +25,12 @@ pub async fn login(
     match services::authenticate_user(&data.db, form.into_inner()).await {
         Ok(user) => {
             session.insert("user_id", user.id)?;
-            session.insert("role", user.role)?;
-            Ok(redirect("/customer/dashboard"))
+            session.insert("role", user.role.clone())?;
+            if user.role == "admin" {
+                Ok(redirect("/admin/dashboard"))
+            } else {
+                Ok(redirect("/customer/dashboard"))
+            }
         }
         Err(error) => render(LoginTemplate {
             error,
