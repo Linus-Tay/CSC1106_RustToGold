@@ -1,4 +1,6 @@
-use crate::models::{FixedDeposit, FixedDepositPlan, FixedDepositSummary, Transaction};
+use crate::models::{
+    AdminFixedDepositRecord, FixedDeposit, FixedDepositPlan, FixedDepositSummary, Transaction,
+};
 use askama::Template;
 
 #[derive(Template)]
@@ -81,6 +83,7 @@ pub struct FixedDepositCreateTemplate {
     pub account_number: String,
     pub balance: String,
     pub plans: Vec<FixedDepositPlan>,
+    pub has_plans: bool,
     pub error: String,
     pub has_error: bool,
 }
@@ -88,8 +91,8 @@ pub struct FixedDepositCreateTemplate {
 #[derive(Template)]
 #[template(path = "admin/fixed_deposits.html")]
 pub struct AdminFixedDepositsTemplate {
-    pub fixed_deposits: Vec<FixedDeposit>,
-    pub has_fixed_deposits: bool,
+    pub records: Vec<AdminFixedDepositRecord>,
+    pub has_records: bool,
 }
 
 #[derive(Template)]

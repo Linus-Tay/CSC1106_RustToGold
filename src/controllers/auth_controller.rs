@@ -8,7 +8,7 @@ use actix_web::{web, HttpResponse, Result};
 
 pub async fn login_page(session: Session) -> Result<HttpResponse> {
     if session_user_id(&session).is_some() {
-        return Ok(redirect("/customer/dashboard"));
+        return Ok(redirect_after_login(&session));
     }
 
     render(LoginTemplate {
@@ -25,8 +25,13 @@ pub async fn login(
     match services::authenticate_user(&data.db, form.into_inner()).await {
         Ok(user) => {
             session.insert("user_id", user.id)?;
-            session.insert("role", user.role)?;
-            Ok(redirect("/customer/dashboard"))
+            session.insert("role", user.role.clone())?;
+
+            if user.role == "admin" {
+                Ok(redirect("/admin/fixed-deposits"))
+            } else {
+                Ok(redirect("/customer/dashboard"))
+            }
         }
         Err(error) => render(LoginTemplate {
             error,
@@ -37,7 +42,7 @@ pub async fn login(
 
 pub async fn signup_page(session: Session) -> Result<HttpResponse> {
     if session_user_id(&session).is_some() {
-        return Ok(redirect("/customer/dashboard"));
+        return Ok(redirect_after_login(&session));
     }
 
     render(SignupTemplate {
@@ -67,4 +72,14 @@ pub async fn signup(
 pub async fn logout(session: Session) -> Result<HttpResponse> {
     session.purge();
     Ok(redirect("/"))
+}
+
+fn redirect_after_login(session: &Session) -> HttpResponse {
+    let role = session.get::<String>("role").ok().flatten();
+
+    if role.as_deref() == Some("admin") {
+        redirect("/admin/fixed-deposits")
+    } else {
+        redirect("/customer/dashboard")
+    }
 }

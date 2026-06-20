@@ -1,5 +1,68 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin | Fixed Deposits</title><link rel="stylesheet" href="/static/css/style.css" /></head><body>
-<main class="app-main"><div class="u-container"><header class="app-page-header"><div><h1 class="app-page-title">Admin Fixed Deposit Management</h1><p class="app-page-description">View all customer fixed deposit records.</p></div><a class="c-button c-button--secondary" href="/admin/fixed-deposit-plans">Manage FD Plans</a></header>
-<section class="c-card"><div class="c-card__body"><div class="table-wrap"><table class="data-table"><thead><tr><th>ID</th><th>User</th><th>Account</th><th>Plan</th><th>Principal</th><th>Interest</th><th>Payout</th><th>Maturity</th><th>Status</th></tr></thead><tbody>
-{% if has_fixed_deposits %}{% for fd in fixed_deposits %}<tr><td>#{{ fd.id }}</td><td>{{ fd.user_id }}</td><td>{{ fd.account_id }}</td><td>{{ fd.plan_id }}</td><td>{{ fd.principal_display() }}</td><td>{{ fd.interest_display() }}</td><td>{{ fd.payout_display() }}</td><td>{{ fd.maturity_date_display() }}</td><td>{{ fd.status_display() }}</td></tr>{% endfor %}{% else %}<tr><td colspan="9">No fixed deposits found.</td></tr>{% endif %}
-</tbody></table></div></div></section></div></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Admin Fixed Deposits</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <main class="app-main">
+    <div class="u-container">
+      <header class="app-page-header">
+        <div>
+          <h1 class="app-page-title">Admin Fixed Deposit Management</h1>
+          <p class="app-page-description">View all customer fixed deposits and their current payout status.</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+  <a class="c-button c-button--secondary" href="/admin/fixed-deposit-plans">Manage FD Plans</a>
+  <a class="c-button c-button--secondary" href="/logout">Logout</a>
+</div>
+      </header>
+
+      <section class="c-card">
+        <div class="c-card__body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>FD ID</th>
+                  <th>Customer</th>
+                  <th>Account</th>
+                  <th>Plan</th>
+                  <th>Principal</th>
+                  <th>Rate</th>
+                  <th>Interest</th>
+                  <th>Payout</th>
+                  <th>Maturity</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if has_records %}
+                {% for record in records %}
+                <tr>
+                  <td>#{{ record.id }}</td>
+                  <td>{{ record.customer_name }}<br><small>{{ record.customer_email }}</small></td>
+                  <td>{{ record.account_number }}</td>
+                  <td>{{ record.plan_name }}</td>
+                  <td>{{ record.principal_display() }}</td>
+                  <td>{{ record.interest_rate_display() }}</td>
+                  <td>{{ record.interest_display() }}</td>
+                  <td>{{ record.payout_display() }}</td>
+                  <td>{{ record.maturity_date_display() }}</td>
+                  <td><span class="badge {{ record.status_badge_class() }}">{{ record.status_display() }}</span></td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr><td colspan="10">No fixed deposit records found.</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

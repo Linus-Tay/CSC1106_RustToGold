@@ -6,7 +6,9 @@ pub mod transaction;
 pub mod user;
 
 pub use self::account::{AccountWorkflow, BankAccount};
-pub use self::fixed_deposit::{FixedDeposit, FixedDepositCalculator, FixedDepositPlan, FixedDepositSummary, SimpleFixedDepositCalculator};
+pub use self::fixed_deposit::{
+    AdminFixedDepositRecord, FixedDeposit, FixedDepositPlan, FixedDepositSummary,
+};
 pub use self::money::Money;
 pub use self::transaction::Transaction;
 pub use self::user::User;

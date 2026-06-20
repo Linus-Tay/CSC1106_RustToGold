@@ -1,6 +1,219 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Admin | FD Plans</title><link rel="stylesheet" href="/static/css/style.css" /></head><body>
-<main class="app-main"><div class="u-container"><header class="app-page-header"><div><h1 class="app-page-title">Fixed Deposit Plan Management</h1><p class="app-page-description">Create and update FD plans used by customers.</p></div><a class="c-button c-button--secondary" href="/admin/fixed-deposits">View All FD Records</a></header>
-{% if has_error %}<div class="alert alert--error">{{ error }}</div><br>{% endif %}{% if has_success %}<div class="alert alert--success">{{ success }}</div><br>{% endif %}
-<section class="c-card"><div class="c-card__header"><h2 class="c-card__title">Create New Plan</h2></div><div class="c-card__body"><form class="form-grid" method="post" action="/admin/fixed-deposit-plans"><input name="name" placeholder="Plan name" required><input name="duration_months" placeholder="Duration months" required><input name="interest_rate" placeholder="Interest rate e.g. 3.20" required><input name="minimum_amount" placeholder="Minimum amount e.g. 1000" required><select name="status"><option value="active">Active</option><option value="inactive">Inactive</option></select><button class="c-button c-button--primary" type="submit">Create Plan</button></form></div></section>
-<section class="c-card" style="margin-top:2rem;"><div class="c-card__header"><h2 class="c-card__title">Existing Plans</h2></div><div class="c-card__body"><div class="table-wrap"><table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Duration</th><th>Rate</th><th>Minimum</th><th>Status</th><th>Update</th></tr></thead><tbody>{% for plan in plans %}<tr><form method="post" action="/admin/fixed-deposit-plans/{{ plan.id }}"><td>#{{ plan.id }}</td><td><input name="name" value="{{ plan.name }}" required></td><td><input name="duration_months" value="{{ plan.duration_months }}" required></td><td><input name="interest_rate" value="{{ plan.interest_rate_value_display() }}" required></td><td><input name="minimum_amount" value="{{ plan.minimum_amount_value_display() }}" required></td><td><select name="status"><option value="active">Active</option><option value="inactive">Inactive</option></select></td><td><button class="c-button c-button--secondary" type="submit">Update</button></td></form></tr>{% endfor %}</tbody></table></div></div></section>
-</div></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Admin FD Plans</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body>
+  <main class="app-main">
+    <div class="u-container">
+      <header class="app-page-header">
+        <div>
+          <h1 class="app-page-title">Fixed Deposit Plan Management</h1>
+          <p class="app-page-description">
+            Create, update, activate, or deactivate plans available to customers.
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <a class="c-button c-button--secondary" href="/admin/fixed-deposits">
+            View All FD Records
+          </a>
+
+          <a class="c-button c-button--secondary" href="/logout">
+            Logout
+          </a>
+        </div>
+      </header>
+
+      {% if has_error %}
+      <div class="alert alert--danger">{{ error }}</div>
+      {% endif %}
+
+      {% if has_success %}
+      <div class="alert alert--success">{{ success }}</div>
+      {% endif %}
+
+      <section class="c-card">
+        <div class="c-card__header">
+          <h2 class="c-card__title">Create New Plan</h2>
+        </div>
+
+        <div class="c-card__body">
+          <form class="form-grid" method="post" action="/admin/fixed-deposit-plans">
+            <label class="form-field">
+              <span class="form-label">Plan Name</span>
+              <input class="form-input" name="name" required />
+            </label>
+
+            <label class="form-field">
+              <span class="form-label">Duration (months)</span>
+              <input
+                class="form-input"
+                name="duration_months"
+                type="number"
+                min="1"
+                max="60"
+                required
+              />
+            </label>
+
+            <label class="form-field">
+              <span class="form-label">Annual Interest Rate (%)</span>
+              <input
+                class="form-input"
+                name="interest_rate"
+                type="number"
+                min="0.01"
+                max="20"
+                step="0.01"
+                required
+              />
+            </label>
+
+            <label class="form-field">
+              <span class="form-label">Minimum Amount</span>
+              <input
+                class="form-input"
+                name="minimum_amount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                required
+              />
+            </label>
+
+            <label class="form-field">
+              <span class="form-label">Status</span>
+              <select class="form-select" name="status">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </label>
+
+            <div class="form-field">
+              <span class="form-label">&nbsp;</span>
+              <button class="c-button c-button--primary" type="submit">
+                Create Plan
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="c-card" style="margin-top: 2rem;">
+        <div class="c-card__header">
+          <h2 class="c-card__title">Existing Plans</h2>
+        </div>
+
+        <div class="c-card__body">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Duration</th>
+                  <th>Rate</th>
+                  <th>Minimum</th>
+                  <th>Status</th>
+                  <th>Update</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for plan in plans %}
+                <tr>
+                  <td>#{{ plan.id }}</td>
+
+                  <td>
+                    <input
+                      class="form-input"
+                      form="plan-form-{{ plan.id }}"
+                      name="name"
+                      value="{{ plan.name }}"
+                      required
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      class="form-input"
+                      form="plan-form-{{ plan.id }}"
+                      name="duration_months"
+                      type="number"
+                      min="1"
+                      max="60"
+                      value="{{ plan.duration_months }}"
+                      required
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      class="form-input"
+                      form="plan-form-{{ plan.id }}"
+                      name="interest_rate"
+                      type="number"
+                      min="0.01"
+                      max="20"
+                      step="0.01"
+                      value="{{ plan.interest_rate_input_value() }}"
+                      required
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      class="form-input"
+                      form="plan-form-{{ plan.id }}"
+                      name="minimum_amount"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value="{{ plan.minimum_amount_input_value() }}"
+                      required
+                    />
+                  </td>
+
+                  <td>
+                    <select
+                      class="form-select"
+                      form="plan-form-{{ plan.id }}"
+                      name="status"
+                    >
+                      <option value="active"{% if plan.is_active() %} selected{% endif %}>
+                        Active
+                      </option>
+
+                      <option value="inactive"{% if plan.is_inactive() %} selected{% endif %}>
+                        Inactive
+                      </option>
+                    </select>
+                  </td>
+
+                  <td>
+                    <form
+                      id="plan-form-{{ plan.id }}"
+                      method="post"
+                      action="/admin/fixed-deposit-plans/{{ plan.id }}"
+                    >
+                      <button class="c-button c-button--secondary" type="submit">
+                        Update
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
