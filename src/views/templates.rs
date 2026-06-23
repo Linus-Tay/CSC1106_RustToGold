@@ -1,5 +1,6 @@
 use crate::models::{
-    AdminFixedDepositRecord, FixedDeposit, FixedDepositPlan, FixedDepositSummary, Transaction,
+    AdminFixedDepositRecord, BankAccount, FixedDeposit, FixedDepositPlan, FixedDepositSummary,
+    AdminHomeLoanRecord, HomeLoanApplication, HomeLoanSummary, Loan, Transaction,
 };
 use askama::Template;
 
@@ -61,6 +62,23 @@ pub struct DepositTemplate {
 pub struct TransactionsTemplate {
     pub transactions: Vec<Transaction>,
     pub has_transactions: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/loan_apply.html")]
+pub struct LoanApplyTemplate {
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/loans.html")]
+pub struct LoanDashboardTemplate {
+    pub account: BankAccount,
+    pub loans: Vec<Loan>,
+    pub has_loans: bool,
+    pub error: String,
+    pub has_error: bool,
 }
 
 #[derive(Template)]
@@ -127,6 +145,33 @@ pub struct CustomerPageTemplate {
     pub message: &'static str,
     pub primary_label: &'static str,
     pub primary_href: &'static str,
+}
+
+#[derive(Template)]
+#[template(path = "customer/home_loans.html")]
+pub struct HomeLoanDashboardTemplate {
+    pub account: BankAccount,
+    pub summary: HomeLoanSummary,
+    pub applications: Vec<HomeLoanApplication>,
+    pub has_applications: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/home_loan_apply.html")]
+pub struct HomeLoanApplyTemplate {
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/home_loans.html")]
+pub struct AdminHomeLoansTemplate {
+    pub records: Vec<AdminHomeLoanRecord>,
+    pub has_records: bool,
+    pub error: String,
+    pub has_error: bool,
 }
 
 #[derive(Template)]

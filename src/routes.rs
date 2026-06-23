@@ -26,6 +26,12 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                 .route("/transactions", web::get().to(controllers::transactions))
                 .route("/loans", web::get().to(controllers::loans_page))
                 .route("/loans/apply", web::get().to(controllers::loan_apply_page))
+                .route("/loans/apply", web::post().to(controllers::create_personal_loan))
+                .route("/loans/{id}/pay", web::post().to(controllers::pay_loan))
+                .route("/home-loans", web::get().to(controllers::home_loans_page))
+                .route("/home-loans/apply", web::get().to(controllers::home_loan_apply_page))
+                .route("/home-loans/apply", web::post().to(controllers::create_home_loan_application))
+                .route("/home-loans/{id}/pay", web::post().to(controllers::pay_home_loan))
                 .route("/fixed-deposits", web::get().to(controllers::fixed_deposits_page))
                 .route("/fixed-deposits/new", web::get().to(controllers::fixed_deposit_new_page))
                 .route("/fixed-deposits", web::post().to(controllers::create_fixed_deposit))
@@ -38,7 +44,11 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                 .route("/fixed-deposits", web::get().to(controllers::admin_fixed_deposits_page))
                 .route("/fixed-deposit-plans", web::get().to(controllers::admin_fixed_deposit_plans_page))
                 .route("/fixed-deposit-plans", web::post().to(controllers::create_fixed_deposit_plan))
-                .route("/fixed-deposit-plans/{id}", web::post().to(controllers::update_fixed_deposit_plan)),
+                .route("/fixed-deposit-plans/{id}", web::post().to(controllers::update_fixed_deposit_plan))
+                .route("/home-loans", web::get().to(controllers::admin_home_loans_page))
+                .route("/home-loans/{id}/approve", web::post().to(controllers::approve_home_loan))
+                .route("/home-loans/{id}/reject", web::post().to(controllers::reject_home_loan)),
+
         )
     );
 

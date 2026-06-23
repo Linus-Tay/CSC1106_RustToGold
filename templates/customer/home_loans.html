@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Home Loans</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<nav class="c-navbar" aria-label="Customer navigation">
+  <div class="u-container c-navbar__inner">
+    <a class="c-navbar__brand" href="/customer/dashboard">
+      <span class="c-navbar__logo-wrap"><img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" /></span>
+      <span>RustToGold</span>
+    </a>
+    <ul class="c-navbar__links">
+      <li><a class="c-navbar__link" href="/customer/dashboard">Dashboard</a></li>
+      <li><a class="c-navbar__link" href="/customer/deposit">Deposit</a></li>
+      <li><a class="c-navbar__link" href="/customer/transactions">Transactions</a></li>
+      <li><a class="c-navbar__link is-active" href="/customer/loans">Loans</a></li>
+      <li><a class="c-navbar__link" href="/customer/fixed-deposits">Fixed Deposits</a></li>
+      <li><a class="c-navbar__link" href="/customer/profile">Profile</a></li>
+    </ul>
+    <div class="c-navbar__actions">
+      <a class="c-navbar__login" href="/logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<main class="app-main">
+  <div class="u-container">
+    <header class="app-page-header">
+      <div>
+        <h1 class="app-page-title">My Home Loans</h1>
+        <p class="app-page-description">View your home loan applications, approval status, and repayment details.</p>
+      </div>
+      <a class="c-button c-button--primary" href="/customer/home-loans/apply">Apply for Home Loan</a>
+    </header>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card__label">Account</div>
+        <div class="stat-card__value">{{ account.account_number }}</div>
+        <div class="stat-card__meta">Savings Account</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__label">Balance</div>
+        <div class="stat-card__value">{{ account.balance_display() }}</div>
+        <div class="stat-card__meta">Available balance</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__label">Pending</div>
+        <div class="stat-card__value">{{ summary.pending_count }}</div>
+        <div class="stat-card__meta">Applications waiting review</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card__label">Outstanding</div>
+        <div class="stat-card__value">{{ summary.total_remaining_display() }}</div>
+        <div class="stat-card__meta">Total remaining repayment</div>
+      </div>
+    </div>
+
+    {% if has_error %}
+    <div class="alert alert--danger">{{ error }}</div>
+    {% endif %}
+
+    <section class="c-card">
+      <div class="c-card__header">
+        <div>
+          <h2 class="c-card__title">Home Loan Records</h2>
+          <p class="c-card__subtitle">Newest applications are shown first.</p>
+        </div>
+      </div>
+
+      <div class="c-card__body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Property</th>
+                <th>Requested</th>
+                <th>Approved</th>
+                <th>Total Repayment</th>
+                <th>Remaining</th>
+                <th>Monthly Payment</th>
+                <th>Next Due</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if has_applications %}
+              {% for loan in applications %}
+              <tr>
+                <td>#{{ loan.id }}</td>
+                <td>{{ loan.house_type_display() }}</td>
+                <td>{{ loan.requested_amount_display() }}</td>
+                <td>{{ loan.approved_amount_display() }}</td>
+                <td>{{ loan.total_repayment_display() }}</td>
+                <td>{{ loan.remaining_display() }}</td>
+                <td>{{ loan.monthly_payment_display() }}</td>
+                <td>{{ loan.next_due_date_display() }}</td>
+                <td>
+                  {% if loan.status == "approved" %}
+                  <span class="badge badge--success">{{ loan.status_display() }}</span>
+                  {% else if loan.status == "pending_review" %}
+                  <span class="badge badge--warning">{{ loan.status_display() }}</span>
+                  {% else %}
+                  <span class="badge badge--neutral">{{ loan.status_display() }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if loan.can_pay() %}
+                  <form method="post" action="/customer/home-loans/{{ loan.id }}/pay">
+                    <button class="c-button c-button--secondary" type="submit">Pay Monthly</button>
+                  </form>
+                  {% else %}
+                  No action
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+              <tr><td colspan="10">You have no home loan applications yet.</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

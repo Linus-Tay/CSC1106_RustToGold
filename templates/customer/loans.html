@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | My Loans</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<p>
+    <a href="/customer/loans/apply">Apply for Personal Loan</a> |
+    <a href="/customer/home-loans">View Home Loans</a> |
+    <a href="/customer/home-loans/apply">Apply for Home Loan</a>
+</p>
+
+<nav class="c-navbar" aria-label="Customer navigation">
+  <div class="u-container c-navbar__inner">
+    <a class="c-navbar__brand" href="/customer/dashboard">
+      <span class="c-navbar__logo-wrap" aria-hidden="true">
+        <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
+      </span>
+      <span>RustToGold</span>
+    </a>
+    <ul class="c-navbar__links">
+      <li><a class="c-navbar__link" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
+      <li><a class="c-navbar__link" href="/customer/deposit"><i data-lucide="circle-dollar-sign"></i>Deposit</a></li>
+      <li><a class="c-navbar__link" href="/customer/transactions"><i data-lucide="receipt-text"></i>Transactions</a></li>
+      <li><a class="c-navbar__link is-active" href="/customer/loans"><i data-lucide="file-signature"></i>Loans</a></li>
+      <li><a class="c-navbar__link" href="/customer/fixed-deposits"><i data-lucide="piggy-bank"></i>Fixed Deposits</a></li>
+      <li><a class="c-navbar__link" href="/customer/profile"><i data-lucide="user-round"></i>Profile</a></li>
+    </ul>
+    <div class="c-navbar__actions">
+      <a class="c-navbar__login" href="/logout"><i data-lucide="log-out"></i> Logout</a>
+    </div>
+  </div>
+</nav>
+
+<main class="app-main">
+  <div class="u-container">
+    <header class="app-page-header">
+      <div>
+        <h1 class="app-page-title">My Loans</h1>
+        <p class="app-page-description">View your loan balances, due dates, and repayment status.</p>
+      </div>
+      <div style="display:flex; gap:12px;">
+  <a class="c-button c-button--primary" href="/customer/loans/apply">
+    <i data-lucide="file-plus"></i> Apply Personal Loan
+  </a>
+
+  <a class="c-button c-button--secondary" href="/customer/home-loans/apply">
+    <i data-lucide="home"></i> Apply Home Loan
+  </a>
+</div>
+      
+    </header>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-card__label"><i data-lucide="landmark"></i> Account</div>
+        <div class="stat-card__value">{{ account.account_number }}</div>
+        <div class="stat-card__meta">Savings Account</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label"><i data-lucide="wallet"></i> Balance</div>
+        <div class="stat-card__value">{{ account.balance_display() }}</div>
+        <div class="stat-card__meta">Available after loan activity</div>
+      </div>
+    </div>
+
+    {% if has_error %}
+    <div class="alert alert--danger">{{ error }}</div>
+    {% endif %}
+
+    <section class="c-card">
+      <div class="c-card__header">
+        <div>
+          <h2 class="c-card__title">Loan Records</h2>
+          <p class="c-card__subtitle">Newest loans are shown first.</p>
+        </div>
+      </div>
+
+      <div class="c-card__body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Loan ID</th>
+                <th>Principal</th>
+                <th>Total Repayment</th>
+                <th>Remaining</th>
+                <th>Monthly Payment</th>
+                <th>Next Due Date</th>
+                <th>Status</th>
+                <th>Repayment</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if has_loans %}
+              {% for loan in loans %}
+              <tr>
+                <td>#{{ loan.id }}</td>
+                <td>{{ loan.principal_loan_display() }}</td>
+                <td>{{ loan.total_repayment_display() }}</td>
+                <td>{{ loan.remaining_loan_display() }}</td>
+                <td>{{ loan.monthly_payment_display() }}</td>
+                <td>{{ loan.loan_due_date_display() }}</td>
+                <td>
+                  {% if loan.can_pay() %}
+                  <span class="badge badge--success">{{ loan.loan_status_display() }}</span>
+                  {% else %}
+                  <span class="badge badge--neutral">Completed</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if loan.can_pay() %}
+                   <form method="post" action="/customer/loans/{{ loan.id }}/pay">
+                     <button class="c-button c-button--secondary" type="submit">
+                      Pay Monthly Payment
+                    </button>
+                   </form>
+                  {% else %}
+                  Completed
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+              <tr>
+                <td colspan="8">You do not have any loans yet.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="c-footer">
+  <div class="u-container c-footer__inner">
+    <div>
+      <div class="c-footer__brand"><span class="c-footer__dot"></span> RustToGold</div>
+      <p class="c-footer__note">Secure digital banking for accounts, transfers, savings, loans, and customer support.</p>
+    </div>
+    <div class="c-footer__links">
+      <a href="/customer/dashboard">Dashboard</a>
+      <a href="/customer/transactions">Transactions</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

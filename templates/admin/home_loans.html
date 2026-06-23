@@ -1,0 +1,53 @@
+<h1>Admin Home Loans</h1>
+
+{% if has_error %}
+<p style="color:red;">{{ error }}</p>
+{% endif %}
+
+{% if has_records %}
+<table border="1" cellpadding="8">
+    <tr>
+        <th>ID</th>
+        <th>Customer</th>
+        <th>Email</th>
+        <th>Account</th>
+        <th>Property</th>
+        <th>Requested</th>
+        <th>Approved</th>
+        <th>Remaining</th>
+        <th>Monthly Payment</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    {% for loan in records %}
+    <tr>
+        <td>#{{ loan.id }}</td>
+        <td>{{ loan.customer_name }}</td>
+        <td>{{ loan.customer_email }}</td>
+        <td>{{ loan.account_number }}</td>
+        <td>{{ loan.house_type_display() }}</td>
+        <td>{{ loan.requested_amount_display() }}</td>
+        <td>{{ loan.approved_amount_display() }}</td>
+        <td>{{ loan.remaining_display() }}</td>
+        <td>{{ loan.monthly_payment_display() }}</td>
+        <td>{{ loan.status_display() }}</td>
+        <td>
+            {% if loan.status == "pending_review" %}
+            <form method="post" action="/admin/home-loans/{{ loan.id }}/approve">
+                <button type="submit">Approve</button>
+            </form>
+
+            <form method="post" action="/admin/home-loans/{{ loan.id }}/reject">
+                <button type="submit">Reject</button>
+            </form>
+            {% else %}
+            No action
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No home loan applications found.</p>
+{% endif %}
