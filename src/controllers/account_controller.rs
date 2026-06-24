@@ -120,7 +120,7 @@ pub async fn create(
         Ok(user) => {
             session.insert("user_id", user.id)?;
             session.insert("role", user.role)?;
-            Ok(redirect("/customer/dashboard"))
+            Ok(redirect("/login"))
         }
         Err(error) => render(SignupTemplate {
             error,

@@ -7,6 +7,8 @@ use argon2::{
 };
 use chrono::NaiveDate;
 use sqlx::PgPool;
+use crate::services::audit_log_service;
+use crate::services::AuditContext;
 
 pub async fn list_all_staff(db: &PgPool) -> Result<Vec<StaffUser>, String> {
     staff_repository::list_all_staff(db)
@@ -21,7 +23,7 @@ pub async fn find_staff_by_id(db: &PgPool, user_id: i64) -> Result<StaffUser, St
         .ok_or_else(|| "Staff user not found.".to_string())
 }
 
-pub async fn create_staff(db: &PgPool, form: CreateStaffForm) -> Result<StaffUser, String> {
+pub async fn create_staff(db: &PgPool, ctx: &AuditContext, form: CreateStaffForm) -> Result<StaffUser, String> {
     let (full_name, email, phone_number, date_of_birth, status) = validate_staff_fields(
         &form.full_name,
         &form.email,
@@ -37,18 +39,33 @@ pub async fn create_staff(db: &PgPool, form: CreateStaffForm) -> Result<StaffUse
         .map_err(|_| "Could not check email availability.".to_string())?;
 
     if email_taken {
+        audit_log_service::record_simple(db, ctx, "create_staff", "staff", None, "failed").await;
         return Err("A user with this email address already exists.".to_string());
     }
 
     let password_hash = hash_password(&password)?;
 
-    staff_repository::create_staff(db, &full_name, &email, &phone_number, date_of_birth, &password_hash, &status)
-        .await
-        .map_err(|_| "Could not create staff user. The email may already be in use.".to_string())
+    match staff_repository::create_staff(db, &full_name, &email, &phone_number, date_of_birth, &password_hash, &status).await {
+        Ok(staff) => {
+            audit_log_service::record(
+                db, ctx,
+                "create_staff", "staff", Some(staff.id),
+                None, Some(&staff),
+                "success",
+            ).await;
+            Ok(staff)
+        }
+        Err(_) => {
+            audit_log_service::record_simple(db, ctx, "create_staff", "staff", None, "failed").await;
+            Err("Could not create staff user. The email may already be in use.".to_string())
+        }
+    }
 }
+
 
 pub async fn update_staff(
     db: &PgPool,
+    ctx: &AuditContext,
     user_id: i64,
     form: UpdateStaffForm,
 ) -> Result<StaffUser, String> {
@@ -65,36 +82,67 @@ pub async fn update_staff(
         .map_err(|_| "Could not check email availability.".to_string())?;
 
     if email_taken {
+        audit_log_service::record_simple(db, ctx, "update_staff", "staff", Some(user_id), "failed").await;
         return Err("A user with this email address already exists.".to_string());
     }
 
-    let staff = staff_repository::update_staff(db, user_id, &full_name, &email, &phone_number, date_of_birth, &status)
+    let before = staff_repository::find_staff_by_id(db, user_id)
         .await
-        .map_err(|_| "Could not update staff user.".to_string())?;
+        .map_err(|_| "Could not load staff user.".to_string())?
+        .ok_or_else(|| "Staff user not found.".to_string())?;
 
-    // Only update password if a new one was provided
-    let new_password = form.password.trim().to_string();
-    if !new_password.is_empty() {
-        let validated = validate_password(&new_password)?;
-        let password_hash = hash_password(&validated)?;
-        staff_repository::update_staff_password(db, user_id, &password_hash)
-            .await
-            .map_err(|_| "Could not update password.".to_string())?;
+    match staff_repository::update_staff(db, user_id, &full_name, &email, &phone_number, date_of_birth, &status).await {
+        Ok(after) => {
+            let new_password = form.password.trim().to_string();
+            if !new_password.is_empty() {
+                let validated = validate_password(&new_password)?;
+                let password_hash = hash_password(&validated)?;
+                staff_repository::update_staff_password(db, user_id, &password_hash)
+                    .await
+                    .map_err(|_| "Could not update password.".to_string())?;
+            }
+
+            audit_log_service::record(
+                db, ctx,
+                "update_staff", "staff", Some(user_id),
+                Some(&before), Some(&after),
+                "success",
+            ).await;
+
+            Ok(after)
+        }
+        Err(_) => {
+            audit_log_service::record_simple(db, ctx, "update_staff", "staff", Some(user_id), "failed").await;
+            Err("Could not update staff user.".to_string())
+        }
     }
-
-    Ok(staff)
 }
 
-pub async fn delete_staff(db: &PgPool, user_id: i64) -> Result<(), String> {
-    let deleted = staff_repository::delete_staff(db, user_id)
+pub async fn delete_staff(
+    db: &PgPool,
+    ctx: &AuditContext,
+    user_id: i64,
+) -> Result<(), String> {
+    let staff = staff_repository::find_staff_by_id(db, user_id)
         .await
-        .map_err(|_| "Could not delete staff user.".to_string())?;
+        .map_err(|_| "Could not load staff user.".to_string())?
+        .ok_or_else(|| "Staff user not found.".to_string())?;
 
-    if !deleted {
-        return Err("Staff user not found or could not be deleted.".to_string());
+    match staff_repository::delete_staff(db, user_id).await {
+        Ok(true) => {
+            audit_log_service::record(
+                db, ctx,
+                "delete_staff", "staff", Some(user_id),
+                Some(&staff), None,
+                "success",
+            ).await;
+            Ok(())
+        }
+        _ => {
+            audit_log_service::record_simple(db, ctx, "delete_staff", "staff", Some(user_id), "failed").await;
+            Err("Staff user not found or could not be deleted.".to_string())
+        }
     }
-
-    Ok(())
 }
 
 // --- Validation helpers ---

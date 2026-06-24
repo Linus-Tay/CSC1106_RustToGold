@@ -30,7 +30,7 @@ CREATE TABLE bank_accounts (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT bank_accounts_type_check CHECK (account_type IN ('savings', 'current')),
-    CONSTRAINT bank_accounts_status_check CHECK (status IN ('active', 'frozen', 'closed')),
+    CONSTRAINT bank_accounts_status_check CHECK (status IN ('pending', 'active', 'frozen', 'closed')),
     CONSTRAINT bank_accounts_balance_non_negative CHECK (balance_cents >= 0)
 );
 
@@ -126,3 +126,15 @@ VALUES
     ('6 Month Growth FD', 6, 250, 100000, 'active'),
     ('12 Month Premium FD', 12, 320, 200000, 'active'),
     ('24 Month Wealth FD', 24, 380, 500000, 'active');
+
+
+INSERT INTO users (full_name, email, phone_number, date_of_birth, password_hash, role, status)
+VALUES (
+    'admin',
+    'admin@rust2gold.com',
+    '11111111',
+    '1995-01-23',
+    '$argon2id$v=19$m=19456,t=2,p=1$1f7IYaoqlUiDeI/KGcAKqQ$xk38+S9tUD0VFuSFKJNdEAMQcG/tEO5lAumqVerqhS8',
+    'admin',
+    'active'
+);

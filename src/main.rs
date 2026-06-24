@@ -21,7 +21,7 @@ pub struct AppState {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().ok();
-
+    env_logger::init();
     let config = Config::from_env();
     let pool = PgPoolOptions::new()
         .max_connections(5)

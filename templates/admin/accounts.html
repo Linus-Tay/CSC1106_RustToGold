@@ -1,0 +1,334 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Accounts{% endblock %}
+
+{% block head %}
+<style>
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
+    color: #111827;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-bar form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .filter-bar select,
+  .filter-bar input {
+    padding: 0.45rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: #111827;
+    background: #fff;
+  }
+
+  .filter-bar select:focus,
+  .filter-bar input:focus {
+    outline: none;
+    border-color: #2563eb;
+  }
+
+  .btn {
+    padding: 0.45rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary { background: #2563eb; color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-ghost {
+    background: transparent;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+  }
+  .btn-ghost:hover { background: #f9fafb; color: #111827; }
+
+  /* Alert banners */
+  .alert {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+  }
+  .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  .alert-error   { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+  /* Table */
+  .panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  .data-table th {
+    padding: 0.65rem 1.25rem;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #9ca3af;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+  }
+
+  .data-table td {
+    padding: 0.75rem 1.25rem;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: #f9fafb; }
+
+  .mono {
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 0.82rem;
+    color: #374151;
+  }
+
+  /* Status badges */
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .badge-green  { background: #dcfce7; color: #166534; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red    { background: #fee2e2; color: #991b1b; }
+  .badge-gray   { background: #f3f4f6; color: #4b5563; }
+
+  /* Row actions */
+  .row-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+  }
+
+  .action-btn {
+    padding: 0.3rem 0.65rem;
+    border-radius: 5px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .action-approve { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+  .action-approve:hover { background: #bbf7d0; }
+  .action-freeze  { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+  .action-freeze:hover { background: #fde68a; }
+  .action-close   { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+  .action-close:hover { background: #fecaca; }
+
+  /* Empty state */
+  .empty-state {
+    padding: 3rem 1.25rem;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.875rem;
+  }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.825rem;
+    color: #6b7280;
+  }
+
+  .pagination-links {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .pagination-links a,
+  .pagination-links span {
+    padding: 0.3rem 0.65rem;
+    border-radius: 5px;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    color: #374151;
+    font-size: 0.825rem;
+  }
+
+  .pagination-links a:hover { background: #f3f4f6; }
+  .pagination-links span.current {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+  }
+  .pagination-links span.disabled { color: #d1d5db; pointer-events: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Accounts <span style="font-weight:400;color:#9ca3af;font-size:1rem;">({{ total_count }})</span></h1>
+</div>
+
+{% if has_success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
+{% if has_error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <form method="GET" action="/admin/accounts">
+    <select name="status">
+      <option value="" {% if filter_status == "" %}selected{% endif %}>All statuses</option>
+      <option value="pending" {% if filter_status == "pending" %}selected{% endif %}>Pending</option>
+      <option value="active"  {% if filter_status == "active"  %}selected{% endif %}>Active</option>
+      <option value="frozen"  {% if filter_status == "frozen"  %}selected{% endif %}>Frozen</option>
+      <option value="closed"  {% if filter_status == "closed"  %}selected{% endif %}>Closed</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Filter</button>
+    {% if filter_status != "" %}
+      <a href="/admin/accounts" class="btn btn-ghost">Clear</a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Table -->
+<div class="panel">
+  {% if has_accounts %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Account Number</th>
+        <th>Type</th>
+        <th>Balance</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for account in accounts %}
+      <tr>
+        <td><span class="mono">{{ account.account_number }}</span></td>
+        <td>{{ account.account_type_display() }}</td>
+        <td>{{ account.balance_display() }}</td>
+        <td>
+          {% if account.status == "active" %}
+            <span class="badge badge-green">Active</span>
+          {% else if account.status == "pending" %}
+            <span class="badge badge-yellow">Pending</span>
+          {% else if account.status == "frozen" %}
+            <span class="badge badge-red">Frozen</span>
+          {% else if account.status == "closed" %}
+            <span class="badge badge-gray">Closed</span>
+          {% else %}
+            <span class="badge badge-gray">{{ account.status_display() }}</span>
+          {% endif %}
+        </td>
+        <td>{{ account.created_at }}</td>
+        <td>
+          <div class="row-actions">
+            {% if account.status == "pending" %}
+            <form method="POST" action="/admin/accounts/{{ account.id }}/approve">
+              <button type="submit" class="action-btn action-approve">Approve</button>
+            </form>
+            {% endif %}
+            {% if account.status == "active" %}
+            <form method="POST" action="/admin/accounts/{{ account.id }}/freeze">
+              <button type="submit" class="action-btn action-freeze">Freeze</button>
+            </form>
+            {% endif %}
+            {% if account.status != "closed" %}
+            <form method="POST" action="/admin/accounts/{{ account.id }}/close">
+              <button type="submit" class="action-btn action-close">Close</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    <span>Page {{ page }} of {{ total_pages }}</span>
+    <div class="pagination-links">
+      {% if page > 1 %}
+        <a href="?status={{ filter_status }}&page={{ page - 1 }}">← Prev</a>
+      {% else %}
+        <span class="disabled">← Prev</span>
+      {% endif %}
+
+      {% for p in 1..=total_pages %}
+        {% if p == page %}
+          <span class="current">{{ p }}</span>
+        {% else %}
+          <a href="?status={{ filter_status }}&page={{ p }}">{{ p }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page < total_pages %}
+        <a href="?status={{ filter_status }}&page={{ page + 1 }}">Next →</a>
+      {% else %}
+        <span class="disabled">Next →</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    {% if filter_status != "" %}
+      No accounts with status <strong>{{ filter_status }}</strong>.
+      <a href="/admin/accounts" style="color:#2563eb;">Clear filter</a>
+    {% else %}
+      No accounts found.
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

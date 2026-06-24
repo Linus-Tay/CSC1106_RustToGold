@@ -1,4 +1,4 @@
-use crate::models::{FixedDeposit, FixedDepositPlan, FixedDepositSummary, StaffUser, Transaction};
+use crate::models::{FixedDeposit, FixedDepositPlan, FixedDepositSummary, StaffUser, Transaction, AuditLogEntry, BankAccount};
 use askama::Template;
 
 #[derive(Template)]
@@ -86,6 +86,17 @@ pub struct FixedDepositCreateTemplate {
 }
 
 #[derive(Template)]
+#[template(path = "admin/dashboard.html")]
+pub struct AdminDashboardTemplate {
+    pub total_deposits: i64,
+    pub active_plans: i64,
+    pub staff_count: i64,
+    pub transaction_count: i64,
+    pub recent_audit: Vec<AuditLogEntry>,
+    pub has_recent_audit: bool,
+}
+
+#[derive(Template)]
 #[template(path = "admin/fixed_deposits.html")]
 pub struct AdminFixedDepositsTemplate {
     pub fixed_deposits: Vec<FixedDeposit>,
@@ -153,6 +164,48 @@ pub struct AdminStaffDashboardTemplate {
 #[template(path = "admin/staff_edit.html")]
 pub struct AdminStaffEditTemplate {
     pub staff: Option<StaffUser>,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/audit_log.html")]
+pub struct AdminAuditLogTemplate {
+    pub entries: Vec<AuditLogEntry>,
+    pub has_entries: bool,
+    pub total_count: i64,
+    pub page: i64,
+    pub total_pages: i64,
+    pub filter_action: String,
+    pub filter_status: String,
+    pub filter_entity_type: String,
+    pub filter_user_id: String,
+}
+
+#[derive(Template)]
+#[template(path = "admin/transactions.html")]
+pub struct AdminTransactionsTemplate {
+    pub transactions: Vec<Transaction>,
+    pub has_transactions: bool,
+    pub total_count: i64,
+    pub page: i64,
+    pub total_pages: i64,
+    pub filter_transaction_type: String,
+    pub filter_user_id: String,
+    pub filter_account_id: String,
+}
+
+#[derive(Template)]
+#[template(path = "admin/accounts.html")]
+pub struct AdminAccountsTemplate {
+    pub accounts: Vec<BankAccount>,
+    pub has_accounts: bool,
+    pub total_count: i64,
+    pub page: i64,
+    pub total_pages: i64,
+    pub filter_status: String,
+    pub success: String,
+    pub has_success: bool,
     pub error: String,
     pub has_error: bool,
 }

@@ -1,3 +1,5 @@
+{% extends "admin/layout.html" %}
+
 {% block content %}
 {% if staff.is_some() %}
   <h1>Edit Staff Member</h1>
@@ -24,7 +26,7 @@
 
   <div class="field">
     <label>Email</label>
-    <input type="email" name="email"
+    <input type="text" name="email"
            value="{% if let Some(s) = staff %}{{ s.email }}{% endif %}"
            required>
   </div>
@@ -69,7 +71,7 @@
         <span>(leave blank to keep current)</span>
       {% endif %}
     </label>
-    <input type="password" name="password"
+    <input type="text" name="password"
            {% if staff.is_none() %}required{% endif %}
            minlength="8">
   </div>

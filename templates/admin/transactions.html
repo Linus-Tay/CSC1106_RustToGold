@@ -1,0 +1,177 @@
+{% extends "admin/layout.html" %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Transactions</h1>
+  <p class="page-subtitle">{{ total_count }} total {% if total_count == 1 %}transaction{% else %}transactions{% endif %}</p>
+</div>
+
+<form method="GET" action="/admin/transactions" class="tx-filters">
+  <div class="filter-field">
+    <label for="transaction_type">Type</label>
+    <select name="transaction_type" id="transaction_type">
+      <option value="" {% if filter_transaction_type == "" %}selected{% endif %}>All types</option>
+      <option value="deposit" {% if filter_transaction_type == "deposit" %}selected{% endif %}>Deposit</option>
+      <option value="withdrawal" {% if filter_transaction_type == "withdrawal" %}selected{% endif %}>Withdrawal</option>
+      <option value="transfer_in" {% if filter_transaction_type == "transfer_in" %}selected{% endif %}>Transfer In</option>
+      <option value="transfer_out" {% if filter_transaction_type == "transfer_out" %}selected{% endif %}>Transfer Out</option>
+      <option value="fixed_deposit_opening" {% if filter_transaction_type == "fixed_deposit_opening" %}selected{% endif %}>FD Opening</option>
+      <option value="fixed_deposit_payout" {% if filter_transaction_type == "fixed_deposit_payout" %}selected{% endif %}>FD Payout</option>
+      <option value="fixed_deposit_early_withdrawal" {% if filter_transaction_type == "fixed_deposit_early_withdrawal" %}selected{% endif %}>FD Early Withdrawal</option>
+    </select>
+  </div>
+
+  <div class="filter-field">
+    <label for="user_id">User ID</label>
+    <input type="text" name="user_id" id="user_id" value="{{ filter_user_id }}" placeholder="e.g. 42">
+  </div>
+
+  <div class="filter-field">
+    <label for="account_id">Account ID</label>
+    <input type="text" name="account_id" id="account_id" value="{{ filter_account_id }}" placeholder="e.g. 7">
+  </div>
+
+  <div class="filter-actions">
+    <button type="submit">Filter</button>
+    <a href="/admin/transactions" class="btn-clear">Clear</a>
+  </div>
+</form>
+
+{% if has_transactions %}
+<table class="tx-table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Time</th>
+      <th>User ID</th>
+      <th>Account ID</th>
+      <th>Type</th>
+      <th>Amount</th>
+      <th>Balance After</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for tx in transactions %}
+    <tr class="{% if tx.is_credit() %}row-credit{% else %}row-debit{% endif %}">
+      <td class="col-id">{{ tx.id }}</td>
+      <td class="col-time">{{ tx.created_at_display() }}</td>
+      <td>{{ tx.user_id }}</td>
+      <td>{{ tx.account_id }}</td>
+      <td>{{ tx.transaction_type_display() }}</td>
+      <td class="col-amount {% if tx.is_credit() %}amount-credit{% else %}amount-debit{% endif %}">
+        {% if tx.is_credit() %}+{% else %}-{% endif %}{{ tx.amount_display() }}
+      </td>
+      <td class="col-amount">{{ tx.balance_after_display() }}</td>
+      <td class="col-desc">
+        {% if let Some(desc) = tx.description %}
+          {{ desc }}
+        {% else %}
+          <span class="empty">—</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="pagination">
+  {% if page > 1 %}
+  <a href="?transaction_type={{ filter_transaction_type }}&user_id={{ filter_user_id }}&account_id={{ filter_account_id }}&page={{ page - 1 }}">&larr; Previous</a>
+  {% endif %}
+
+  <span class="pagination-status">Page {{ page }} of {{ total_pages }}</span>
+
+  {% if page < total_pages %}
+  <a href="?transaction_type={{ filter_transaction_type }}&user_id={{ filter_user_id }}&account_id={{ filter_account_id }}&page={{ page + 1 }}">Next &rarr;</a>
+  {% endif %}
+</div>
+
+{% else %}
+<p class="empty-state">No transactions match these filters.</p>
+{% endif %}
+
+<style>
+  .page-header { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 1rem; }
+  .page-subtitle { color: #6b7280; font-size: 0.9rem; }
+
+  .tx-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    padding: 1rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+  }
+  .filter-field { display: flex; flex-direction: column; gap: 0.25rem; }
+  .filter-field label { font-size: 0.75rem; font-weight: 600; color: #4b5563; text-transform: uppercase; letter-spacing: 0.03em; }
+  .filter-field input, .filter-field select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    min-width: 160px;
+  }
+  .filter-actions { display: flex; gap: 0.5rem; }
+  .filter-actions button {
+    padding: 0.45rem 1rem;
+    background: #111827;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+  .btn-clear {
+    padding: 0.45rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    color: #374151;
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+
+  .tx-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .tx-table th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7280;
+  }
+  .tx-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #f3f4f6; }
+
+  .col-id { color: #9ca3af; font-variant-numeric: tabular-nums; }
+  .col-time { white-space: nowrap; font-variant-numeric: tabular-nums; color: #4b5563; }
+  .col-amount { font-variant-numeric: tabular-nums; font-weight: 500; }
+  .col-desc { color: #6b7280; max-width: 280px; }
+
+  .amount-credit { color: #065f46; }
+  .amount-debit { color: #991b1b; }
+
+  .row-credit { background: #f0fdf4; }
+  .row-debit { background: #fff; }
+  .row-credit:hover, .row-debit:hover { background: #f9fafb; }
+
+  .empty { color: #d1d5db; }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+  }
+  .pagination a { color: #2563eb; text-decoration: none; }
+  .pagination a:hover { text-decoration: underline; }
+  .pagination-status { color: #6b7280; }
+
+  .empty-state { padding: 2rem; text-align: center; color: #6b7280; }
+</style>
+{% endblock %}

@@ -27,7 +27,7 @@ pub async fn login(
             session.insert("user_id", user.id)?;
             session.insert("role", user.role.clone())?;
             if user.role == "admin" {
-                Ok(redirect("/admin/dashboard"))
+                Ok(redirect("/admin/accounts"))
             } else {
                 Ok(redirect("/customer/dashboard"))
             }
@@ -41,7 +41,7 @@ pub async fn login(
 
 pub async fn signup_page(session: Session) -> Result<HttpResponse> {
     if session_user_id(&session).is_some() {
-        return Ok(redirect("/customer/dashboard"));
+        return Ok(redirect("/login"));
     }
 
     render(SignupTemplate {
@@ -57,9 +57,7 @@ pub async fn signup(
 ) -> Result<HttpResponse> {
     match services::register_customer(&data.db, form.into_inner()).await {
         Ok(user) => {
-            session.insert("user_id", user.id)?;
-            session.insert("role", user.role)?;
-            Ok(redirect("/customer/dashboard"))
+            Ok(redirect("/login"))
         }
         Err(error) => render(SignupTemplate {
             error,

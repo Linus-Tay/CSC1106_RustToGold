@@ -5,11 +5,11 @@ use crate::views::render;
 use crate::views::templates::{AdminStaffDashboardTemplate, AdminStaffEditTemplate};
 use crate::AppState;
 use crate::services;
+use crate::services::AuditContext;
 use actix_session::Session;
-use actix_web::{web, HttpResponse, Result};
+use actix_web::{web, HttpRequest, HttpResponse, Result};
 
 /// GET /admin/staff
-/// Lists all staff users. Shows success/error flash messages via query params.
 pub async fn admin_staff_page(
     data: web::Data<AppState>,
     session: Session,
@@ -49,7 +49,6 @@ pub async fn admin_staff_page(
 }
 
 /// GET /admin/staff/new
-/// Shows the create staff form.
 pub async fn admin_staff_new_page(
     data: web::Data<AppState>,
     session: Session,
@@ -66,17 +65,20 @@ pub async fn admin_staff_new_page(
 }
 
 /// POST /admin/staff
-/// Handles creation of a new staff user.
 pub async fn create_staff(
     data: web::Data<AppState>,
     session: Session,
+    req: HttpRequest,
     form: web::Form<CreateStaffForm>,
 ) -> Result<HttpResponse> {
-    if let Err(response) = require_admin(&data, &session).await {
-        return Ok(response);
-    }
+    let admin = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
 
-    match services::create_staff(&data.db, form.into_inner()).await {
+    let ctx = build_ctx(&admin.id, &req);
+
+    match services::create_staff(&data.db, &ctx, form.into_inner()).await {
         Ok(_) => Ok(redirect("/admin/staff?created=1")),
         Err(error) => render(AdminStaffEditTemplate {
             staff: None,
@@ -87,7 +89,6 @@ pub async fn create_staff(
 }
 
 /// GET /admin/staff/{id}/edit
-/// Shows the edit form pre-filled with the staff member's current data.
 pub async fn admin_staff_edit_page(
     data: web::Data<AppState>,
     session: Session,
@@ -108,23 +109,24 @@ pub async fn admin_staff_edit_page(
 }
 
 /// POST /admin/staff/{id}
-/// Handles update of an existing staff member.
 pub async fn update_staff(
     data: web::Data<AppState>,
     session: Session,
+    req: HttpRequest,
     path: web::Path<i64>,
     form: web::Form<UpdateStaffForm>,
 ) -> Result<HttpResponse> {
-    if let Err(response) = require_admin(&data, &session).await {
-        return Ok(response);
-    }
+    let admin = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
 
+    let ctx = build_ctx(&admin.id, &req);
     let user_id = path.into_inner();
 
-    match services::update_staff(&data.db, user_id, form.into_inner()).await {
+    match services::update_staff(&data.db, &ctx, user_id, form.into_inner()).await {
         Ok(_) => Ok(redirect("/admin/staff?updated=1")),
         Err(error) => {
-            // Re-load the staff member to re-render the edit form with the error
             match services::find_staff_by_id(&data.db, user_id).await {
                 Ok(staff) => render(AdminStaffEditTemplate {
                     staff: Some(staff),
@@ -138,18 +140,35 @@ pub async fn update_staff(
 }
 
 /// POST /admin/staff/{id}/delete
-/// Deletes a staff member. Uses POST since HTML forms don't support DELETE.
 pub async fn delete_staff(
     data: web::Data<AppState>,
     session: Session,
+    req: HttpRequest,
     path: web::Path<i64>,
 ) -> Result<HttpResponse> {
-    if let Err(response) = require_admin(&data, &session).await {
-        return Ok(response);
-    }
+    let admin = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
 
-    match services::delete_staff(&data.db, path.into_inner()).await {
+    let ctx = build_ctx(&admin.id, &req);
+
+    match services::delete_staff(&data.db, &ctx, path.into_inner()).await {
         Ok(_) => Ok(redirect("/admin/staff?deleted=1")),
         Err(message) => render_error("Could not delete staff member", message),
+    }
+}
+
+// --- Helpers ---
+
+fn build_ctx(user_id: &i64, req: &HttpRequest) -> AuditContext {
+    AuditContext {
+        actor_user_id: Some(*user_id),
+        ip_address: req.peer_addr().map(|a| a.ip().to_string()),
+        user_agent: req
+            .headers()
+            .get("User-Agent")
+            .and_then(|v| v.to_str().ok())
+            .map(String::from),
     }
 }

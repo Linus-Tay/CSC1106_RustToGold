@@ -1,0 +1,246 @@
+{% extends "admin/layout.html" %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Audit Log</h1>
+  <p class="page-subtitle">{{ total_count }} total {% if total_count == 1 %}entry{% else %}entries{% endif %}</p>
+</div>
+
+<form method="GET" action="/admin/audit-log" class="audit-filters">
+  <div class="filter-field">
+    <label for="action">Action</label>
+    <select name="action" id="action">
+      <option value="" {% if filter_action == "" %}selected{% endif %}>All actions</option>
+      <option value="create_staff" {% if filter_action == "create_staff" %}selected{% endif %}>Create Staff</option>
+      <option value="update_staff" {% if filter_action == "update_staff" %}selected{% endif %}>Update Staff</option>
+      <option value="delete_staff" {% if filter_action == "delete_staff" %}selected{% endif %}>Delete Staff</option>
+      <option value="freeze_account" {% if filter_action == "freeze_account" %}selected{% endif %}>Freeze Account</option>
+      <option value="create_fixed_deposit" {% if filter_action == "create_fixed_deposit" %}selected{% endif %}>Create Fixed Deposit</option>
+      <option value="update_fixed_deposit" {% if filter_action == "update_fixed_deposit" %}selected{% endif %}>Update Fixed Deposit</option>
+      <option value="delete_fixed_deposit" {% if filter_action == "delete_fixed_deposit" %}selected{% endif %}>Delete Fixed Deposit</option>
+    </select>
+  </div>
+
+  <div class="filter-field">
+    <label for="status">Status</label>
+    <select name="status" id="status">
+      <option value="" {% if filter_status == "" %}selected{% endif %}>All statuses</option>
+      <option value="success" {% if filter_status == "success" %}selected{% endif %}>Success</option>
+      <option value="failed" {% if filter_status == "failed" %}selected{% endif %}>Failed</option>
+      <option value="unauthorized" {% if filter_status == "unauthorized" %}selected{% endif %}>Unauthorized</option>
+    </select>
+  </div>
+
+  <div class="filter-field">
+    <label for="entity_type">Entity Type</label>
+    <input type="text" name="entity_type" id="entity_type" value="{{ filter_entity_type }}" placeholder="e.g. staff">
+  </div>
+
+  <div class="filter-field">
+    <label for="user_id">User ID</label>
+    <input type="text" name="user_id" id="user_id" value="{{ filter_user_id }}" placeholder="Actor ID">
+  </div>
+
+  <div class="filter-actions">
+    <button type="submit">Filter</button>
+    <a href="/admin/audit-log" class="btn-clear">Clear</a>
+  </div>
+</form>
+
+{% if has_entries %}
+<table class="audit-table">
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Actor</th>
+      <th>Action</th>
+      <th>Entity</th>
+      <th>Status</th>
+      <th>IP Address</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for entry in entries %}
+    <tr class="audit-row status-{{ entry.status }}">
+      <td class="col-time">{{ entry.created_at_display() }}</td>
+      <td>{{ entry.actor_display() }}</td>
+      <td>{{ entry.action_display() }}</td>
+      <td>{{ entry.entity_display() }}</td>
+      <td>
+        <span class="badge badge-{{ entry.status }}">{{ entry.status_display() }}</span>
+      </td>
+      <td class="col-ip">{{ entry.ip_address_display() }}</td>
+      <td>
+        {% if entry.has_old_value() || entry.has_new_value() %}
+        <button type="button" class="btn-toggle-diff" onclick="toggleDiff({{ entry.id }})">View</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% if entry.has_old_value() || entry.has_new_value() %}
+    <tr id="diff-{{ entry.id }}" class="audit-diff-row" style="display:none;">
+      <td colspan="7">
+        <div class="diff-container">
+          {% if entry.has_old_value() %}
+          <div class="diff-column">
+            <h4>Before</h4>
+            <pre>{{ entry.old_value_display() }}</pre>
+          </div>
+          {% endif %}
+          {% if entry.has_new_value() %}
+          <div class="diff-column">
+            <h4>After</h4>
+            <pre>{{ entry.new_value_display() }}</pre>
+          </div>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="pagination">
+  {% if page > 1 %}
+  <a href="?action={{ filter_action }}&status={{ filter_status }}&entity_type={{ filter_entity_type }}&user_id={{ filter_user_id }}&page={{ page - 1 }}">&larr; Previous</a>
+  {% endif %}
+
+  <span class="pagination-status">Page {{ page }} of {{ total_pages }}</span>
+
+  {% if page < total_pages %}
+  <a href="?action={{ filter_action }}&status={{ filter_status }}&entity_type={{ filter_entity_type }}&user_id={{ filter_user_id }}&page={{ page + 1 }}">Next &rarr;</a>
+  {% endif %}
+</div>
+
+{% else %}
+<p class="empty-state">No audit log entries match these filters.</p>
+{% endif %}
+
+<script>
+  function toggleDiff(id) {
+    const row = document.getElementById("diff-" + id);
+    if (!row) return;
+    row.style.display = row.style.display === "none" ? "table-row" : "none";
+  }
+</script>
+
+<style>
+  .page-header { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 1rem; }
+  .page-subtitle { color: #6b7280; font-size: 0.9rem; }
+
+  .audit-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    padding: 1rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+  }
+  .filter-field { display: flex; flex-direction: column; gap: 0.25rem; }
+  .filter-field label { font-size: 0.75rem; font-weight: 600; color: #4b5563; text-transform: uppercase; letter-spacing: 0.03em; }
+  .filter-field input, .filter-field select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    min-width: 160px;
+  }
+  .filter-actions { display: flex; gap: 0.5rem; }
+  .filter-actions button {
+    padding: 0.45rem 1rem;
+    background: #111827;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+  .btn-clear {
+    padding: 0.45rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    color: #374151;
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+
+  .audit-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .audit-table th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7280;
+  }
+  .audit-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #f3f4f6; }
+  .col-time { white-space: nowrap; font-variant-numeric: tabular-nums; color: #4b5563; }
+  .col-ip { font-family: monospace; color: #6b7280; }
+
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-success { background: #d1fae5; color: #065f46; }
+  .badge-failed { background: #fee2e2; color: #991b1b; }
+  .badge-unauthorized { background: #fef3c7; color: #92400e; }
+
+  .btn-toggle-diff {
+    background: none;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: #374151;
+  }
+  .btn-toggle-diff:hover { background: #f3f4f6; }
+
+  .audit-diff-row td { padding: 0; }
+  .diff-container {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem 1rem 1rem 2.5rem;
+    background: #fafafa;
+  }
+  .diff-column { flex: 1; min-width: 0; }
+  .diff-column h4 {
+    margin: 0 0 0.35rem 0;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #9ca3af;
+  }
+  .diff-column pre {
+    background: #1f2937;
+    color: #e5e7eb;
+    padding: 0.6rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+  }
+  .pagination a { color: #2563eb; text-decoration: none; }
+  .pagination a:hover { text-decoration: underline; }
+  .pagination-status { color: #6b7280; }
+
+  .empty-state { padding: 2rem; text-align: center; color: #6b7280; }
+</style>
+{% endblock %}

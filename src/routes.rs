@@ -53,9 +53,27 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     web::resource("/staff/{id}")
                         .route(web::post().to(controllers::staff_controller::update_staff)),
                 )
+                .route("/audit-log", web::get().to(controllers::admin_audit_log_page))
                 .service(
                     web::resource("/staff/{id}/delete")
                         .route(web::post().to(controllers::staff_controller::delete_staff)),
+                )
+                .route("/transactions", web::get().to(controllers::admin_account_controller::admin_transactions_page))
+                .service(
+                    web::resource("/accounts")
+                        .route(web::get().to(controllers::admin_account_controller::admin_accounts_page)),
+                )
+                .service(
+                    web::resource("/accounts/{id}/approve")
+                        .route(web::post().to(controllers::admin_account_controller::approve_account)),
+                )
+                .service(
+                    web::resource("/accounts/{id}/freeze")
+                        .route(web::post().to(controllers::admin_account_controller::freeze_account)),
+                )
+                .service(
+                    web::resource("/accounts/{id}/close")
+                        .route(web::post().to(controllers::admin_account_controller::close_account)),
                 )
                 .route("/fixed-deposits", web::get().to(controllers::admin_fixed_deposits_page))
                 .route("/fixed-deposit-plans", web::get().to(controllers::admin_fixed_deposit_plans_page))

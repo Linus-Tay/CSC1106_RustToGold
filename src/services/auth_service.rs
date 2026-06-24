@@ -76,6 +76,25 @@ pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, Str
         return Err("Invalid email or password.".to_string());
     }
 
+    if user.role != "admin" && user.role != "staff" {
+         // check if existing account is pending approval
+        let account = account_repository::find_primary_account_by_user_id(db, user.id)
+            .await
+            .map_err(|_| "Could not load your bank account.".to_string())?;
+            
+        if let Some(account) = account {
+            if account.status == "pending" {
+                return Err("Your account is pending approval. Please wait for an admin to approve it before logging in.".to_string());
+            }
+            if account.status == "frozen" {
+                return Err("Your account has been frozen. Please contact support.".to_string());
+            }
+            if account.status == "closed" {
+                return Err("Your account has been closed.".to_string());
+            }
+        }
+    }
+    
     user_repository::update_last_login(db, user.id)
         .await
         .map_err(|_| "Login succeeded, but the last-login timestamp could not be updated.".to_string())?;

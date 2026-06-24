@@ -1,0 +1,324 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block head %}
+<style>
+  .page-header {
+    margin-bottom: 1.75rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    color: #111827;
+  }
+
+  .page-header p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  /* Stat cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    margin-bottom: 0.4rem;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+  }
+
+  .stat-card .stat-sub {
+    font-size: 0.8rem;
+    color: #9ca3af;
+  }
+
+  .stat-card.accent {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+
+  .stat-card.accent .stat-label,
+  .stat-card.accent .stat-value,
+  .stat-card.accent .stat-sub {
+    color: #fff;
+  }
+
+  .stat-card.accent .stat-sub {
+    color: #bfdbfe;
+  }
+
+  /* Two-column lower section */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 860px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Panel */
+  .panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .panel-header h2 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+    color: #111827;
+  }
+
+  .panel-header a {
+    font-size: 0.8rem;
+    color: #2563eb;
+    text-decoration: none;
+  }
+
+  .panel-header a:hover {
+    text-decoration: underline;
+  }
+
+  /* Quick-links list */
+  .quick-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .quick-links li {
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .quick-links li:last-child {
+    border-bottom: none;
+  }
+
+  .quick-links a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    text-decoration: none;
+    color: #374151;
+    font-size: 0.875rem;
+    transition: background 0.1s;
+  }
+
+  .quick-links a:hover {
+    background: #f9fafb;
+    color: #111827;
+  }
+
+  .quick-links .link-arrow {
+    color: #d1d5db;
+    font-size: 1rem;
+  }
+
+  /* Recent activity table */
+  .activity-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .activity-table th {
+    padding: 0.6rem 1.25rem;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #9ca3af;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .activity-table td {
+    padding: 0.7rem 1.25rem;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .activity-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .activity-table tr:hover td {
+    background: #f9fafb;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .badge-green  { background: #dcfce7; color: #166534; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-red    { background: #fee2e2; color: #991b1b; }
+  .badge-gray   { background: #f3f4f6; color: #4b5563; }
+
+  .empty-state {
+    padding: 2.5rem 1.25rem;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.875rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <p>Overview of accounts, deposits, and recent activity.</p>
+</div>
+
+<!-- Stat cards -->
+<div class="stats-grid">
+  <div class="stat-card accent">
+    <div class="stat-label">Total Fixed Deposits</div>
+    <div class="stat-value">{{ total_deposits }}</div>
+    <div class="stat-sub">across all accounts</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Active Plans</div>
+    <div class="stat-value">{{ active_plans }}</div>
+    <div class="stat-sub">deposit plans configured</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Staff Members</div>
+    <div class="stat-value">{{ staff_count }}</div>
+    <div class="stat-sub">admin users</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Transactions</div>
+    <div class="stat-value">{{ transaction_count }}</div>
+    <div class="stat-sub">total recorded</div>
+  </div>
+</div>
+
+<!-- Lower grid -->
+<div class="dashboard-grid">
+
+  <!-- Quick navigation -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Quick Navigation</h2>
+    </div>
+    <ul class="quick-links">
+      <li>
+        <a href="/admin/staff">
+          Staff Management
+          <span class="link-arrow">›</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/fixed-deposits">
+          Fixed Deposits
+          <span class="link-arrow">›</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/fixed-deposit-plans">
+          Fixed Deposit Plans
+          <span class="link-arrow">›</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/transactions">
+          Transactions
+          <span class="link-arrow">›</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/audit-log">
+          Audit Log
+          <span class="link-arrow">›</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Recent audit activity -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Recent Audit Activity</h2>
+      <a href="/admin/audit-log">View all →</a>
+    </div>
+    {% if has_recent_audit %}
+    <table class="activity-table">
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Entity</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in recent_audit %}
+        <tr>
+          <td>{{ entry.action }}</td>
+          <td>{{ entry.entity_type }}</td>
+          <td>
+            {% if entry.status == "success" %}
+              <span class="badge badge-green">Success</span>
+            {% else if entry.status == "failure" %}
+              <span class="badge badge-red">Failed</span>
+            {% else %}
+              <span class="badge badge-gray">{{ entry.status }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">No audit entries yet.</div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

@@ -44,4 +44,11 @@ impl Transaction {
     pub fn created_at_display(&self) -> String {
         self.created_at.format("%d %b %Y, %I:%M %p").to_string()
     }
+
+    pub fn is_credit(&self) -> bool {
+        matches!(
+            self.transaction_type.as_str(),
+            "deposit" | "transfer_in" | "fixed_deposit_payout" | "fixed_deposit_early_withdrawal"
+        )
+    }
 }

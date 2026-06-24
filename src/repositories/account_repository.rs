@@ -1,4 +1,4 @@
-use crate::models::{BankAccount, Transaction};
+use crate::models::{BankAccount, Transaction, BankAccountWithUser};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
@@ -8,7 +8,7 @@ pub async fn create_primary_account(db: &PgPool, user_id: i64) -> Result<BankAcc
     sqlx::query_as::<_, BankAccount>(
         r#"
         INSERT INTO bank_accounts (user_id, account_number, account_type, balance_cents, status)
-        VALUES ($1, $2, 'savings', 0, 'active')
+        VALUES ($1, $2, 'savings', 0, 'pending')
         RETURNING id, user_id, account_number, account_type, balance_cents, status, created_at, updated_at
         "#,
     )
@@ -95,4 +95,76 @@ async fn lock_primary_account(
     .bind(user_id)
     .fetch_one(&mut **tx)
     .await
+}
+
+pub async fn update_account_status(
+    db: &PgPool,
+    account_id: i64,
+    new_status: &str,
+) -> Result<BankAccount, sqlx::Error> {
+    sqlx::query_as!(
+        BankAccount,
+        r#"
+        UPDATE bank_accounts
+        SET status = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING *
+        "#,
+        new_status,
+        account_id,
+    )
+    .fetch_one(db)
+    .await
+}
+
+pub async fn count_accounts(
+    db: &PgPool,
+    status: Option<&str>,
+) -> Result<i64, sqlx::Error> {
+    match status {
+        Some(s) => sqlx::query_scalar!(
+            r#"SELECT COUNT(*) as "count!" FROM bank_accounts WHERE status = $1"#,
+            s
+        )
+        .fetch_one(db)
+        .await,
+        None => sqlx::query_scalar!(
+            r#"SELECT COUNT(*) as "count!" FROM bank_accounts"#
+        )
+        .fetch_one(db)
+        .await,
+    }
+}
+
+pub async fn list_accounts_with_users(
+    db: &PgPool,
+    status: Option<&str>,
+    limit: i64,
+    offset: i64,
+) -> Result<Vec<BankAccount>, sqlx::Error> {
+    match status {
+        Some(s) => sqlx::query_as!(
+            BankAccount,
+            r#"
+            SELECT * FROM bank_accounts
+            WHERE status = $1
+            ORDER BY created_at DESC
+            LIMIT $2 OFFSET $3
+            "#,
+            s, limit, offset
+        )
+        .fetch_all(db)
+        .await,
+        None => sqlx::query_as!(
+            BankAccount,
+            r#"
+            SELECT * FROM bank_accounts
+            ORDER BY created_at DESC
+            LIMIT $1 OFFSET $2
+            "#,
+            limit, offset
+        )
+        .fetch_all(db)
+        .await,
+    }
 }
