@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Apply Home Loan</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<nav class="c-navbar" aria-label="Customer navigation">
+  <div class="u-container c-navbar__inner">
+    <a class="c-navbar__brand" href="/customer/dashboard">
+      <span class="c-navbar__logo-wrap">
+        <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
+      </span>
+      <span>RustToGold</span>
+    </a>
+    <ul class="c-navbar__links">
+      <li><a class="c-navbar__link" href="/customer/dashboard">Dashboard</a></li>
+      <li><a class="c-navbar__link" href="/customer/deposit">Deposit</a></li>
+      <li><a class="c-navbar__link" href="/customer/transactions">Transactions</a></li>
+      <li><a class="c-navbar__link is-active" href="/customer/loans">Loans</a></li>
+      <li><a class="c-navbar__link" href="/customer/fixed-deposits">Fixed Deposits</a></li>
+      <li><a class="c-navbar__link" href="/customer/profile">Profile</a></li>
+    </ul>
+    <div class="c-navbar__actions">
+      <a class="c-navbar__login" href="/logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<main class="app-main">
+  <div class="u-container">
+    <header class="app-page-header">
+      <div>
+        <h1 class="app-page-title">Apply for Home Loan</h1>
+        <p class="app-page-description">Submit a home loan application for staff review and approval.</p>
+      </div>
+      <a class="c-button c-button--secondary" href="/customer/home-loans">Back to Home Loans</a>
+    </header>
+
+    {% if has_error %}
+    <div class="alert alert--danger">{{ error }}</div>
+    {% endif %}
+
+    <section class="c-card">
+      <div class="c-card__header">
+        <div>
+          <h2 class="c-card__title">Home Loan Application</h2>
+          <p class="c-card__subtitle">
+            Minimum home loan amount is $20,000. Maximum amount and allowed terms depend on property type.
+          </p>
+        </div>
+      </div>
+
+      <div class="c-card__body">
+        <div class="alert alert--info">
+          HDB 1-2 Room: max $200,000, terms 5/10/15 years.
+          HDB 3+ Room: max $500,000, terms 10/15/20/25 years.
+          Condo: max $1,000,000, terms 10/15/20/25/30 years.
+          Landed: max $2,000,000, terms 15/20/25/30/35 years.
+        </div>
+
+        <form method="post" action="/customer/home-loans/apply">
+          <p>
+            <label>Property Type</label><br>
+            <select name="house_type" required>
+              <option value="hdb_1_or_2_room">HDB 1- or 2-Room Flat — max $200,000</option>
+              <option value="hdb_3_or_larger">HDB 3-Room or Larger Flat — max $500,000</option>
+              <option value="condo">Private Condominium — max $1,000,000</option>
+              <option value="landed">Landed Property — max $2,000,000</option>
+            </select>
+          </p>
+
+          <p>
+            <label>Amount</label><br>
+            <input type="number" name="amount" min="20000" step="0.01" placeholder="e.g. 200000" required>
+          </p>
+
+          <p>
+            <label>Loan Term</label><br>
+            <select name="home_loan_years" required>
+              <option value="5">5 years</option>
+              <option value="10">10 years</option>
+              <option value="15">15 years</option>
+              <option value="20">20 years</option>
+              <option value="25">25 years</option>
+              <option value="30">30 years</option>
+              <option value="35">35 years</option>
+            </select>
+          </p>
+
+          <button class="c-button c-button--primary" type="submit">Submit Application</button>
+        </form>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

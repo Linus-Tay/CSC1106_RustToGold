@@ -4,6 +4,6 @@ pub mod templates;
 pub use self::renderer::render;
 pub use self::templates::{
     CustomerPageTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate, ForbiddenTemplate,
-    HomeTemplate, LoginTemplate, NotFoundTemplate, ProfileTemplate, SignupTemplate,
-    TransactionsTemplate, OnboardingTemplate
+    HomeTemplate, LoginTemplate, NotFoundTemplate, ProfileTemplate, SignupTemplate, HomeLoanDashboardTemplate, HomeLoanApplyTemplate, AdminHomeLoansTemplate, 
+    LoanApplyTemplate, LoanDashboardTemplate, TransactionsTemplate, OnboardingTemplate
 };
