@@ -2,6 +2,7 @@ use super::formatting::title_case_code;
 use super::Money;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::FromRow;
+
 #[derive(Debug, Clone, FromRow)]
 pub struct HomeLoanApplication {
     pub id: i64,
@@ -23,6 +24,7 @@ pub struct HomeLoanApplication {
     pub monthly_payment_cents: Option<i64>,
     pub next_due_date: Option<NaiveDate>,
 }
+
 #[derive(Debug, Clone, FromRow)]
 pub struct AdminHomeLoanRecord {
     pub id: i64,
@@ -45,6 +47,7 @@ pub struct AdminHomeLoanRecord {
     pub customer_email: String,
     pub account_number: String,
 }
+
 #[derive(Debug, Clone, FromRow)]
 pub struct HomeLoanSummary {
     pub total_count: i64,
@@ -56,6 +59,7 @@ pub struct HomeLoanSummary {
     pub total_remaining_cents: i64,
     pub total_monthly_payment_cents: i64,
 }
+
 impl HomeLoanSummary {
     pub fn total_approved_display(&self) -> String {
         Money::from_cents(self.total_approved_cents).display()
@@ -109,6 +113,7 @@ impl HomeLoanApplication {
             .unwrap_or_else(|| "Pending approval".to_string())
     }
 
+
     pub fn next_due_date_display(&self) -> String {
         self.next_due_date
             .map(|value| value.format("%d %b %Y").to_string())
@@ -123,7 +128,21 @@ impl HomeLoanApplication {
         format!("{} years", self.term_months / 12)
     }
 
+    pub fn is_overdue(&self) -> bool {
+        let today = chrono::Local::now().date_naive();
+
+        self.status == "approved"
+            && self.next_due_date
+                .map(|date| date < today)
+                .unwrap_or(false)
+    }
+
+
     pub fn status_display(&self) -> String {
+        if self.is_overdue() {
+            return "Overdue".to_string();
+        }
+
         match self.status.as_str() {
             "pending_review" => "Pending Review".to_string(),
             value => title_case_code(value),
@@ -136,6 +155,7 @@ impl HomeLoanApplication {
             && self.monthly_payment_cents.unwrap_or(0) > 0
     }
 }
+
 
 impl AdminHomeLoanRecord {
     pub fn house_type_display(&self) -> String {
@@ -170,7 +190,20 @@ impl AdminHomeLoanRecord {
             .unwrap_or_else(|| "-".to_string())
     }
 
+    pub fn is_overdue(&self) -> bool {
+        let today = chrono::Local::now().date_naive();
+
+        self.status == "approved"
+            && self.next_due_date
+                .map(|date| date < today)
+                .unwrap_or(false)
+    }
+
     pub fn status_display(&self) -> String {
+        if self.is_overdue() {
+            return "Overdue".to_string();
+        }
+
         match self.status.as_str() {
             "pending_review" => "Pending Review".to_string(),
             value => title_case_code(value),
