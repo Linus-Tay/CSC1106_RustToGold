@@ -38,8 +38,8 @@ pub async fn apply_personal_loan(
         .map_err(|_| "Could not load your profile.".to_string())?
         .ok_or_else(|| "Customer record not found.".to_string())?; 
   
-        //MAS rule for one bank 
-    let max_limit = user_profile.monthly_income_cents * 4;
+        //MAS rule for unsecured loans
+    let max_limit = user_profile.monthly_income_cents * 12;
 
     let outstanding_loan = loan_repository::total_outstanding_by_user_id(db, user_id)
         .await
