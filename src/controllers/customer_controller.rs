@@ -1,7 +1,7 @@
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::require_customer;
 use crate::forms::{DepositForm, ProfileForm};
-use crate::repositories::account_repository;
+use crate::repositories::{account_repository, product_repository};
 use crate::services;
 use crate::views::{
     render, CustomerPageTemplate, DashboardTemplate, DepositTemplate, ProfileTemplate,
@@ -10,6 +10,7 @@ use crate::views::{
 use crate::AppState;
 use actix_session::Session;
 use actix_web::{web, HttpResponse, Result};
+use uuid::Uuid;
 
 fn display_money_without_symbol(value: String) -> String {
     value.trim_start_matches('$').to_string()
@@ -63,17 +64,18 @@ pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result
     })
 }
 
-pub async fn deposit(
-    data: web::Data<AppState>,
-    session: Session,
-    form: web::Form<DepositForm>,
+pub async fn deposit(app_state: web::Data<AppState>, session: Session, form: web::Form<DepositForm>,
 ) -> Result<HttpResponse> {
-    let user = match require_customer(&data, &session).await {
-        Ok(user) => user,
-        Err(response) => return Ok(response),
-    };
+    // let user = match require_customer(&data, &session).await {
+    //     Ok(user) => user,
+    //     Err(response) => return Ok(response),
+    // };
 
-    match services::deposit(&data, user.id, form.into_inner()).await {
+
+   let uuid: Option<Uuid> = Uuid::parse_str("5fb16131-993e-46a6-873d-7a2c49dd0edc").ok();
+   let account_number = form.account_number.clone();
+
+    match services::deposit(&app_state, uuid.unwrap(), form.into_inner()).await {
         Ok(account) => {
             let balance = display_money_without_symbol(account.balance_display());
             let account_number = account.account_number;
@@ -88,9 +90,13 @@ pub async fn deposit(
             })
         }
         Err(error) => {
-            let account = match account_repository::find_primary_account_by_user_id(&data.db, user.id).await {
+            println!("error: {}", error);
+            let account = match  product_repository::get_product_by_account_number(&app_state.db, &account_number).await {
                 Ok(Some(account)) => account,
-                _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
+                _ => {
+                    println!("not found here?: {}", &account_number);
+                    return render_error("Account unavailable", "No bank account was found.".to_string())
+                },
             };
 
             let balance = display_money_without_symbol(account.balance_display());
@@ -106,6 +112,10 @@ pub async fn deposit(
             })
         }
     }
+}
+
+pub async fn transfer(app_state: web::Data<AppState>, session: Session, form: web::Form<DepositForm>) {
+    
 }
 
 pub async fn transactions(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {

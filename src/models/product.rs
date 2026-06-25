@@ -11,28 +11,9 @@ pub struct Product {
     pub account_number: String,
     pub product_id: String,
     pub balance_cents: i64,
-    pub status: AccountStatus,
+    pub status: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-}
-
-#[derive(Debug, Clone, Copy, Type, PartialEq)]
-#[sqlx(type_name = "account_status_type", rename_all = "UPPERCASE")]
-pub enum AccountStatus {
-    PENDING,
-    ACTIVE,
-    INACTIVE
-}
-
-
-impl AccountStatus {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            AccountStatus::PENDING => "pending",
-            AccountStatus::ACTIVE => "active",
-            AccountStatus::INACTIVE => "inactive",
-        }
-    }
 }
 
 impl Product {
@@ -49,18 +30,22 @@ impl Product {
     }
 
     pub fn can_receive_deposit(&self, amount: Money) -> bool {
-        self.status == AccountStatus::ACTIVE && amount.cents() > 0
+        self.status == "active" && amount.cents() > 0
+    }
+
+    pub fn get_customer_id(&self) -> Uuid {
+        self.customer_id
     }
 }
 
-pub trait AccountWorkflow {
+pub trait ProductWorkflow {
     fn is_open_for_customer_actions(&self) -> bool;
     fn projected_balance_after_deposit(&self, amount: Money) -> Option<Money>;
 }
 
-impl AccountWorkflow for Product {
+impl ProductWorkflow for Product {
     fn is_open_for_customer_actions(&self) -> bool {
-        self.status == AccountStatus::ACTIVE
+        self.status == "active"
     }
 
     fn projected_balance_after_deposit(&self, amount: Money) -> Option<Money> {

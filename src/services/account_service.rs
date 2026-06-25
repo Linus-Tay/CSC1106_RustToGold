@@ -1,6 +1,5 @@
-use crate::controllers::account_controller::OnboardingFormData;
+use crate::controllers::onboard_controller::OnboardingFormData;
 use crate::forms::DepositForm;
-use crate::models::customer::{ContactMethod, EmploymentType, Gender, KycStatus, Residency};
 use crate::models::{AccountWorkflow, BankAccount, Customer, Money, Transaction};
 use crate::repositories::customer_repository::NewCustomer;
 use crate::repositories::{account_repository, customer_repository, transaction_repository};
@@ -26,22 +25,22 @@ pub async fn register_customer(db: &PgPool, form: OnboardingFormData) -> Result<
         // Other mandatory fields...
         full_name: &step1.full_name.clone(),
         nric: &step1.nric.clone(),
-        residency: step1.residential_status.clone(),
+        residency: &step1.residential_status.clone(),
         date_of_birth: NaiveDate::from_ymd_opt(2026, 01, 01).unwrap(),
-        gender: Gender::Male,
+        gender: &String::from("Male"),
         nationality: &String::from("Singaporean"),
         race: Some(&String::from("Chinese")),
         email: &String::from("test@gmail.com"),
         phone_number: &String::from("911111112"),
-        preferred_contact: Some(ContactMethod::Email),
         mailing_address: Some(&String::from("Random Address")),
         residential_address: &String::from("Random Address"),
-        employment_status: EmploymentType::Unemployed,
+        employment_status: &String::from("Unemployed"),
+        preferred_contact: None,
         occupation: None,
         employer_name: None,
         monthly_income_range: None,
         industry: None,
-        kyc_status: Some(KycStatus::PENDING),
+        kyc_status: None,
     };
 
     let final_customer = match customer_option {

@@ -1,12 +1,11 @@
-use std::iter::Empty;
-
 use crate::controllers::session_guard::{redirect, session_user_id};
 use crate::models::Customer;
-use crate::models::customer::Residency;
 use crate::services::{self, get_product_details, get_path_template};
 use crate::views::renderer::render_html;
+use crate::views::templates::AccountCreationTemplate;
 use crate::views::{ErrorTemplate, OnboardingFormTemplate, OnboardingResultTemplate, OnboardingTemplate, render};
 use actix_session::Session;
+use askama::DynTemplate;
 use chrono::NaiveDate;
 use crate::AppState;
 use actix_web::{web, HttpResponse, Result};
@@ -32,7 +31,7 @@ pub struct Step1Data {
     pub nric: String,
     pub dob: String,
     pub nationality: String,
-    pub residential_status: Residency,
+    pub residential_status: String,
     pub race: String
 }
 
@@ -73,11 +72,17 @@ pub async fn onboarding(path: web::Path<String>, query: web::Query<OnboardingQue
 
 pub async fn submit(data: web::Data<AppState>,session: Session) -> Result<HttpResponse> {
     let mut form_data = session.get::<OnboardingFormData>("onboarding_form_data")?.unwrap_or_default();
-    let result = services::account_service::register_customer(&data.db, form_data).await;
+    let product_id = match session.get::<String>("onboarding_product_id")? {
+        Some(id) => id,
+        None => return render(OnboardingResultTemplate {
+            result_message: String::from("Missing product_id")
+        }),
+    };
+
+    let result = services::customer_service::create_customer(&data.db, form_data).await;
 
     match result {
         Ok(customer) => {
-            let product_id = session.get::<String>("onboarding_product_id").ok().flatten().unwrap();
             println!("{}", product_id);
             let test = services::product_service::create_product(&data.db, customer.id, product_id).await;
             match test {
@@ -93,7 +98,18 @@ pub async fn submit(data: web::Data<AppState>,session: Session) -> Result<HttpRe
         })
     }
 
-    //render(ErrorTemplate)
+    // let template = AccountCreationTemplate {
+    //     account_creation_link: String::from("http://localhost:3000/")
+    // };
+
+    // let result = services::email_service::send_template_email(&String::from("jiayong.kok@hotmail.com"), &String::from("Welcome to Rust To Gold Bank!"), &template).await;
+
+
+    // match result {
+    //     Ok(()) => println!("works"),
+    //     Err(e) => println!("{}", e.to_string())
+    // }
+    // render(ErrorTemplate)
 }
 
 pub async fn step1_post(session: Session, form: web::Form<Step1Data>) -> Result<HttpResponse> {

@@ -6,6 +6,7 @@ pub struct Config {
     pub session_secret: String,
     pub host: String,
     pub port: u16,
+    pub smtp_port: u16
 }
 
 impl Config {
@@ -17,6 +18,10 @@ impl Config {
             .ok()
             .and_then(|value| value.parse::<u16>().ok())
             .unwrap_or(3000);
+        let smtp_port = env::var("SMTP_PORT")
+            .ok()
+            .and_then(|value| value.parse::<u16>().ok())
+            .unwrap_or(587);
 
         if session_secret.as_bytes().len() < 64 {
             panic!("SESSION_SECRET must be at least 64 bytes for cookie session security.");
@@ -27,6 +32,7 @@ impl Config {
             session_secret,
             host,
             port,
+            smtp_port
         }
     }
 

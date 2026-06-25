@@ -113,3 +113,12 @@ pub struct NotFoundTemplate;
 #[derive(Template)]
 #[template(path = "errors/error.html")]
 pub struct ErrorTemplate;
+
+
+// EMAIL TEMPLATES
+
+#[derive(Template)]
+#[template(path = "email/account_creation.html")]
+pub struct AccountCreationTemplate {
+    pub account_creation_link: String,
+}

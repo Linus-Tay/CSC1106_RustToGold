@@ -1,4 +1,4 @@
-use crate::models::customer::{ContactMethod, Customer, EmploymentType, Gender, KycStatus, Residency};
+use crate::models::customer::{Customer};
 use chrono::NaiveDate;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -7,27 +7,30 @@ pub struct NewCustomer<'a> {
     pub full_name: &'a str,
     pub nric: &'a str,
     pub date_of_birth: NaiveDate,
-    pub gender: Gender,
+    pub gender: &'a str,
     pub nationality: &'a str,
-    pub residency: Residency,
+    pub residency: &'a str,
     pub race: Option<&'a str>,
     pub email: &'a str,
     pub phone_number: &'a str,
     pub residential_address: &'a str,
     pub mailing_address: Option<&'a str>,
-    pub preferred_contact: Option<ContactMethod>,
-    pub employment_status: EmploymentType,
+    pub preferred_contact: Option<&'a str>,
+    pub employment_status: &'a str,
     pub occupation: Option<&'a str>,
     pub employer_name: Option<&'a str>,
     pub industry: Option<&'a str>,
     pub monthly_income_range: Option<&'a str>,
-    pub kyc_status: Option<KycStatus>,
+    pub kyc_status: Option<&'a str>,
 }
 
 pub async fn get_customer_by_nric(db: &PgPool, nric: String) -> Result<Option<Customer>, sqlx::Error> {
     println!("{}", nric);
     sqlx::query_as::<_, Customer>(
-        r#"SELECT * FROM customers WHERE nric = $1"#
+        r#"SELECT id, full_name, nric, date_of_birth, gender, nationality, residency, race,
+                  email, phone_number, residential_address, mailing_address, preferred_contact,
+                  employment_status, occupation, employer_name, industry, monthly_income_range,
+                  kyc_status, created_at, updated_at FROM customers WHERE nric = $1"#
     )
     .bind(nric)
     .fetch_optional(db)
@@ -55,9 +58,8 @@ pub async fn create_customer(db: &PgPool, new_customer: &NewCustomer<'_>) -> Res
             employer_name,
             industry,
             monthly_income_range,
-            kyc_status
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
         RETURNING id, full_name, nric, date_of_birth, gender, nationality, residency, race,
                   email, phone_number, residential_address, mailing_address, preferred_contact,
                   employment_status, occupation, employer_name, industry, monthly_income_range,
@@ -81,7 +83,6 @@ pub async fn create_customer(db: &PgPool, new_customer: &NewCustomer<'_>) -> Res
     .bind(new_customer.employer_name)
     .bind(new_customer.industry)
     .bind(new_customer.monthly_income_range)
-    .bind(new_customer.kyc_status.unwrap_or(KycStatus::PENDING))
     .fetch_one(db)
     .await
 }
@@ -134,7 +135,7 @@ pub async fn update_customer(db: &PgPool, uuid: Uuid, new_info: &NewCustomer<'_>
     .bind(new_info.employer_name)
     .bind(new_info.industry)
     .bind(new_info.monthly_income_range)
-    .bind(new_info.kyc_status.unwrap_or(KycStatus::PENDING))
+    .bind(new_info.kyc_status.unwrap_or("pending"))
     .bind(uuid)
     .fetch_one(db)
     .await

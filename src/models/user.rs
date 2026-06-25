@@ -1,9 +1,11 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::FromRow;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
 pub struct User {
     pub id: i64,
+    pub customer_id: Uuid,
     pub full_name: String,
     pub email: String,
     pub phone_number: String,

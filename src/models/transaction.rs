@@ -2,12 +2,13 @@ use super::formatting::title_case_code;
 use super::Money;
 use chrono::NaiveDateTime;
 use sqlx::FromRow;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
 pub struct Transaction {
-    pub id: i64,
-    pub account_id: i64,
-    pub user_id: i64,
+    pub id: Uuid,
+    pub product_id: Uuid,
+    pub customer_id: Uuid,
     pub transaction_type: String,
     pub amount_cents: i64,
     pub balance_after_cents: i64,
@@ -18,10 +19,10 @@ pub struct Transaction {
 impl Transaction {
     pub fn transaction_type_display(&self) -> String {
         match self.transaction_type.as_str() {
-            "deposit" => "Deposit".to_string(),
-            "withdrawal" => "Withdrawal".to_string(),
-            "transfer_in" => "Transfer In".to_string(),
-            "transfer_out" => "Transfer Out".to_string(),
+            "DEPOSIT" => "Deposit".to_string(),
+            "WITHDRAWAL" => "Withdrawal".to_string(),
+            "TRANSFER_IN" => "Transfer In".to_string(),
+            "TRANSFER_OUT" => "Transfer Out".to_string(),
             value => title_case_code(value),
         }
     }
