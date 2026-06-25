@@ -31,6 +31,12 @@ pub struct OnboardingFormTemplate1 {
 }
 
 #[derive(Template)]
+#[template(path= "onboarding/onboarding_result.html")]
+pub struct OnboardingResultTemplate {
+    pub result_message: String
+}
+
+#[derive(Template)]
 #[template(path = "auth/login.html")]
 pub struct LoginTemplate {
     pub error: String,

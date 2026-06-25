@@ -12,10 +12,12 @@ use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie::Key, web, App, HttpServer};
 use config::Config;
 use sqlx::{postgres::PgPoolOptions, PgPool};
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
     pub db: PgPool,
+    pub account_mutex: Arc<tokio::sync::Mutex<()>>,
 }
 
 #[actix_web::main]
@@ -29,7 +31,10 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Could not connect to PostgreSQL. Check DATABASE_URL in .env.");
 
-    let state = AppState { db: pool };
+    let state = AppState {
+        db: pool,
+        account_mutex: Arc::new(tokio::sync::Mutex::new(())),
+    };
     let session_key = Key::from(config.session_secret.as_bytes());
     let bind_address = config.bind_address();
 

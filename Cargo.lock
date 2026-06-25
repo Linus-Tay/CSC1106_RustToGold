@@ -1842,6 +1842,7 @@ dependencies = [
  "askama",
  "chrono",
  "dotenvy",
+ "rand 0.10.1",
  "serde",
  "sqlx",
  "tokio",

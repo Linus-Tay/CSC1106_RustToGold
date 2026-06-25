@@ -1,10 +1,14 @@
 use std::iter::Empty;
 
 use crate::controllers::session_guard::{redirect, session_user_id};
+use crate::models::Customer;
+use crate::models::customer::Residency;
 use crate::services::{self, get_product_details, get_path_template};
 use crate::views::renderer::render_html;
-use crate::views::{ErrorTemplate, OnboardingFormTemplate, OnboardingTemplate, render};
+use crate::views::{ErrorTemplate, OnboardingFormTemplate, OnboardingResultTemplate, OnboardingTemplate, render};
 use actix_session::Session;
+use chrono::NaiveDate;
+use crate::AppState;
 use actix_web::{web, HttpResponse, Result};
 use serde::{Deserialize, Serialize};
 
@@ -18,13 +22,26 @@ pub struct OnboardingQuery {
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct OnboardingFormData {
-    pub step1: Option<Step1Data>
+    pub step1: Option<Step1Data>,
+    pub step2: Option<Step2Data>
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Step1Data {
     pub full_name: String,
+    pub nric: String,
+    pub dob: String,
+    pub nationality: String,
+    pub residential_status: Residency,
+    pub race: String
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct Step2Data {
+    pub full_name: String,
+    pub nric: String
+}
+
 
 pub async fn onboarding(path: web::Path<String>, query: web::Query<OnboardingQuery>, session: Session) -> Result<HttpResponse> {
 
@@ -54,13 +71,38 @@ pub async fn onboarding(path: web::Path<String>, query: web::Query<OnboardingQue
     }
 } 
 
+pub async fn submit(data: web::Data<AppState>,session: Session) -> Result<HttpResponse> {
+    let mut form_data = session.get::<OnboardingFormData>("onboarding_form_data")?.unwrap_or_default();
+    let result = services::account_service::register_customer(&data.db, form_data).await;
+
+    match result {
+        Ok(customer) => {
+            let product_id = session.get::<String>("onboarding_product_id").ok().flatten().unwrap();
+            println!("{}", product_id);
+            let test = services::product_service::create_product(&data.db, customer.id, product_id).await;
+            match test {
+                Ok(test) => println!("nice"),
+                Err(e) => println!("An error occured: {}", e)
+            }
+            render(OnboardingResultTemplate {
+                result_message: String::from("Your application has been submitted. It will take 3 - 5 working days to process your application")
+            })
+        },
+        Err(error_msg) => render(OnboardingResultTemplate {
+            result_message: error_msg
+        })
+    }
+
+    //render(ErrorTemplate)
+}
+
 pub async fn step1_post(session: Session, form: web::Form<Step1Data>) -> Result<HttpResponse> {
     let mut form_data = session.get::<OnboardingFormData>("onboarding_form_data")?
     .unwrap_or_default();
 
     form_data.step1 = Some(form.into_inner());
     session.insert("onboarding_form_data", &form_data)?;
-    session.insert("onboarding_step", 2);
+    session.insert("onboarding_step", 1);
 
     Ok(redirect("/onboarding/additional-details"))
 }
@@ -78,10 +120,12 @@ pub async fn render_form(session: Session, form_template: String, step_number: i
 
             render_html(form_template)
         }
-        (Some(step), Some(_)) if step == step_number => {    
+        (Some(step), Some(_)) if step_number <= step => {
+            println!("Works: {} {}", step, step_number);  
             render_html(form_template)
         }
         _ => {
+            println!("{}, {}", onboarding_step.unwrap_or(0), step_number);
             render(ErrorTemplate )
         },
     }

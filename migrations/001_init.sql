@@ -1,22 +1,50 @@
 DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS bank_accounts;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS customer_products;
 
-CREATE TYPE residency_status AS ENUM ('CITIZEN', 'PR', 'FOREIGNER');
+CREATE TYPE gender_type AS ENUM ('MALE', 'FEMALE');
+CREATE TYPE residency_type AS ENUM ('CITIZEN', 'PR', 'FOREIGNER');
+CREATE TYPE employment_type AS ENUM ('EMPLOYED', 'SELF_EMPLOYED', 'UNEMPLOYED', 'STUDENT', 'RETIRED');
+CREATE TYPE contact_method_type AS ENUM ('EMAIL', 'PHONE');
 CREATE TYPE kyc_status_type AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+CREATE TYPE statement_type AS ENUM ('DIGITAL', 'PHYSICAL');
+CREATE TYPE account_status_type AS ENUM ('ACTIVE', 'INACTIVE', 'PENDING');
 
 CREATE TABLE customers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    phone_number VARCHAR(20),
-    date_of_birth DATE NOT NULL,
-    residency residency_status NOT NULL,
-    nric VARCHAR(20) UNIQUE NOT NULL,
-    kyc_status kyc_status_type DEFAULT 'PENDING',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    full_name            VARCHAR(100) NOT NULL,
+    nric                 VARCHAR(20) UNIQUE NOT NULL,
+    date_of_birth        DATE NOT NULL,
+    gender               gender_type NOT NULL,
+    nationality          VARCHAR(50) NOT NULL,
+    residency            residency_type NOT NULL,
+    race                 VARCHAR(50),
+    email                VARCHAR(255) UNIQUE NOT NULL,
+    phone_number         VARCHAR(20) NOT NULL,
+    residential_address  TEXT NOT NULL,
+    mailing_address      TEXT,
+    preferred_contact    contact_method_type DEFAULT 'EMAIL',
+    employment_status    employment_type NOT NULL,
+    occupation           VARCHAR(100),
+    employer_name        VARCHAR(100),
+    industry             VARCHAR(100),
+    monthly_income_range VARCHAR(50),
+    kyc_status           kyc_status_type DEFAULT 'PENDING',
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE customer_products (
+    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id          UUID NOT NULL REFERENCES customers(id),
+    product_id           VARCHAR(50) NOT NULL,
+    account_number       VARCHAR(20) UNIQUE NOT NULL,
+    status               account_status_type DEFAULT 'PENDING',
+	balance_cents		 BIGINT,
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE users (

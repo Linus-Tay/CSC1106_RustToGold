@@ -5,5 +5,5 @@ pub use self::renderer::render;
 pub use self::templates::{
     CustomerPageTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate, ForbiddenTemplate,
     HomeTemplate, LoginTemplate, NotFoundTemplate, ProfileTemplate, SignupTemplate,
-    TransactionsTemplate, OnboardingTemplate, OnboardingFormTemplate, OnboardingFormTemplate1
+    TransactionsTemplate, OnboardingTemplate, OnboardingFormTemplate, OnboardingFormTemplate1, OnboardingResultTemplate
 };

@@ -1,13 +1,85 @@
 use crate::controllers::account_controller::OnboardingFormData;
 use crate::forms::DepositForm;
 use crate::models::customer::{ContactMethod, EmploymentType, Gender, KycStatus, Residency};
-use crate::models::{AccountWorkflow, BankAccount, Customer, Money, Transaction};
+use crate::models::{AccountWorkflow, BankAccount, Customer, Money, Product, Transaction};
 use crate::repositories::customer_repository::NewCustomer;
-use crate::repositories::{account_repository, customer_repository, transaction_repository};
+use crate::repositories::{account_repository, customer_repository, product_repository, transaction_repository};
 use crate::services::support::clean_optional_text;
 use crate::AppState;
 use chrono::NaiveDate;
 use sqlx::PgPool;
+use uuid::Uuid;
+use rand::{rng, RngExt};
+
+pub async fn create_product(db: &PgPool, customer_id: Uuid, product_id: String) -> Result<Product, String> {
+    println!("this ran??");
+    let product_option = product_repository::get_product_by_user_id(db, &customer_id, &product_id)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    if product_option.is_some() {
+        println!("caught here xd");
+        return Err("lol".to_string());
+    }
+
+    let account_number = generate_account_number(db)
+    .await;
+
+    let product = product_repository::insert_product(db, customer_id, product_id, account_number)
+    .await;
+
+    match product {
+        Ok(product) => Ok(product),
+        Err(err_message) => return Err(err_message.to_string()),
+    }
+}
+
+fn luhn_check_digit(number: &str) -> u32 {
+    let sum: u32 = number
+        .chars()
+        .rev()
+        .enumerate()
+        .map(|(i, c)| {
+            let mut digit = c.to_digit(10).unwrap();
+            if i % 2 == 0 {
+                digit *= 2;
+                if digit > 9 {
+                    digit -= 9;
+                }
+            }
+            digit
+        })
+        .sum();
+
+    (10 - (sum % 10)) % 10
+}
+
+
+async fn generate_account_number(db: &PgPool) -> String {
+    let mut rng: rand::prelude::ThreadRng = rng();
+    let prefix = "7282";
+
+    loop {
+        let random_part: String = (0..7)
+        .map(|_| rng.random_range(0..10).to_string())
+        .collect();
+        
+        let base = format!("{}{}", prefix, random_part);
+        let check_digit = luhn_check_digit(&base);
+        
+        let full = format!("{}{}", base, check_digit);
+
+        let account_number = format!("{}-{}-{}", &full[0..4], &full[4..11], &full[11..12]);
+
+        let product_option = product_repository::get_product_by_account_number(db, &account_number)
+        .await;
+
+        match product_option {
+            Ok(None) => return account_number,
+            _ => continue,
+        }
+    }
+}
 
 pub async fn register_customer(db: &PgPool, form: OnboardingFormData) -> Result<Customer, String> {
     // This replaces your entire first `if let` block
@@ -60,56 +132,4 @@ pub async fn register_customer(db: &PgPool, form: OnboardingFormData) -> Result<
     };
 
     Ok(final_customer)
-}
-
-pub async fn load_customer_dashboard(
-    db: &PgPool,
-    user_id: i64,
-) -> Result<(BankAccount, Vec<Transaction>), String> {
-    let account = account_repository::find_primary_account_by_user_id(db, user_id)
-        .await
-        .map_err(|_| "Could not load your bank account.".to_string())?
-        .ok_or_else(|| "No bank account was found for this customer.".to_string())?;
-
-    let transactions = transaction_repository::find_recent_transactions_by_user_id(db, user_id, 5)
-        .await
-        .map_err(|_| "Could not load recent transactions.".to_string())?;
-
-    Ok((account, transactions))
-}
-
-pub async fn list_transactions(db: &PgPool, user_id: i64) -> Result<Vec<Transaction>, String> {
-    transaction_repository::find_recent_transactions_by_user_id(db, user_id, 50)
-        .await
-        .map_err(|_| "Could not load transaction history.".to_string())
-}
-
-pub async fn deposit(app_state: &AppState, user_id: i64, form: DepositForm) -> Result<BankAccount, String> {
-    let amount = Money::parse_dollars(&form.amount)?;
-    let description = clean_optional_text(&form.description);
-    let current_account = account_repository::find_primary_account_by_user_id(&app_state.db, user_id)
-        .await
-        .map_err(|_| "Could not load your bank account.".to_string())?
-        .ok_or_else(|| "No bank account was found for this customer.".to_string())?;
-
-    if !current_account.is_open_for_customer_actions() {
-        return Err("This account is not open for deposits.".to_string());
-    }
-
-    if current_account.projected_balance_after_deposit(amount).is_none() {
-        return Err("This deposit cannot be applied to the account.".to_string());
-    }
-
-    let _guard = app_state.account_mutex.lock().await;
-
-    let (updated_account, _) = account_repository::deposit_to_primary_account(
-        &app_state.db,
-        user_id,
-        amount.cents(),
-        description.as_deref(),
-    )
-    .await
-    .map_err(|_| "Deposit failed. Please try again.".to_string())?;
-
-    Ok(updated_account)
 }

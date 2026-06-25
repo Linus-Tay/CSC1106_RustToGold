@@ -73,7 +73,7 @@ pub async fn deposit(
         Err(response) => return Ok(response),
     };
 
-    match services::deposit(&data.db, user.id, form.into_inner()).await {
+    match services::deposit(&data, user.id, form.into_inner()).await {
         Ok(account) => {
             let balance = display_money_without_symbol(account.balance_display());
             let account_number = account.account_number;
