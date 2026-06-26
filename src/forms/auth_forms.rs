@@ -8,6 +8,7 @@ pub struct SignupForm {
     pub date_of_birth: String,
     pub password: String,
     pub confirm_password: String,
+    pub product_id: Option<String>,
     pub simulation_confirmed: Option<String>,
 }
 

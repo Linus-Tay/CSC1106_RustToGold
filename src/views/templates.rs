@@ -6,18 +6,24 @@ use askama::Template;
 pub struct HomeTemplate;
 
 #[derive(Template)]
-#[template(path = "onboarding.html")]
-pub struct OnboardingTemplate {
-    pub product_available: bool,
-    pub product_id: String,
-    pub channel: String,
-    pub product_name: String,
-    pub product_summary: String,
-    pub product_rate: String,
-    pub product_minimum: String,
-    pub product_features: Vec<String>,
-    pub action_url: String,
-}
+#[template(path = "about.html")]
+pub struct AboutTemplate;
+
+#[derive(Template)]
+#[template(path = "banking.html")]
+pub struct BankingTemplate;
+
+#[derive(Template)]
+#[template(path = "contact.html")]
+pub struct ContactTemplate;
+
+#[derive(Template)]
+#[template(path = "faq.html")]
+pub struct FaqTemplate;
+
+#[derive(Template)]
+#[template(path = "security.html")]
+pub struct SecurityTemplate;
 
 #[derive(Template)]
 #[template(path = "auth/login.html")]
@@ -31,6 +37,10 @@ pub struct LoginTemplate {
 pub struct SignupTemplate {
     pub error: String,
     pub has_error: bool,
+    pub has_selected_product: bool,
+    pub selected_product_id: String,
+    pub selected_product_name: String,
+    pub selected_product_summary: String,
 }
 
 #[derive(Template)]

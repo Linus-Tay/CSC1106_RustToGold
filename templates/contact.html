@@ -1,0 +1,104 @@
+{% extends "layouts/public.html" %}
+
+{% block title %}Contact Us | RustToGold{% endblock %}
+{% block meta_description %}Contact RustToGold for help with your account, cards, transfers, fixed deposits, loans, login access, or security concerns.{% endblock %}
+
+{% block content %}
+<main id="top">
+  <section class="contact-hero section-shell grid gap-12 py-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:py-24">
+    <div data-reveal>
+      <p class="c-kicker">Contact RustToGold</p>
+      <h1 class="page-title mt-5">How can we help today?</h1>
+      <p class="lead-copy mt-7 max-w-2xl">
+        Whether you need help with your account, card, transfer, application, or login access, send us your enquiry and our support team will guide you through the next step.
+      </p>
+
+      <div class="contact-support-notes mt-9">
+        <div>
+          <i data-lucide="clock" class="h-5 w-5"></i>
+          <span>
+            <strong>Response within 1–2 business days</strong>
+            <small>For general account, product, and application enquiries.</small>
+          </span>
+        </div>
+
+        <div>
+          <i data-lucide="shield-alert" class="h-5 w-5"></i>
+          <span>
+            <strong>Security concern?</strong>
+            <small>Freeze your card first if you notice suspicious card activity.</small>
+          </span>
+        </div>
+
+        <div>
+          <i data-lucide="file-check-2" class="h-5 w-5"></i>
+          <span>
+            <strong>Include helpful details</strong>
+            <small>Share your enquiry clearly so we can review it faster.</small>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <form class="contact-form-card" action="#" method="post" data-reveal>
+      <div>
+        <p class="c-kicker">Support form</p>
+        <h2>Send us a message</h2>
+        <p>Tell us what you need help with. Please do not include your full card number, password, or OTP.</p>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="form-field">
+          <label for="name">Full name</label>
+          <input id="name" name="name" type="text" placeholder="Enter your full name" required />
+        </div>
+
+        <div class="form-field">
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" required />
+        </div>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="form-field">
+          <label for="topic">What is this about?</label>
+          <select id="topic" name="topic" required>
+            <option value="">Select a topic</option>
+            <option>Account access</option>
+            <option>Account application</option>
+            <option>Card support</option>
+            <option>Money transfer</option>
+            <option>Fixed deposit</option>
+            <option>Loan application</option>
+            <option>Security concern</option>
+            <option>Other enquiry</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="urgency">How urgent is it?</label>
+          <select id="urgency" name="urgency" required>
+            <option>General enquiry</option>
+            <option>Need help soon</option>
+            <option>Account or card concern</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="message">Message</label>
+        <textarea id="message" name="message" rows="6" placeholder="Tell us what happened and what you need help with" required></textarea>
+      </div>
+
+      <div class="contact-form-footer">
+        <p>
+          For your safety, RustToGold will never ask for your password or OTP through this form.
+        </p>
+        <button type="submit" class="btn-primary">
+          Submit enquiry <i data-lucide="send" class="h-4 w-4"></i>
+        </button>
+      </div>
+    </form>
+  </section>
+</main>
+{% endblock %}

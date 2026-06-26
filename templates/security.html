@@ -1,0 +1,111 @@
+{% extends "layouts/public.html" %}
+
+{% block title %}Security | RustToGold{% endblock %}
+{% block meta_description %}Protect your RustToGold account with OTP verification, card freeze controls, activity alerts, suspicious activity review, login protection, and secure account records.{% endblock %}
+
+{% block content %}
+<main id="top" class="security-page">
+  <section class="security-hero section-shell py-16 lg:py-24">
+    <div class="security-hero-copy" data-reveal>
+      <p class="c-kicker">Security & protection</p>
+      <h1 class="hero-title mt-5">Simple protection for everyday banking.</h1>
+      <p class="lead-copy mt-7">
+        RustToGold keeps important account actions clear, confirmed, and easy to control — from OTP verification to card freeze and activity alerts.
+      </p>
+    </div>
+
+    <div class="security-status-panel" aria-label="RustToGold security overview" data-reveal>
+      <div class="security-status-top">
+        <span class="security-status-icon"><i data-lucide="shield-check" class="h-6 w-6"></i></span>
+        <div>
+          <p>Account protection</p>
+          <h2>Protected</h2>
+        </div>
+      </div>
+
+      <div class="security-status-list">
+        <div>
+          <span><i data-lucide="key-round" class="h-4 w-4"></i> OTP verification</span>
+          <strong>Ready</strong>
+        </div>
+        <div>
+          <span><i data-lucide="credit-card" class="h-4 w-4"></i> Card freeze</span>
+          <strong>Available</strong>
+        </div>
+        <div>
+          <span><i data-lucide="bell-ring" class="h-4 w-4"></i> Activity alerts</span>
+          <strong>On</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="protection-features" class="security-feature-section py-16 lg:py-20">
+    <div class="section-shell">
+      <div class="security-section-intro" data-reveal>
+        <p class="c-kicker">Protection features</p>
+        <h2 class="section-title mt-4">Built for the moments that matter.</h2>
+        <p class="lead-copy mt-5">
+          Clear security controls help you confirm sensitive actions, react quickly, and understand what happened on your account.
+        </p>
+      </div>
+
+      <div class="security-feature-grid mt-11">
+        <article class="security-feature-card" data-reveal>
+          <span class="security-feature-icon"><i data-lucide="message-square-code" class="h-5 w-5"></i></span>
+          <h3>OTP verification</h3>
+          <p>Extra confirmation can be required before larger transfers, new payees, or sensitive profile changes are completed.</p>
+        </article>
+
+        <article class="security-feature-card" data-reveal>
+          <span class="security-feature-icon"><i data-lucide="snowflake" class="h-5 w-5"></i></span>
+          <h3>Card freeze controls</h3>
+          <p>Freeze your card quickly when it is misplaced, then review the card status clearly from your banking dashboard.</p>
+        </article>
+
+        <article class="security-feature-card" data-reveal>
+          <span class="security-feature-icon"><i data-lucide="bell-ring" class="h-5 w-5"></i></span>
+          <h3>Activity alerts</h3>
+          <p>Stay updated when transfers, login activity, card changes, or important account actions take place.</p>
+        </article>
+
+        <article class="security-feature-card" data-reveal>
+          <span class="security-feature-icon"><i data-lucide="shield-alert" class="h-5 w-5"></i></span>
+          <h3>Suspicious activity review</h3>
+          <p>Unusual transfer patterns or sensitive changes can trigger extra checks before the activity becomes a bigger risk.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-shell py-16 lg:py-20">
+    <div class="security-process-card" data-reveal>
+      <div class="security-process-copy">
+        <p class="c-kicker">Account control</p>
+        <h2>Protection that stays visible.</h2>
+        <p>
+          RustToGold keeps security actions understandable: confirm important steps, get alerted when activity happens, and rely on clear account records when support or review is needed.
+        </p>
+      </div>
+
+      <div class="security-process-steps" aria-label="RustToGold security process">
+        <div>
+          <span>01</span>
+          <strong>Login protection</strong>
+          <p>Secure sign-in and session handling help protect access to your account.</p>
+        </div>
+        <div>
+          <span>02</span>
+          <strong>Extra verification</strong>
+          <p>OTP checks can confirm higher-risk transfers or account changes.</p>
+        </div>
+        <div>
+          <span>03</span>
+          <strong>Clear records</strong>
+          <p>Important events are logged so account activity can be reviewed when needed.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

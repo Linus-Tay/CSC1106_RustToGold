@@ -1,7 +1,7 @@
 {% extends "layouts/public.html" %}
 
 {% block title %}RustToGold | Secure Digital Banking{% endblock %}
-{% block meta_description %}RustToGold is a polished digital banking experience for everyday savings, high-yield savings, multi-currency banking, cards, fixed deposits, loans, and security controls.{% endblock %}
+{% block meta_description %}RustToGold is a polished academic digital banking simulation for accounts, cards, money transfers, fixed deposits, loans, dashboards, and security controls.{% endblock %}
 
 {% block content %}
 <main id="top">
@@ -10,33 +10,34 @@
       <p class="c-kicker">A better digital banking portal</p>
       <h1 class="hero-title mt-5">Banking that feels clear, secure, and in control.</h1>
       <p class="lead-copy mt-7 max-w-2xl">
-        RustToGold brings savings, cards, deposits, loans, and everyday account controls into one clean online banking experience.
+        RustToGold brings everyday accounts, cards, transfers, fixed deposits, loans, and security controls into one clean online banking experience.
       </p>
 
       <div class="mt-10 flex flex-wrap gap-3">
-        <a href="/banking" class="btn-primary"><i data-lucide="landmark" class="h-4 w-4"></i> Explore banking</a>
+        <a href="/signup" class="btn-primary"><i data-lucide="user-plus" class="h-4 w-4"></i> Open Account</a>
+        <a href="/banking" class="btn-secondary">Explore banking <i data-lucide="arrow-right" class="h-4 w-4"></i></a>
       </div>
 
       <div class="hero-assurance mt-11" aria-label="Key banking capabilities">
         <div class="assurance-item">
           <i data-lucide="wallet-cards" class="h-5 w-5"></i>
           <span>
-            <strong>Accounts for different goals</strong>
-            <small>Choose everyday savings, high-yield savings, or multi-currency banking based on how you manage money.</small>
+            <strong>Accounts that stay organised</strong>
+            <small>Check balances, link products, and keep account activity easy to follow.</small>
           </span>
         </div>
         <div class="assurance-item">
           <i data-lucide="credit-card" class="h-5 w-5"></i>
           <span>
             <strong>Cards with clear controls</strong>
-            <small>Use credit and foreign exchange card options with visible status, limits, and spending controls.</small>
+            <small>View card status, linked accounts, and spending-related actions in one place.</small>
           </span>
         </div>
         <div class="assurance-item">
           <i data-lucide="shield-check" class="h-5 w-5"></i>
           <span>
             <strong>OTP-ready verification</strong>
-            <small>Add extra checks for higher-risk actions such as card changes, large transfers, and profile updates.</small>
+            <small>Add extra checks for higher-risk actions such as larger transfers.</small>
           </span>
         </div>
       </div>
@@ -61,7 +62,7 @@
         </div>
 
         <div class="quick-action-row">
-          <span><i data-lucide="wallet" class="h-4 w-4"></i> Accounts</span>
+          <span><i data-lucide="send" class="h-4 w-4"></i> Transfer</span>
           <span><i data-lucide="credit-card" class="h-4 w-4"></i> Cards</span>
           <span><i data-lucide="piggy-bank" class="h-4 w-4"></i> Deposit</span>
         </div>
@@ -71,23 +72,23 @@
         <div class="preview-card activity-preview">
           <div class="preview-section-heading">
             <span>Today’s activity</span>
-            <a href="/banking">View all</a>
+            <a href="/banking#dashboard">View all</a>
           </div>
 
           <div class="activity-row">
-            <span class="activity-icon blue"><i data-lucide="badge-dollar-sign" class="h-4 w-4"></i></span>
+            <span class="activity-icon blue"><i data-lucide="send" class="h-4 w-4"></i></span>
             <div>
-              <strong>Salary credit received</strong>
-              <small>High-yield savings milestone updated</small>
+              <strong>Transfer completed</strong>
+              <small>To Ali Tan · FAST transfer</small>
             </div>
-            <b>+S$3,200.00</b>
+            <b>-S$850.00</b>
           </div>
 
           <div class="activity-row">
             <span class="activity-icon green"><i data-lucide="shield-check" class="h-4 w-4"></i></span>
             <div>
               <strong>Security check passed</strong>
-              <small>OTP verified for card settings</small>
+              <small>OTP verified for transfer</small>
             </div>
             <b>Ready</b>
           </div>
@@ -112,43 +113,23 @@
     <div class="section-shell">
       <div class="section-heading-row" data-reveal>
         <div>
-          <p class="c-kicker">Banking products</p>
-          <h2 class="section-title mt-4">Explore banking that fits the way you manage money.</h2>
+          <p class="c-kicker">Banking areas</p>
+          <h2 class="section-title mt-4">Choose what you want to manage.</h2>
         </div>
         <p class="lead-copy">
-          From daily spending to wealth building, travel, deposits, and borrowing, RustToGold keeps each product simple to understand and easy to access.
+          Clear entry points for the main banking workflows: accounts, cards, transfers, fixed deposits, loans, and security. Each area leads to a focused section with more detail.
         </p>
       </div>
 
       <div class="banking-service-grid mt-12">
-        <a href="/banking#everyday-savings" class="banking-service-card" data-reveal>
+        <a href="/banking#accounts" class="banking-service-card" data-reveal>
           <div class="service-card-head">
             <span class="service-icon"><i data-lucide="wallet-cards" class="h-5 w-5"></i></span>
-            <span class="service-tag">Everyday</span>
+            <span class="service-tag">Accounts</span>
           </div>
-          <h3>Everyday Savings Account</h3>
-          <p>A simple account for salary, bills, transfers, and daily spending, with a debit card issued as part of the account experience.</p>
-          <span class="service-link">Explore now <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
-        </a>
-
-        <a href="/banking#high-yield-savings" class="banking-service-card" data-reveal>
-          <div class="service-card-head">
-            <span class="service-icon"><i data-lucide="trending-up" class="h-5 w-5"></i></span>
-            <span class="service-tag">Grow</span>
-          </div>
-          <h3>High-Yield Savings Account</h3>
-          <p>Build your balance faster by unlocking bonus interest through monthly actions like salary crediting, card spend, and bill payments.</p>
-          <span class="service-link">Explore now <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
-        </a>
-
-        <a href="/banking#multi-currency-account" class="banking-service-card" data-reveal>
-          <div class="service-card-head">
-            <span class="service-icon"><i data-lucide="globe-2" class="h-5 w-5"></i></span>
-            <span class="service-tag">Travel</span>
-          </div>
-          <h3>Multi-Currency Account</h3>
-          <p>Hold SGD, USD, EUR, JPY, and other currencies in one account, exchange when rates look favourable, and spend overseas with more control.</p>
-          <span class="service-link">Explore now <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+          <h3>Manage everyday accounts</h3>
+          <p>View balances, application status, linked products, and account activity without digging through multiple pages.</p>
+          <span class="service-link">View account options <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
         </a>
 
         <a href="/banking#cards" class="banking-service-card" data-reveal>
@@ -156,9 +137,19 @@
             <span class="service-icon"><i data-lucide="credit-card" class="h-5 w-5"></i></span>
             <span class="service-tag">Cards</span>
           </div>
-          <h3>Credit and FX cards</h3>
-          <p>Choose a flexible credit card for everyday spending or a foreign exchange card designed for travel and overseas payments.</p>
-          <span class="service-link">Explore now <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+          <h3>Apply for and control cards</h3>
+          <p>Support debit, credit, and student card flows with linked accounts, card status, and simple customer controls.</p>
+          <span class="service-link">View card products <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        </a>
+
+        <a href="/banking#money-transfers" class="banking-service-card" data-reveal>
+          <div class="service-card-head">
+            <span class="service-icon"><i data-lucide="send" class="h-5 w-5"></i></span>
+            <span class="service-tag">Transfers</span>
+          </div>
+          <h3>Send money with confidence</h3>
+          <p>Review recipient details, confirm the payment, apply OTP checks when needed, and store a clean transaction record.</p>
+          <span class="service-link">View transfer flow <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
         </a>
 
         <a href="/banking#fixed-deposits" class="banking-service-card" data-reveal>
@@ -166,19 +157,29 @@
             <span class="service-icon"><i data-lucide="piggy-bank" class="h-5 w-5"></i></span>
             <span class="service-tag">Deposits</span>
           </div>
-          <h3>Fixed Deposits</h3>
-          <p>Place spare funds for a selected tenure, review the estimated interest upfront, and choose what happens when the deposit matures.</p>
-          <span class="service-link">Explore now <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+          <h3>Plan fixed deposit placements</h3>
+          <p>Choose placement amount, tenure, interest estimate, maturity instruction, and payout destination clearly.</p>
+          <span class="service-link">View fixed deposits <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
         </a>
 
-        <a href="/banking#loans" class="banking-service-card service-card-dark" data-reveal>
+        <a href="/banking#loans" class="banking-service-card" data-reveal>
           <div class="service-card-head">
             <span class="service-icon"><i data-lucide="file-signature" class="h-5 w-5"></i></span>
             <span class="service-tag">Loans</span>
           </div>
-          <h3>Personal Loans</h3>
-          <p>Apply for a personal loan with clear repayment information, approval status, and disbursement details shown in one place.</p>
-          <span class="service-link">Explore now <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+          <h3>Track loan applications</h3>
+          <p>Submit applications, review approval state, record disbursement details, and show repayment progress clearly.</p>
+          <span class="service-link">View loan management <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        </a>
+
+        <a href="/security" class="banking-service-card service-card-dark" data-reveal>
+          <div class="service-card-head">
+            <span class="service-icon"><i data-lucide="shield-check" class="h-5 w-5"></i></span>
+            <span class="service-tag">Security</span>
+          </div>
+          <h3>Keep key actions protected</h3>
+          <p>Use visible security controls for OTP verification, card freeze, suspicious activity review, and audit logging.</p>
+          <span class="service-link">View security controls <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
         </a>
       </div>
     </div>

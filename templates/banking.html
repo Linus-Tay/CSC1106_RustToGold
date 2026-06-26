@@ -1,0 +1,341 @@
+{% extends "layouts/public.html" %}
+
+{% block title %}Banking Products | RustToGold{% endblock %}
+{% block meta_description %}Explore RustToGold banking products including everyday savings, high-yield savings, fixed deposits, personal loans, credit cards, and foreign exchange card options.{% endblock %}
+
+{% block content %}
+<main class="banking-page">
+  <section class="section-shell banking-hero-section py-16 lg:py-20">
+    <div class="grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+      <div data-reveal>
+        <p class="c-kicker">Banking products</p>
+        <h1 class="page-title mt-4">Banking options for saving, growing, spending, and borrowing.</h1>
+        <p class="lead-copy mt-7 max-w-2xl">
+          Explore accounts, cards, deposits, and financing products designed around real customer needs — from everyday spending to higher-yield saving, travel, and personal loans.
+        </p>
+
+        <div class="mt-9 flex flex-wrap gap-3">
+          <a href="#accounts" class="btn-primary">
+            Compare accounts <i data-lucide="arrow-right" class="h-4 w-4"></i>
+          </a>
+          <a href="#cards" class="btn-secondary">
+            View cards <i data-lucide="credit-card" class="h-4 w-4"></i>
+          </a>
+        </div>
+
+        <div class="banking-hero-assurance mt-10">
+          <span><i data-lucide="shield-check" class="h-4 w-4"></i> Secure online application</span>
+          <span><i data-lucide="wallet-cards" class="h-4 w-4"></i> Debit access with eligible accounts</span>
+          <span><i data-lucide="landmark" class="h-4 w-4"></i> Clear product-specific approval flow</span>
+        </div>
+      </div>
+
+      <div class="banking-hero-panel" data-reveal aria-label="Product overview">
+        <div class="banking-hero-panel-top">
+          <div>
+            <p class="c-kicker">Product guide</p>
+            <h2>Choose the product that fits your next step.</h2>
+          </div>
+          <span class="hero-panel-pill">Personal Banking</span>
+        </div>
+
+        <div class="banking-choice-list">
+          <a href="#everyday-savings" class="banking-choice-item">
+            <span class="choice-icon"><i data-lucide="wallet" class="h-5 w-5"></i></span>
+            <span>
+              <strong>Daily spending</strong>
+              <small>Use a simple savings account with bundled debit card access.</small>
+            </span>
+            <i data-lucide="arrow-right" class="choice-arrow h-4 w-4"></i>
+          </a>
+
+          <a href="#high-yield-savings" class="banking-choice-item">
+            <span class="choice-icon"><i data-lucide="badge-percent" class="h-5 w-5"></i></span>
+            <span>
+              <strong>Higher savings potential</strong>
+              <small>Unlock bonus interest through salary, card spend, or bills.</small>
+            </span>
+            <i data-lucide="arrow-right" class="choice-arrow h-4 w-4"></i>
+          </a>
+
+          <a href="#personal-loans" class="banking-choice-item">
+            <span class="choice-icon"><i data-lucide="file-signature" class="h-5 w-5"></i></span>
+            <span>
+              <strong>Borrow when needed</strong>
+              <small>Apply for a personal loan with clear tenure and repayment estimates.</small>
+            </span>
+            <i data-lucide="arrow-right" class="choice-arrow h-4 w-4"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="banking-subnav-section">
+    <div class="section-shell banking-subnav">
+      <a href="#accounts">Accounts</a>
+      <a href="#fixed-deposits">Fixed Deposits</a>
+      <a href="#personal-loans">Personal Loans</a>
+      <a href="#cards">Cards</a>
+      <a href="#application-flow">How to Apply</a>
+    </div>
+  </section>
+
+  <section id="accounts" class="section-shell py-16 lg:py-20">
+    <div class="banking-section-heading" data-reveal>
+      <div>
+        <p class="c-kicker">Accounts</p>
+        <h2 class="section-title mt-4">Pick the account that matches how you use money.</h2>
+      </div>
+      <p class="lead-copy">
+        Everyday savings is built for daily use, while high-yield savings rewards stronger banking habits. Eligible deposit accounts can include debit card access for ATM withdrawals and everyday spending.
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-5 lg:grid-cols-2">
+      <article id="everyday-savings" class="rtg-product-card" data-reveal>
+        <div class="product-card-top">
+          <span class="product-icon"><i data-lucide="wallet" class="h-5 w-5"></i></span>
+          <span class="product-tag">Daily Banking</span>
+        </div>
+        <h3>Everyday Savings Account</h3>
+        <p>
+          A simple account for salary crediting, deposits, ATM access, online banking, and day-to-day spending.
+        </p>
+        <div class="product-badge-row">
+          <span>Bundled debit card</span>
+          <span>Easy starting account</span>
+        </div>
+        <ul class="product-feature-list">
+          <li>Keep daily spending and incoming funds in one place.</li>
+          <li>Use a linked debit card for purchases and ATM withdrawals.</li>
+          <li>Track balances, deposits, and transfers from the dashboard.</li>
+        </ul>
+        <div class="product-cta-row">
+          <a href="/signup" class="btn-primary">Apply Now</a>
+          <a href="#application-flow" class="product-text-link">How it works</a>
+        </div>
+      </article>
+
+      <article id="high-yield-savings" class="rtg-product-card product-featured-card" data-reveal>
+        <div class="product-card-top">
+          <span class="product-icon"><i data-lucide="badge-percent" class="h-5 w-5"></i></span>
+          <span class="product-tag">Bonus Interest</span>
+        </div>
+        <h3>High-Yield Savings Account</h3>
+        <p>
+          A savings account for customers who want to grow balances faster by completing monthly banking actions.
+        </p>
+        <div class="product-badge-row">
+          <span>Salary crediting</span>
+          <span>Card spend</span>
+          <span>Bill payments</span>
+        </div>
+        <ul class="product-feature-list">
+          <li>Earn a base rate, then unlock higher bonus interest tiers.</li>
+          <li>Track monthly actions such as salary, spending, and bill payments.</li>
+          <li>Useful for customers who want visible savings progress.</li>
+        </ul>
+        <div class="product-cta-row">
+          <a href="/signup" class="btn-primary">Apply Now</a>
+          <a href="#application-flow" class="product-text-link">How it works</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="fixed-deposits" class="banking-soft-section py-16 lg:py-20">
+    <div class="section-shell banking-split">
+      <div data-reveal>
+        <p class="c-kicker">Fixed deposits</p>
+        <h2 class="section-title mt-4">Lock in a placement with a clear tenure and maturity plan.</h2>
+        <p class="lead-copy mt-5">
+          Fixed deposits are for customers who want to set aside funds for a selected period and review the expected return before confirming the placement.
+        </p>
+
+        <div class="banking-info-list mt-7">
+          <span><i data-lucide="circle-dollar-sign" class="h-4 w-4"></i> Choose placement amount</span>
+          <span><i data-lucide="calendar-clock" class="h-4 w-4"></i> Select tenure and maturity instruction</span>
+          <span><i data-lucide="banknote" class="h-4 w-4"></i> Pay out or renew at maturity</span>
+        </div>
+
+        <div class="mt-8">
+          <a href="/signup" class="btn-primary">Apply Now</a>
+        </div>
+      </div>
+
+      <div class="banking-calculator-card" data-reveal>
+        <div class="calculator-row">
+          <span>Placement amount</span>
+          <strong>S$10,000</strong>
+        </div>
+        <div class="calculator-row">
+          <span>Tenure</span>
+          <strong>12 months</strong>
+        </div>
+        <div class="calculator-row">
+          <span>Interest display</span>
+          <strong>Shown before confirmation</strong>
+        </div>
+        <div class="calculator-row highlight">
+          <span>Maturity instruction</span>
+          <strong>Payout or renew</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="personal-loans" class="section-shell py-16 lg:py-20">
+    <div class="banking-section-heading" data-reveal>
+      <div>
+        <p class="c-kicker">Personal loans</p>
+        <h2 class="section-title mt-4">Financing with a clear application and repayment view.</h2>
+      </div>
+      <p class="lead-copy">
+        A loan application can begin even if the customer does not already hold a savings account. The application should capture the purpose, requested amount, tenure, income details, decision status, and repayment estimate.
+      </p>
+    </div>
+
+    <div class="loan-showcase mt-12">
+      <div class="loan-copy-card" data-reveal>
+        <span class="product-icon"><i data-lucide="file-signature" class="h-5 w-5"></i></span>
+        <h3>Personal Loan</h3>
+        <p>
+          Apply for a fixed-tenure loan with transparent repayment information and application tracking from submission to approval.
+        </p>
+
+        <ul class="product-feature-list">
+          <li>Capture loan amount, tenure, and intended use.</li>
+          <li>Display estimated monthly repayment before submission.</li>
+          <li>Track pending, approved, rejected, active, and completed status.</li>
+        </ul>
+
+        <div class="product-cta-row">
+          <a href="/signup" class="btn-primary">Apply Now</a>
+          <a href="#application-flow" class="product-text-link">View steps</a>
+        </div>
+      </div>
+
+      <div class="loan-metric-grid" data-reveal>
+        <div class="loan-metric-card">
+          <i data-lucide="calculator" class="h-5 w-5"></i>
+          <strong>Repayment estimate</strong>
+          <small>Show amount, tenure, and monthly instalment clearly.</small>
+        </div>
+        <div class="loan-metric-card">
+          <i data-lucide="clipboard-check" class="h-5 w-5"></i>
+          <strong>Eligibility review</strong>
+          <small>Route the application into a lending decision flow.</small>
+        </div>
+        <div class="loan-metric-card">
+          <i data-lucide="wallet-cards" class="h-5 w-5"></i>
+          <strong>Disbursement option</strong>
+          <small>Let approved funds be credited to a selected account.</small>
+        </div>
+        <div class="loan-metric-card">
+          <i data-lucide="history" class="h-5 w-5"></i>
+          <strong>Status tracking</strong>
+          <small>Keep the customer updated from submission to completion.</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cards" class="banking-soft-section py-16 lg:py-20">
+    <div class="section-shell">
+      <div class="banking-section-heading" data-reveal>
+        <div>
+          <p class="c-kicker">Cards</p>
+          <h2 class="section-title mt-4">Two card options for different spending needs.</h2>
+        </div>
+        <p class="lead-copy">
+          Credit cards are independent applications with credit assessment. A foreign exchange card is travel-focused and can be used for supported currency wallets and overseas spending visibility.
+        </p>
+      </div>
+
+      <div class="cards-showcase mt-12">
+        <article id="flex-credit-card" class="card-product-panel card-product-blue" data-reveal>
+          <div class="card-product-content">
+            <p class="c-kicker">Credit card</p>
+            <h3>Flex Credit Card</h3>
+            <p>
+              A flexible credit card for everyday purchases, statements, repayment tracking, and card control features.
+            </p>
+
+            <ul class="card-feature-list">
+              <li>Independent application without needing an existing bank account.</li>
+              <li>Income and eligibility review before limit assignment.</li>
+              <li>Monthly billing, repayment status, and card controls.</li>
+            </ul>
+
+            <a href="/signup" class="btn-light">Apply Now</a>
+          </div>
+          <div class="card-art" aria-hidden="true">
+            <span>RustToGold</span>
+            <strong>FLEX CARD</strong>
+            <small>•••• 2458</small>
+          </div>
+        </article>
+
+        <article id="foreign-exchange-card" class="card-product-panel card-product-gold" data-reveal>
+          <div class="card-product-content">
+            <p class="c-kicker">Foreign exchange card</p>
+            <h3>Foreign Exchange Card</h3>
+            <p>
+              A travel-friendly card for customers who want clearer overseas spending records and supported currency wallet balances.
+            </p>
+
+            <ul class="card-feature-list">
+              <li>Top up from an eligible funding source.</li>
+              <li>Hold supported travel currency balances in card wallets.</li>
+              <li>Track overseas transactions and exchange details in one place.</li>
+            </ul>
+
+            <a href="/signup" class="btn-dark">Apply Now</a>
+          </div>
+          <div class="card-art card-art-light" aria-hidden="true">
+            <span>Travel Wallet</span>
+            <strong>FX CARD</strong>
+            <small>SGD · USD · EUR · JPY</small>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="application-flow" class="section-shell py-16 lg:py-20">
+    <div class="banking-section-heading" data-reveal>
+      <div>
+        <p class="c-kicker">How to apply</p>
+        <h2 class="section-title mt-4">A clear journey that creates the right account foundation first.</h2>
+      </div>
+      <p class="lead-copy">
+        Customers first choose the product they want. If the product needs an eligible savings account, RustToGold completes KYC, creates the required Everyday Savings or High-Yield Savings Account, then returns the customer to the original product application.
+      </p>
+    </div>
+
+    <div class="customer-flow-grid mt-12">
+      <article class="customer-flow-card" data-reveal>
+        <span>01</span>
+        <h3>Choose a product</h3>
+        <p>Select an account, fixed deposit, loan, credit card, or foreign exchange card before starting the journey.</p>
+      </article>
+      <article class="customer-flow-card" data-reveal>
+        <span>02</span>
+        <h3>Verify your details</h3>
+        <p>Complete KYC once so the customer profile and account foundation can be created.</p>
+      </article>
+      <article class="customer-flow-card" data-reveal>
+        <span>03</span>
+        <h3>Review and submit</h3>
+        <p>Create the selected savings account first when the product requires an account.</p>
+      </article>
+      <article class="customer-flow-card" data-reveal>
+        <span>04</span>
+        <h3>Track the outcome</h3>
+        <p>Continue back to the original product, then track approval, activation, or follow-up status.</p>
+      </article>
+    </div>
+  </section>
+</main>
+{% endblock %}
