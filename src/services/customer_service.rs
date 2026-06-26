@@ -12,7 +12,7 @@ pub async fn create_customer(db: &PgPool, form: OnboardingForm) -> Result<Custom
 
     println!("{}", step1.nric);
 
-    let customer_option = customer_repository::get_customer_by_nric(db, step1.nric.clone())
+    let customer_option = customer_repository::get_customer_by_nric(db, &step1.nric.clone())
         .await
         .map_err(|e| e.to_string())?;
 

@@ -3,12 +3,13 @@ use crate::controllers::session_guard::require_customer;
 use crate::forms::account_forms::TransferForm;
 use crate::forms::{DepositForm, ProfileForm};
 use crate::repositories::{account_repository, product_repository};
-use crate::services;
+use crate::services::{self, product_service};
 use crate::views::{
     CustomerPageTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate, ProfileTemplate, TransactionsTemplate, render,
 };
 use crate::AppState;
 use actix_session::Session;
+use actix_web::dev::Path;
 use actix_web::{web, HttpResponse, Result};
 use uuid::Uuid;
 
@@ -305,4 +306,25 @@ pub async fn fixed_deposit_new_page(
         primary_label: "Back to Fixed Deposits",
         primary_href: "/customer/fixed-deposits",
     })
+}
+
+pub async fn approve_product(data: web::Data<AppState>, path: web::Path<String>, session: Session) -> Result<HttpResponse> {
+    let account_id = match Uuid::parse_str(&path.into_inner()) {
+        Ok(account_id) => account_id,
+        Err(e) => {
+            println!("ok");
+            return render(ErrorTemplate)
+        }
+    };
+
+    match product_service::approve_product(&data, account_id).await {
+        Ok(updated_product) => {
+            println!("works!");
+            render(ErrorTemplate)
+        },
+        Err(e) => {
+            println!("error for approve product: {}", e.to_string());
+            render(ErrorTemplate)
+        }
+    }
 }

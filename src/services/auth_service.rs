@@ -70,7 +70,7 @@ pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, St
         return Err("An online banking profile with this email already exists.".to_string());
     }
 
-    let existing_customer = customer_repository::get_customer_by_nric(db, nric_fin.clone())
+    let existing_customer = customer_repository::get_customer_by_nric(db, &nric_fin.clone())
         .await
         .map_err(|error| {
             eprintln!("SIGNUP NRIC lookup failed for {nric_fin}: {error:?}");

@@ -24,18 +24,35 @@ pub struct NewCustomer<'a> {
     pub kyc_status: Option<&'a str>,
 }
 
-pub async fn get_customer_by_nric(db: &PgPool, nric: String) -> Result<Option<Customer>, sqlx::Error> {
+pub async fn get_customer_by_nric(db: &PgPool, nric: &str) -> Result<Option<Customer>, sqlx::Error> {
     println!("{}", nric);
     sqlx::query_as::<_, Customer>(
         r#"SELECT id, full_name, nric, date_of_birth, gender, nationality, residency, race,
                   email, phone_number, residential_address, mailing_address, preferred_contact,
                   employment_status, occupation, employer_name, industry, monthly_income_range,
-                  kyc_status, created_at, updated_at FROM customers WHERE nric = $1"#
+                  kyc_status, created_at, updated_at 
+                  FROM customers 
+                  WHERE nric = $1"#
     )
     .bind(nric)
     .fetch_optional(db)
     .await
 }
+
+pub async fn get_customer_by_id(db: &PgPool, id: &Uuid) -> Result<Customer, sqlx::Error> {
+    sqlx::query_as::<_, Customer>(
+        r#"SELECT id, full_name, nric, date_of_birth, gender, nationality, residency, race,
+                  email, phone_number, residential_address, mailing_address, preferred_contact,
+                  employment_status, occupation, employer_name, industry, monthly_income_range,
+                  kyc_status, created_at, updated_at 
+                  FROM customers 
+                  WHERE id = $1"#
+    )
+    .bind(id)
+    .fetch_one(db)
+    .await
+}
+
 
 pub async fn create_customer(db: &PgPool, new_customer: &NewCustomer<'_>) -> Result<Customer, sqlx::Error> {
     sqlx::query_as::<_, Customer> (
@@ -139,6 +156,25 @@ pub async fn update_customer(db: &PgPool, uuid: Uuid, new_info: &NewCustomer<'_>
     .bind(uuid)
     .fetch_one(db)
     .await
+}
+
+pub async fn approve_customer(db: &PgPool, account_id: &Uuid) -> Result<Customer, sqlx::Error> {
+    let updated_product = sqlx::query_as::<_, Customer>(
+        r#"
+        UPDATE customers
+        SET kyc_status = 'approved', updated_at = NOW()
+        WHERE id = $1 AND kyc_status = 'pending'
+        RETURNING id, full_name, nric, date_of_birth, gender, nationality, residency, race,
+            email, phone_number, residential_address, mailing_address, preferred_contact,
+            employment_status, occupation, employer_name, industry, monthly_income_range,
+            kyc_status, created_at, updated_at
+        "#,
+    )
+    .bind(account_id)
+    .fetch_one(db)
+    .await?;
+
+    Ok(updated_product)
 }
 pub async fn create_customer_profile_for_user(
     db: &PgPool,
