@@ -55,7 +55,8 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("/fixed-deposits", web::get().to(controllers::fixed_deposits_page))
                     .route("/fixed-deposits/new", web::get().to(controllers::fixed_deposit_new_page))
                     .route("/profile", web::get().to(controllers::profile_page))
-                    .route("/profile", web::post().to(controllers::update_profile)),
+                    .route("/profile", web::post().to(controllers::update_profile))
+                    .route("/approve/{path}", web::post().to(controllers::approve_product))
             ),
     );
 }
