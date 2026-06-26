@@ -5,7 +5,7 @@ use uuid::Uuid;
 pub async fn get_product_by_user_id_and_product_id(db: &PgPool, customer_id: &Uuid, product_id: &str) -> Result<Option<Product>, sqlx::Error> {
     sqlx::query_as::<_, Product> (
         r#"
-        SELECT id, customer_id, account_number, product_id, balance_cents, status, created_at, updated_at FROM customer_products WHERE product_id = $1 AND customer_id = $2
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at FROM customer_products WHERE product_id = $1 AND customer_id = $2
         "#
     )
     .bind(product_id)

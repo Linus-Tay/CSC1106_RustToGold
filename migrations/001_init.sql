@@ -1,127 +1,155 @@
-DROP TABLE IF EXISTS transactions;
---DROP TABLE IF EXISTS bank_accounts;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS account_creation_links;
-DROP TABLE IF EXISTS registered_paynow;
-DROP TABLE IF EXISTS customer_products;
-DROP TABLE IF EXISTS customers;
+-- RustToGold 001_init.sql
+-- Updated to match the current Rust models/repositories and the routed account-creation flow.
+-- WARNING: This is a reset script. It drops existing local development tables.
 
-    -- CREATE TYPE gender_type AS ENUM ('MALE', 'FEMALE');
-    -- CREATE TYPE residency_type AS ENUM ('CITIZEN', 'PR', 'FOREIGNER');
-    -- CREATE TYPE employment_type AS ENUM ('EMPLOYED', 'SELF_EMPLOYED', 'UNEMPLOYED', 'STUDENT', 'RETIRED');
-    -- CREATE TYPE contact_method_type AS ENUM ('EMAIL', 'PHONE');
-    -- CREATE TYPE kyc_status_type AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
-    -- CREATE TYPE statement_type AS ENUM ('DIGITAL', 'PHYSICAL');
-    -- CREATE TYPE account_status_type AS ENUM ('ACTIVE', 'INACTIVE', 'PENDING');
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+DROP TABLE IF EXISTS transactions CASCADE;
+DROP TABLE IF EXISTS registered_paynow CASCADE;
+DROP TABLE IF EXISTS account_creation_links CASCADE;
+DROP TABLE IF EXISTS bank_accounts CASCADE;
+DROP TABLE IF EXISTS customer_products CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
 
 CREATE TABLE customers (
     id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    full_name            VARCHAR(100) NOT NULL,
-    nric                 VARCHAR(20) UNIQUE NOT NULL,
+    full_name            TEXT NOT NULL,
+    nric                 TEXT UNIQUE NOT NULL,
     date_of_birth        DATE NOT NULL,
-    gender               VARCHAR(10) NOT NULL,
-    nationality          VARCHAR(50) NOT NULL,
-    residency            VARCHAR(50) NOT NULL,
-    race                 VARCHAR(50),
-    email                VARCHAR(255) UNIQUE NOT NULL,
-    phone_number         VARCHAR(20) NOT NULL,
+    gender               TEXT NOT NULL DEFAULT 'Not collected',
+    nationality          TEXT NOT NULL,
+    residency            TEXT NOT NULL,
+    race                 TEXT NULL,
+    email                TEXT UNIQUE NOT NULL,
+    phone_number         TEXT NOT NULL,
     residential_address  TEXT NOT NULL,
-    mailing_address      TEXT,
-    preferred_contact    VARCHAR(20) DEFAULT 'email',
-    employment_status    VARCHAR(50) NOT NULL,
-    occupation           VARCHAR(100),
-    employer_name        VARCHAR(100),
-    industry             VARCHAR(100),
-    monthly_income_range VARCHAR(50),
-    kyc_status           VARCHAR(20) DEFAULT 'pending',
-    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    CONSTRAINT gender_check CHECK (gender IN ('male', 'female')),
-    CONSTRAINT residency_check CHECK (residency IN ('citizen', 'pr', 'foreigner')),
-    CONSTRAINT employment_check CHECK (employment_status IN ('employed', 'self_employed', 'unemployed', 'student', 'nsf', 'retired')),
-    CONSTRAINT kyc_status_check CHECK (kyc_status IN ('pending', 'approved', 'rejected')),
-    CONSTRAINT preferred_contact_check CHECK (preferred_contact IN ('email', 'telegram'))
-);
+    mailing_address      TEXT NULL,
+    preferred_contact    TEXT NULL,
+    employment_status    TEXT NOT NULL,
+    occupation           TEXT NULL,
+    employer_name        TEXT NULL,
+    industry             TEXT NULL,
+    monthly_income_range TEXT NULL,
+    kyc_status           TEXT NOT NULL DEFAULT 'pending',
+    created_at           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-CREATE TABLE customer_products (
-    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    customer_id          UUID NOT NULL REFERENCES customers(id),
-    product_id           VARCHAR(50) NOT NULL,
-    product_type         VARCHAR(20) NOT NULL,
-    account_number       VARCHAR(20) UNIQUE NOT NULL,
-    status               VARCHAR(20) DEFAULT 'inactive',
-	balance_cents		 BIGINT NOT NULL DEFAULT 0,
-    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    CONSTRAINT product_status_check CHECK (status IN ('active', 'inactive', 'closed')),
-    CONSTRAINT          transactions_amount_positive CHECK (balance_cents >= 0),
-    CONSTRAINT          product_type_check CHECK (product_type IN ('savings', 'spending', 'fixed_deposit', 'investment'))
+    CONSTRAINT customers_kyc_status_check
+        CHECK (kyc_status IN ('pending', 'approved', 'rejected'))
 );
 
 CREATE TABLE users (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username             VARCHAR(255) NOT NULL UNIQUE,
-    password_hash       TEXT NOT NULL,
-    role                VARCHAR(30) NOT NULL DEFAULT 'customer',
-    status              VARCHAR(30)  NOT NULL DEFAULT 'active',
-    last_login_at       TIMESTAMP NULL,
-    created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at          TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT users_role_check CHECK (role IN ('customer', 'staff', 'admin')),
-    CONSTRAINT users_status_check CHECK (status IN ('active', 'suspended', 'closed'))
+    id             BIGSERIAL PRIMARY KEY,
+    customer_id    UUID NOT NULL DEFAULT gen_random_uuid(),
+    full_name      TEXT NOT NULL,
+    email          TEXT NOT NULL UNIQUE,
+    phone_number   TEXT NOT NULL,
+    date_of_birth  DATE NOT NULL,
+    password_hash  TEXT NOT NULL,
+    role           TEXT NOT NULL DEFAULT 'customer',
+    status         TEXT NOT NULL DEFAULT 'active',
+    last_login_at  TIMESTAMP NULL,
+    created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT users_customer_id_unique UNIQUE (customer_id),
+    CONSTRAINT users_role_check
+        CHECK (role IN ('customer', 'staff', 'admin')),
+    CONSTRAINT users_status_check
+        CHECK (status IN ('active', 'suspended', 'closed'))
 );
 
--- CREATE TABLE bank_accounts (
---     id BIGSERIAL PRIMARY KEY,
---     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
---     account_number VARCHAR(50) NOT NULL UNIQUE,
---     account_type VARCHAR(30) NOT NULL DEFAULT 'savings',
---     balance_cents BIGINT NOT NULL DEFAULT 0,
---     status VARCHAR(30) NOT NULL DEFAULT 'active',
---     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
---     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
---     CONSTRAINT bank_accounts_type_check CHECK (account_type IN ('savings', 'current')),
---     CONSTRAINT bank_accounts_status_check CHECK (status IN ('active', 'frozen', 'closed')),
---     CONSTRAINT bank_accounts_balance_non_negative CHECK (balance_cents >= 0)
--- );
+CREATE TABLE bank_accounts (
+    id             BIGSERIAL PRIMARY KEY,
+    user_id        BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    account_number TEXT NOT NULL UNIQUE,
+    account_type   TEXT NOT NULL DEFAULT 'everyday_savings',
+    balance_cents  BIGINT NOT NULL DEFAULT 0,
+    status         TEXT NOT NULL DEFAULT 'active',
+    created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT bank_accounts_type_check
+        CHECK (account_type IN ('everyday_savings', 'high_yield_savings', 'savings', 'current')),
+    CONSTRAINT bank_accounts_status_check
+        CHECK (status IN ('active', 'frozen', 'closed')),
+    CONSTRAINT bank_accounts_balance_non_negative
+        CHECK (balance_cents >= 0)
+);
+
+CREATE TABLE customer_products (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id    UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    product_id     TEXT NOT NULL,
+    product_type   TEXT NOT NULL,
+    account_number TEXT NOT NULL UNIQUE,
+    status         TEXT NOT NULL DEFAULT 'active',
+    balance_cents  BIGINT NOT NULL DEFAULT 0,
+    created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT customer_products_unique_customer_product
+        UNIQUE (customer_id, product_id),
+    CONSTRAINT customer_products_status_check
+        CHECK (status IN ('active', 'inactive', 'closed')),
+    CONSTRAINT customer_products_balance_non_negative
+        CHECK (balance_cents >= 0),
+    CONSTRAINT customer_products_type_check
+        CHECK (product_type IN ('savings', 'spending', 'fixed_deposit', 'investment'))
+);
 
 CREATE TABLE transactions (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id          UUID NOT NULL REFERENCES customer_products(id) ON DELETE CASCADE,
-    customer_id         UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    transaction_type    VARCHAR(30) NOT NULL,
+    account_id          BIGINT NULL REFERENCES bank_accounts(id) ON DELETE SET NULL,
+    user_id             BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    product_id          UUID NULL REFERENCES customer_products(id) ON DELETE SET NULL,
+    customer_id         UUID NULL REFERENCES customers(id) ON DELETE SET NULL,
+    transaction_type    TEXT NOT NULL,
     amount_cents        BIGINT NOT NULL,
     balance_after_cents BIGINT NOT NULL,
     description         TEXT NULL,
     created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT          transactions_type_check CHECK (transaction_type IN ('deposit', 'withdrawal', 'transfer_in', 'transfer_out')),
-    CONSTRAINT          transactions_amount_positive CHECK (amount_cents > 0),
-    CONSTRAINT          transactions_balance_after_non_negative CHECK (balance_after_cents >= 0)
+
+    CONSTRAINT transactions_type_check
+        CHECK (transaction_type IN ('deposit', 'withdrawal', 'transfer_in', 'transfer_out')),
+    CONSTRAINT transactions_amount_positive
+        CHECK (amount_cents > 0),
+    CONSTRAINT transactions_balance_after_non_negative
+        CHECK (balance_after_cents >= 0)
 );
 
 CREATE TABLE account_creation_links (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    status      VARCHAR(20) DEFAULT 'pending',
+    status      TEXT NOT NULL DEFAULT 'pending',
     expires_at  TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    CONSTRAINT status_check CHECK (status IN ('pending', 'expired', 'used'))
+    created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT account_creation_links_status_check
+        CHECK (status IN ('pending', 'expired', 'used'))
 );
 
 CREATE TABLE registered_paynow (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    customer_id         UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
-    paynow_type         VARCHAR(20) NOT NULL,
-    paynow_id           VARCHAR(20) NOT NULL,
-    linked_account_id   UUID NOT NULL REFERENCES customer_products(id) ON DELETE CASCADE,
-    registered_at       TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    status              VARCHAR(20) NOT NULL,
-    CONSTRAINT paynow_type_check CHECK (paynow_type IN ('phone_number', 'nric')),
-    CONSTRAINT status_check CHECK (status IN ('active', 'inactive'))
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id       UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    paynow_type       TEXT NOT NULL,
+    paynow_id         TEXT NOT NULL,
+    linked_account_id UUID NOT NULL REFERENCES customer_products(id) ON DELETE CASCADE,
+    registered_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status            TEXT NOT NULL DEFAULT 'active',
+
+    CONSTRAINT registered_paynow_type_check
+        CHECK (paynow_type IN ('phone_number', 'nric')),
+    CONSTRAINT registered_paynow_status_check
+        CHECK (status IN ('active', 'inactive'))
 );
 
-
 CREATE INDEX idx_users_email ON users(email);
---CREATE INDEX idx_bank_accounts_user_id ON bank_accounts(user_id);
+CREATE INDEX idx_users_customer_id ON users(customer_id);
+CREATE INDEX idx_bank_accounts_user_id ON bank_accounts(user_id);
 CREATE INDEX idx_customer_products_customer_id ON customer_products(customer_id);
+CREATE INDEX idx_customer_products_account_number ON customer_products(account_number);
+CREATE INDEX idx_transactions_user_id_created_at ON transactions(user_id, created_at DESC);
 CREATE INDEX idx_transactions_customer_id_created_at ON transactions(customer_id, created_at DESC);
+CREATE INDEX idx_transactions_product_id_created_at ON transactions(product_id, created_at DESC);

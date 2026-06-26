@@ -1715,3 +1715,369 @@ body {
 main {
   flex: 1;
 }
+
+/* =========================================================
+   Routed account-opening wizard
+   Used by templates/auth/signup_*.html
+   ========================================================= */
+
+.rtg-wizard-body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(29, 78, 216, 0.12), transparent 28rem),
+    radial-gradient(circle at bottom right, rgba(212, 168, 79, 0.16), transparent 30rem),
+    var(--color-bg);
+}
+
+.rtg-wizard-shell {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 2rem;
+}
+
+.rtg-wizard-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.rtg-wizard-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-heading);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.rtg-wizard-logo {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 1rem;
+  background: var(--color-white);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  overflow: hidden;
+}
+
+.rtg-wizard-logo img {
+  width: 1.8rem;
+  height: 1.8rem;
+  object-fit: contain;
+}
+
+.rtg-wizard-exit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.rtg-wizard-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.rtg-wizard-sidebar,
+.rtg-wizard-card {
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-xl);
+}
+
+.rtg-wizard-sidebar {
+  position: sticky;
+  top: 1rem;
+  padding: 1rem;
+}
+
+.rtg-wizard-stepper {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.rtg-step {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.rtg-step span {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 999px;
+  background: var(--tint-slate);
+  color: var(--color-heading);
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+}
+
+.rtg-step.is-active {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.rtg-step.is-active span {
+  background: var(--color-gold);
+  color: var(--color-primary);
+}
+
+.rtg-wizard-security-note,
+.rtg-wizard-note {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: var(--tint-blue);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.rtg-wizard-main {
+  min-width: 0;
+}
+
+.rtg-wizard-scroll {
+  display: grid;
+  gap: 1rem;
+}
+
+.rtg-wizard-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--tint-red);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.rtg-wizard-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.rtg-wizard-card {
+  padding: clamp(1.1rem, 2.5vw, 2rem);
+}
+
+.rtg-wizard-card-head {
+  max-width: 760px;
+  margin-bottom: 1.25rem;
+}
+
+.rtg-wizard-card-head h1 {
+  margin-top: 0.25rem;
+  color: var(--color-heading);
+  font-family: var(--font-heading);
+  font-size: clamp(1.65rem, 3.4vw, 2.5rem);
+  line-height: 1.08;
+}
+
+.rtg-wizard-card-head p:last-child {
+  margin-top: 0.6rem;
+  color: var(--color-muted);
+  max-width: 68ch;
+}
+
+.rtg-choice-grid,
+.rtg-form-grid,
+.rtg-review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.rtg-choice-card {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  cursor: pointer;
+}
+
+.rtg-choice-card input {
+  margin-top: 0.25rem;
+}
+
+.rtg-choice-card span {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.rtg-choice-card small {
+  color: var(--color-primary-light);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--text-xs);
+}
+
+.rtg-choice-card strong {
+  color: var(--color-heading);
+  font-size: 1rem;
+}
+
+.rtg-choice-card em {
+  color: var(--color-muted);
+  font-style: normal;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.rtg-form-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.rtg-form-field--full {
+  grid-column: 1 / -1;
+}
+
+.rtg-form-field label {
+  color: var(--color-heading);
+  font-weight: 800;
+  font-size: var(--text-sm);
+}
+
+.rtg-form-field label span {
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.rtg-form-field input,
+.rtg-form-field select,
+.rtg-form-field textarea {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-white);
+  padding: 0.8rem 0.95rem;
+  color: var(--color-text);
+  outline: none;
+}
+
+.rtg-form-field textarea {
+  min-height: 6.5rem;
+  resize: vertical;
+}
+
+.rtg-form-field input:focus,
+.rtg-form-field select:focus,
+.rtg-form-field textarea:focus {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.12);
+}
+
+.rtg-wizard-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.rtg-review-card {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+}
+
+.rtg-review-card h2 {
+  margin-bottom: 0.65rem;
+  color: var(--color-heading);
+  font-size: 1rem;
+}
+
+.rtg-review-card p {
+  margin-top: 0.35rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.rtg-review-card strong {
+  color: var(--color-heading);
+}
+
+.rtg-declaration-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.rtg-declaration-list label {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.8rem 0.9rem;
+  border-radius: 1rem;
+  background: var(--tint-slate);
+  color: var(--color-text);
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.rtg-declaration-list input {
+  margin-top: 0.18rem;
+}
+
+@media (max-width: 860px) {
+  .rtg-wizard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .rtg-wizard-sidebar {
+    position: static;
+  }
+
+  .rtg-wizard-stepper {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .rtg-step {
+    justify-content: center;
+    font-size: var(--text-sm);
+  }
+
+  .rtg-step strong {
+    display: none;
+  }
+
+  .rtg-choice-grid,
+  .rtg-form-grid,
+  .rtg-review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rtg-wizard-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}

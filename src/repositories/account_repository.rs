@@ -2,18 +2,23 @@ use crate::models::{BankAccount, Transaction};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
-pub async fn create_primary_account(db: &PgPool, user_id: i64) -> Result<BankAccount, sqlx::Error> {
+pub async fn create_primary_account(
+    db: &PgPool,
+    user_id: i64,
+    account_type: &str,
+) -> Result<BankAccount, sqlx::Error> {
     let account_number = format!("RTG-{}", Uuid::new_v4().simple());
 
     sqlx::query_as::<_, BankAccount>(
         r#"
         INSERT INTO bank_accounts (user_id, account_number, account_type, balance_cents, status)
-        VALUES ($1, $2, 'savings', 0, 'active')
+        VALUES ($1, $2, $3, 0, 'active')
         RETURNING id, user_id, account_number, account_type, balance_cents, status, created_at, updated_at
         "#,
     )
     .bind(user_id)
     .bind(account_number)
+    .bind(account_type)
     .fetch_one(db)
     .await
 }

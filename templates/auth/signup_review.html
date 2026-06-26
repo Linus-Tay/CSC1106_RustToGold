@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Review Application</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Manrope', 'Inter', 'sans-serif'] } } } };</script>
+</head>
+<body class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_32rem),radial-gradient(circle_at_top_right,rgba(214,165,74,0.18),transparent_30rem),linear-gradient(180deg,#F8FBFF_0%,#F7FAFC_55%,#FFFFFF_100%)] font-sans text-slate-900">
+  <main class="min-h-screen p-4 lg:p-6">
+    <header class="mx-auto mb-4 flex max-w-7xl items-center justify-between rounded-3xl border border-white/70 bg-white/80 px-5 py-4 shadow-sm backdrop-blur">
+      <a href="/" class="flex items-center gap-3 font-heading text-lg font-black tracking-tight text-[#071B33]"><span class="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><img class="h-10 w-10 object-contain" src="/static/images/rusttogold-logo.png" alt="RustToGold" /></span><span>RustToGold</span></a>
+      <a href="/" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md">Exit</a>
+    </header>
+    <div class="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <aside class="rounded-[2rem] bg-[#071B33] p-5 text-white shadow-2xl shadow-[#071B33]/20 lg:sticky lg:top-6 lg:h-[calc(100vh-8rem)]">
+        <p class="text-xs font-black uppercase tracking-[0.24em] text-[#F0CC76]">Account opening</p>
+        <h1 class="mt-3 font-heading text-3xl font-black leading-tight tracking-tight">Review before submitting.</h1>
+        <p class="mt-3 text-sm leading-6 text-white/70">Check the information below before we open your profile and main account.</p>
+        <nav class="mt-8 space-y-2" aria-label="Account opening steps">
+          <a class="flex items-center gap-3 rounded-2xl px-4 py-3 text-white/75" href="/signup/account"><span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-400 text-sm font-black text-[#071B33]">✓</span><strong class="text-sm">Choose Account</strong></a>
+          <a class="flex items-center gap-3 rounded-2xl px-4 py-3 text-white/75" href="/signup/personal"><span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-400 text-sm font-black text-[#071B33]">✓</span><strong class="text-sm">Basic Details</strong></a>
+          <a class="flex items-center gap-3 rounded-2xl px-4 py-3 text-white/75" href="/signup/contact"><span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-400 text-sm font-black text-[#071B33]">✓</span><strong class="text-sm">Contact Details</strong></a>
+          <a class="flex items-center gap-3 rounded-2xl px-4 py-3 text-white/75" href="/signup/employment"><span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-400 text-sm font-black text-[#071B33]">✓</span><strong class="text-sm">Employment</strong></a>
+          <a class="flex items-center gap-3 rounded-2xl px-4 py-3 text-white/75" href="/signup/security"><span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-400 text-sm font-black text-[#071B33]">✓</span><strong class="text-sm">Security</strong></a>
+          <a class="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-[#071B33] shadow-lg" href="/signup/review"><span class="grid h-8 w-8 place-items-center rounded-full bg-[#D6A54A] text-sm font-black">6</span><strong class="text-sm">Review & Submit</strong></a>
+        </nav>
+      </aside>
+      <section class="rounded-[2rem] border border-slate-200 bg-white/90 p-5 shadow-xl shadow-slate-200/70 backdrop-blur lg:p-8">
+        {% if has_error %}<div class="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ error }}</div>{% endif %}
+        <div class="space-y-8">
+          <div><p class="text-xs font-black uppercase tracking-[0.22em] text-blue-600">Step 6</p><h2 class="mt-3 font-heading text-4xl font-black tracking-tight text-[#071B33]">Review & Submit</h2><p class="mt-3 max-w-2xl text-base leading-7 text-slate-600">Make sure everything is correct before opening your RustToGold account.</p></div>
+
+          <div class="grid gap-4 xl:grid-cols-2">
+            <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div class="flex items-start justify-between gap-4"><h3 class="font-heading text-xl font-black text-[#071B33]">Account</h3><a class="text-sm font-bold text-blue-600" href="/signup/account">Edit</a></div><dl class="mt-4 grid gap-3 text-sm"><div><dt class="font-bold text-slate-500">Account type</dt><dd class="mt-1 font-semibold text-slate-900">{{ selected_account_type }}</dd></div><div><dt class="font-bold text-slate-500">Preferred name</dt><dd class="mt-1 font-semibold text-slate-900">{{ preferred_account_name }}</dd></div><div><dt class="font-bold text-slate-500">Purpose</dt><dd class="mt-1 font-semibold text-slate-900">{{ account_purpose }}</dd></div></dl></section>
+            <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div class="flex items-start justify-between gap-4"><h3 class="font-heading text-xl font-black text-[#071B33]">Identity</h3><a class="text-sm font-bold text-blue-600" href="/signup/personal">Edit</a></div><dl class="mt-4 grid gap-3 text-sm"><div><dt class="font-bold text-slate-500">Full name</dt><dd class="mt-1 font-semibold text-slate-900">{{ full_name }}</dd></div><div><dt class="font-bold text-slate-500">NRIC / FIN</dt><dd class="mt-1 font-semibold text-slate-900">{{ nric_fin }}</dd></div><div><dt class="font-bold text-slate-500">Date of birth</dt><dd class="mt-1 font-semibold text-slate-900">{{ date_of_birth }}</dd></div><div><dt class="font-bold text-slate-500">Nationality</dt><dd class="mt-1 font-semibold text-slate-900">{{ nationality }}</dd></div><div><dt class="font-bold text-slate-500">Residential status</dt><dd class="mt-1 font-semibold text-slate-900">{{ residential_status }}</dd></div><div><dt class="font-bold text-slate-500">Residential address</dt><dd class="mt-1 font-semibold text-slate-900">{{ residential_address }}</dd></div></dl></section>
+            <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div class="flex items-start justify-between gap-4"><h3 class="font-heading text-xl font-black text-[#071B33]">Contact</h3><a class="text-sm font-bold text-blue-600" href="/signup/contact">Edit</a></div><dl class="mt-4 grid gap-3 text-sm"><div><dt class="font-bold text-slate-500">Email</dt><dd class="mt-1 font-semibold text-slate-900">{{ email }}</dd></div><div><dt class="font-bold text-slate-500">Mobile number</dt><dd class="mt-1 font-semibold text-slate-900">{{ phone_number }}</dd></div><div><dt class="font-bold text-slate-500">Mailing address</dt><dd class="mt-1 font-semibold text-slate-900">{{ mailing_address }}</dd></div></dl></section>
+            <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div class="flex items-start justify-between gap-4"><h3 class="font-heading text-xl font-black text-[#071B33]">Employment</h3><a class="text-sm font-bold text-blue-600" href="/signup/employment">Edit</a></div><dl class="mt-4 grid gap-3 text-sm"><div><dt class="font-bold text-slate-500">Employment status</dt><dd class="mt-1 font-semibold text-slate-900">{{ employment_status }}</dd></div><div><dt class="font-bold text-slate-500">Occupation</dt><dd class="mt-1 font-semibold text-slate-900">{{ occupation }}</dd></div><div><dt class="font-bold text-slate-500">Employer</dt><dd class="mt-1 font-semibold text-slate-900">{{ employer_name }}</dd></div><div><dt class="font-bold text-slate-500">Income range</dt><dd class="mt-1 font-semibold text-slate-900">{{ monthly_income_range }}</dd></div><div><dt class="font-bold text-slate-500">Source of funds</dt><dd class="mt-1 font-semibold text-slate-900">{{ source_initial_deposit }}</dd></div><div><dt class="font-bold text-slate-500">Password</dt><dd class="mt-1 font-semibold text-emerald-700">{% if password_created %}Created securely{% else %}Not created yet{% endif %}</dd></div></dl></section>
+          </div>
+
+          <form action="/signup/submit" method="post" class="space-y-4 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <h3 class="font-heading text-xl font-black text-[#071B33]">Declarations</h3>
+            <label class="flex gap-3 text-sm font-semibold leading-6 text-slate-700"><input class="mt-1 h-4 w-4 rounded border-slate-300" type="checkbox" name="opening_for_self" required /><span>I am opening this account for myself.</span></label>
+            <label class="flex gap-3 text-sm font-semibold leading-6 text-slate-700"><input class="mt-1 h-4 w-4 rounded border-slate-300" type="checkbox" name="not_acting_for_others" required /><span>I am not acting on behalf of another person.</span></label>
+            <label class="flex gap-3 text-sm font-semibold leading-6 text-slate-700"><input class="mt-1 h-4 w-4 rounded border-slate-300" type="checkbox" name="funds_legitimate" required /><span>The funds placed into this account will come from legitimate sources.</span></label>
+            <label class="flex gap-3 text-sm font-semibold leading-6 text-slate-700"><input class="mt-1 h-4 w-4 rounded border-slate-300" type="checkbox" name="terms_agreed" required /><span>I agree to RustToGold's account terms and electronic banking conditions.</span></label>
+            <label class="flex gap-3 text-sm font-semibold leading-6 text-slate-700"><input class="mt-1 h-4 w-4 rounded border-slate-300" type="checkbox" name="accuracy_confirmed" required /><span>I confirm that the information submitted is accurate and complete.</span></label>
+            <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between"><a class="inline-flex justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700" href="/signup/security">Back</a><button class="inline-flex justify-center rounded-full bg-[#D6A54A] px-7 py-3 text-sm font-black text-[#071B33] shadow-lg shadow-[#D6A54A]/25 transition hover:-translate-y-0.5" type="submit">Submit application</button></div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

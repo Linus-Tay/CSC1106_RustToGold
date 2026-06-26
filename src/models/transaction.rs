@@ -7,8 +7,8 @@ use uuid::Uuid;
 #[derive(Debug, Clone, FromRow)]
 pub struct Transaction {
     pub id: Uuid,
-    pub product_id: Uuid,
-    pub customer_id: Uuid,
+    pub product_id: Option<Uuid>,
+    pub customer_id: Option<Uuid>,
     pub transaction_type: String,
     pub amount_cents: i64,
     pub balance_after_cents: i64,
@@ -19,10 +19,10 @@ pub struct Transaction {
 impl Transaction {
     pub fn transaction_type_display(&self) -> String {
         match self.transaction_type.as_str() {
-            "deposit" => "Deposit".to_string(),
-            "withdrawal" => "Withdrawal".to_string(),
-            "transfer_in" => "Transfer In".to_string(),
-            "transfer_out" => "Transfer Out".to_string(),
+            "DEPOSIT" | "deposit" => "Deposit".to_string(),
+            "WITHDRAWAL" | "withdrawal" => "Withdrawal".to_string(),
+            "TRANSFER_IN" | "transfer_in" => "Transfer In".to_string(),
+            "TRANSFER_OUT" | "transfer_out" => "Transfer Out".to_string(),
             value => title_case_code(value),
         }
     }

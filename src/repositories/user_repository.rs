@@ -5,7 +5,7 @@ use sqlx::PgPool;
 pub async fn find_user_by_email(db: &PgPool, email: &str) -> Result<Option<User>, sqlx::Error> {
     sqlx::query_as::<_, User>(
         r#"
-        SELECT id, full_name, email, phone_number, date_of_birth, password_hash, role, status,
+        SELECT id, customer_id, full_name, email, phone_number, date_of_birth, password_hash, role, status,
                last_login_at, created_at, updated_at
         FROM users
         WHERE email = $1
@@ -19,7 +19,7 @@ pub async fn find_user_by_email(db: &PgPool, email: &str) -> Result<Option<User>
 pub async fn find_user_by_id(db: &PgPool, user_id: i64) -> Result<Option<User>, sqlx::Error> {
     sqlx::query_as::<_, User>(
         r#"
-        SELECT id, full_name, email, phone_number, date_of_birth, password_hash, role, status,
+        SELECT id, customer_id, full_name, email, phone_number, date_of_birth, password_hash, role, status,
                last_login_at, created_at, updated_at
         FROM users
         WHERE id = $1
@@ -32,6 +32,7 @@ pub async fn find_user_by_id(db: &PgPool, user_id: i64) -> Result<Option<User>, 
 
 pub async fn create_customer(
     db: &PgPool,
+    customer_id: uuid::Uuid,
     full_name: &str,
     email: &str,
     phone_number: &str,
@@ -40,12 +41,13 @@ pub async fn create_customer(
 ) -> Result<User, sqlx::Error> {
     sqlx::query_as::<_, User>(
         r#"
-        INSERT INTO users (full_name, email, phone_number, date_of_birth, password_hash, role, status)
-        VALUES ($1, $2, $3, $4, $5, 'customer', 'active')
-        RETURNING id, full_name, email, phone_number, date_of_birth, password_hash, role, status,
+        INSERT INTO users (customer_id, full_name, email, phone_number, date_of_birth, password_hash, role, status)
+        VALUES ($1, $2, $3, $4, $5, $6, 'customer', 'active')
+        RETURNING id, customer_id, full_name, email, phone_number, date_of_birth, password_hash, role, status,
                   last_login_at, created_at, updated_at
         "#,
     )
+    .bind(customer_id)
     .bind(full_name)
     .bind(email)
     .bind(phone_number)
@@ -75,7 +77,7 @@ pub async fn update_profile(
         UPDATE users
         SET full_name = $1, phone_number = $2, updated_at = NOW()
         WHERE id = $3
-        RETURNING id, full_name, email, phone_number, date_of_birth, password_hash, role, status,
+        RETURNING id, customer_id, full_name, email, phone_number, date_of_birth, password_hash, role, status,
                   last_login_at, created_at, updated_at
         "#,
     )

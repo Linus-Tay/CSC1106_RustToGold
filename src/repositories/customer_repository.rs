@@ -140,3 +140,67 @@ pub async fn update_customer(db: &PgPool, uuid: Uuid, new_info: &NewCustomer<'_>
     .fetch_one(db)
     .await
 }
+pub async fn create_customer_profile_for_user(
+    db: &PgPool,
+    customer_id: Uuid,
+    full_name: &str,
+    nric: &str,
+    date_of_birth: NaiveDate,
+    nationality: &str,
+    residency: &str,
+    email: &str,
+    phone_number: &str,
+    residential_address: &str,
+    mailing_address: Option<&str>,
+    employment_status: &str,
+    occupation: Option<&str>,
+    employer_name: Option<&str>,
+    monthly_income_range: Option<&str>,
+) -> Result<Customer, sqlx::Error> {
+    sqlx::query_as::<_, Customer>(
+        r#"
+        INSERT INTO customers (
+            id,
+            full_name,
+            nric,
+            date_of_birth,
+            gender,
+            nationality,
+            residency,
+            race,
+            email,
+            phone_number,
+            residential_address,
+            mailing_address,
+            preferred_contact,
+            employment_status,
+            occupation,
+            employer_name,
+            industry,
+            monthly_income_range,
+            kyc_status
+        )
+        VALUES ($1, $2, $3, $4, 'Not collected', $5, $6, NULL, $7, $8, $9, $10, NULL, $11, $12, $13, NULL, $14, 'pending')
+        RETURNING id, full_name, nric, date_of_birth, gender, nationality, residency, race,
+                  email, phone_number, residential_address, mailing_address, preferred_contact,
+                  employment_status, occupation, employer_name, industry, monthly_income_range,
+                  kyc_status, created_at, updated_at
+        "#,
+    )
+    .bind(customer_id)
+    .bind(full_name)
+    .bind(nric)
+    .bind(date_of_birth)
+    .bind(nationality)
+    .bind(residency)
+    .bind(email)
+    .bind(phone_number)
+    .bind(residential_address)
+    .bind(mailing_address)
+    .bind(employment_status)
+    .bind(occupation)
+    .bind(employer_name)
+    .bind(monthly_income_range)
+    .fetch_one(db)
+    .await
+}

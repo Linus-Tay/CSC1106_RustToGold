@@ -21,19 +21,19 @@ pub struct OnboardingTemplate {
 #[derive(Template)]
 #[template(path= "onboarding/forms/onboarding_form1.html")]
 pub struct OnboardingFormTemplate {
-    pub test: bool
+    pub test: bool,
 }
 
 #[derive(Template)]
 #[template(path= "onboarding/forms/onboarding_form2.html")]
 pub struct OnboardingFormTemplate1 {
-    pub test: bool
+    pub test: bool,
 }
 
 #[derive(Template)]
 #[template(path= "onboarding/onboarding_result.html")]
 pub struct OnboardingResultTemplate {
-    pub result_message: String
+    pub result_message: String,
 }
 
 #[derive(Template)]
@@ -48,6 +48,83 @@ pub struct LoginTemplate {
 pub struct SignupTemplate {
     pub error: String,
     pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "auth/signup_account.html")]
+pub struct SignupAccountTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub selected_account_type: String,
+    pub preferred_account_name: String,
+    pub account_purpose: String,
+}
+
+#[derive(Template)]
+#[template(path = "auth/signup_personal.html")]
+pub struct SignupPersonalTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub full_name: String,
+    pub nric_fin: String,
+    pub date_of_birth: String,
+    pub nationality: String,
+    pub residential_status: String,
+    pub residential_address: String,
+}
+
+#[derive(Template)]
+#[template(path = "auth/signup_contact.html")]
+pub struct SignupContactTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub email: String,
+    pub phone_number: String,
+    pub mailing_address: String,
+}
+
+#[derive(Template)]
+#[template(path = "auth/signup_employment.html")]
+pub struct SignupEmploymentTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub employment_status: String,
+    pub occupation: String,
+    pub employer_name: String,
+    pub monthly_income_range: String,
+    pub source_initial_deposit: String,
+}
+
+#[derive(Template)]
+#[template(path = "auth/signup_security.html")]
+pub struct SignupSecurityTemplate {
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "auth/signup_review.html")]
+pub struct SignupReviewTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub selected_account_type: String,
+    pub preferred_account_name: String,
+    pub account_purpose: String,
+    pub full_name: String,
+    pub nric_fin: String,
+    pub date_of_birth: String,
+    pub nationality: String,
+    pub residential_status: String,
+    pub residential_address: String,
+    pub email: String,
+    pub phone_number: String,
+    pub mailing_address: String,
+    pub employment_status: String,
+    pub occupation: String,
+    pub employer_name: String,
+    pub monthly_income_range: String,
+    pub source_initial_deposit: String,
+    pub password_created: bool,
 }
 
 #[derive(Template)]
@@ -113,9 +190,6 @@ pub struct NotFoundTemplate;
 #[derive(Template)]
 #[template(path = "errors/error.html")]
 pub struct ErrorTemplate;
-
-
-// EMAIL TEMPLATES
 
 #[derive(Template)]
 #[template(path = "email/account_creation.html")]

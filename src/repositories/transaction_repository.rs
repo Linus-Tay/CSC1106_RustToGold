@@ -8,9 +8,11 @@ pub async fn find_recent_transactions_by_user_id(
 ) -> Result<Vec<Transaction>, sqlx::Error> {
     sqlx::query_as::<_, Transaction>(
         r#"
-        SELECT id, account_id, user_id, transaction_type, amount_cents, balance_after_cents, description, created_at
+        SELECT id, product_id, customer_id, transaction_type, amount_cents,
+               balance_after_cents, description, created_at
         FROM transactions
         WHERE user_id = $1
+           OR customer_id = (SELECT customer_id FROM users WHERE id = $1)
         ORDER BY created_at DESC, id DESC
         LIMIT $2
         "#,
