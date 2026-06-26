@@ -9,7 +9,7 @@ pub use self::onboard_controller::{display_product, redirect_to_product_informat
 pub use self::auth_controller::{login, login_page, logout, signup, signup_page};
 pub use self::customer_controller::{
     dashboard, deposit, deposit_page, fixed_deposit_new_page, fixed_deposits_page,
-    loan_apply_page, loans_page, profile_page, transactions, transfer_page, update_profile,
+    loan_apply_page, loans_page, profile_page, transactions, transfer_page, update_profile, transfer
 };
 pub use self::error_controller::{forbidden, not_found};
 pub use self::public_controller::home;

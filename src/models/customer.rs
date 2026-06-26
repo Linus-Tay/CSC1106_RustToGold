@@ -17,7 +17,7 @@ pub struct Customer {
     pub phone_number: String,
     pub residential_address: String,
     pub mailing_address: Option<String>,
-    pub preferred_contact: String,
+    pub preferred_contact: Option<String>,
     pub employment_status: String,
     pub occupation: Option<String>,
     pub employer_name: Option<String>,

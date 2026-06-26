@@ -1,4 +1,5 @@
 use crate::controllers::session_guard::{redirect, session_user_id};
+use crate::forms::{OnboardingForm, Step1Form};
 use crate::models::Customer;
 use crate::services::{self, get_product_details, get_path_template};
 use crate::views::renderer::render_html;
@@ -18,29 +19,6 @@ pub struct OnboardingQuery {
     #[serde(rename = "Channel")]
     pub channel: Option<String>,
 }
-
-#[derive(Serialize, Deserialize, Default)]
-pub struct OnboardingFormData {
-    pub step1: Option<Step1Data>,
-    pub step2: Option<Step2Data>
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Step1Data {
-    pub full_name: String,
-    pub nric: String,
-    pub dob: String,
-    pub nationality: String,
-    pub residential_status: String,
-    pub race: String
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Step2Data {
-    pub full_name: String,
-    pub nric: String
-}
-
 
 pub async fn onboarding(path: web::Path<String>, query: web::Query<OnboardingQuery>, session: Session) -> Result<HttpResponse> {
 
@@ -71,7 +49,7 @@ pub async fn onboarding(path: web::Path<String>, query: web::Query<OnboardingQue
 } 
 
 pub async fn submit(data: web::Data<AppState>,session: Session) -> Result<HttpResponse> {
-    let mut form_data = session.get::<OnboardingFormData>("onboarding_form_data")?.unwrap_or_default();
+    let mut form_data = session.get::<OnboardingForm>("onboarding_form_data")?.unwrap_or_default();
     let product_id = match session.get::<String>("onboarding_product_id")? {
         Some(id) => id,
         None => return render(OnboardingResultTemplate {
@@ -84,11 +62,17 @@ pub async fn submit(data: web::Data<AppState>,session: Session) -> Result<HttpRe
     match result {
         Ok(customer) => {
             println!("{}", product_id);
-            let test = services::product_service::create_product(&data.db, customer.id, product_id).await;
+            let test = services::product_service::create_product(&data.db, customer.id, product_id, "savings".to_string()).await;
             match test {
                 Ok(test) => println!("nice"),
                 Err(e) => println!("An error occured: {}", e)
             }
+
+            session.remove("onboarding_step");
+            session.remove("onboarding_form_data");
+            session.remove("onboarding_product_id");
+            session.remove("onboarding_product_type");
+
             render(OnboardingResultTemplate {
                 result_message: String::from("Your application has been submitted. It will take 3 - 5 working days to process your application")
             })
@@ -112,8 +96,8 @@ pub async fn submit(data: web::Data<AppState>,session: Session) -> Result<HttpRe
     // render(ErrorTemplate)
 }
 
-pub async fn step1_post(session: Session, form: web::Form<Step1Data>) -> Result<HttpResponse> {
-    let mut form_data = session.get::<OnboardingFormData>("onboarding_form_data")?
+pub async fn step1_post(session: Session, form: web::Form<Step1Form>) -> Result<HttpResponse> {
+    let mut form_data = session.get::<OnboardingForm>("onboarding_form_data")?
     .unwrap_or_default();
 
     form_data.step1 = Some(form.into_inner());
@@ -162,7 +146,7 @@ pub async fn redirect_to_product_information(query: web::Query<OnboardingQuery>,
 
 pub async fn display_product(session: Session) -> Result<HttpResponse> {
     let product_id = session.get::<String>("onboarding_product_id").ok().flatten();
-    let channel = session.get::<String>("onboarding_channel").ok().flatten().unwrap_or_else(|| "PERSONAL".to_string());
+    //let channel = session.get::<String>("onboarding_channel").ok().flatten().unwrap_or_else(|| "PERSONAL".to_string());
 
     let product = product_id.as_ref().and_then(|id| get_product_details(id));
     match product {
@@ -170,7 +154,7 @@ pub async fn display_product(session: Session) -> Result<HttpResponse> {
             render(OnboardingTemplate {
                 product_available: true,
                 product_id: product_id.clone().unwrap(),
-                channel,
+                product_type: "savings".to_string(),
                 product_name: product.name,
                 product_summary: product.summary,
                 product_rate: product.rate,
@@ -182,7 +166,7 @@ pub async fn display_product(session: Session) -> Result<HttpResponse> {
             render(OnboardingTemplate {
                 product_available: false,
                 product_id: String::new(),
-                channel,
+                product_type: "savings".to_string(),
                 product_name: String::new(),
                 product_summary: String::new(),
                 product_rate: String::new(),

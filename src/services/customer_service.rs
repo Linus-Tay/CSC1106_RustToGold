@@ -1,5 +1,4 @@
-use crate::controllers::onboard_controller::OnboardingFormData;
-use crate::forms::DepositForm;
+use crate::forms::{DepositForm, OnboardingForm};
 use crate::models::{AccountWorkflow, BankAccount, Customer, Money, Transaction};
 use crate::repositories::customer_repository::NewCustomer;
 use crate::repositories::{account_repository, customer_repository, transaction_repository};
@@ -8,7 +7,7 @@ use crate::AppState;
 use chrono::NaiveDate;
 use sqlx::PgPool;
 
-pub async fn create_customer(db: &PgPool, form: OnboardingFormData) -> Result<Customer, String> {
+pub async fn create_customer(db: &PgPool, form: OnboardingForm) -> Result<Customer, String> {
     let step1 = form.step1.as_ref().ok_or("Missing onboarding step1 data")?;
 
     println!("{}", step1.nric);
@@ -26,15 +25,15 @@ pub async fn create_customer(db: &PgPool, form: OnboardingFormData) -> Result<Cu
         nric: &step1.nric.clone(),
         residency: &step1.residential_status.clone(),
         date_of_birth: NaiveDate::from_ymd_opt(2026, 01, 01).unwrap(),
-        gender: &String::from("Male"),
+        gender: &String::from("male"),
         nationality: &String::from("Singaporean"),
         race: Some(&String::from("Chinese")),
-        email: &String::from("test@gmail.com"),
+        email: &step1.email.clone(),
         phone_number: &String::from("911111112"),
-        preferred_contact: None,
+        preferred_contact: Some(&String::from("email")),
         mailing_address: Some(&String::from("Random Address")),
         residential_address: &String::from("Random Address"),
-        employment_status: &String::from("Unemployed"),
+        employment_status: &String::from("unemployed"),
         occupation: None,
         employer_name: None,
         monthly_income_range: None,

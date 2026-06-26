@@ -1,4 +1,5 @@
 use crate::forms::DepositForm;
+use crate::forms::account_forms::TransferForm;
 use crate::models::product::ProductWorkflow;
 use crate::models::{AccountWorkflow, BankAccount, Customer, Money, Product, Transaction};
 use crate::repositories::customer_repository::NewCustomer;
@@ -10,7 +11,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 use rand::{rng, RngExt};
 
-pub async fn create_product(db: &PgPool, customer_id: Uuid, product_id: String) -> Result<Product, String> {
+pub async fn create_product(db: &PgPool, customer_id: Uuid, product_id: String, product_type: String ) -> Result<Product, String> {
     println!("this ran??");
     let product_option = product_repository::get_product_by_user_id_and_product_id(db, &customer_id, &product_id)
     .await
@@ -24,7 +25,7 @@ pub async fn create_product(db: &PgPool, customer_id: Uuid, product_id: String) 
     let account_number = generate_account_number(db)
     .await;
 
-    let product = product_repository::insert_product(db, &customer_id, &product_id, &account_number)
+    let product = product_repository::insert_product(db, &customer_id, &product_id, &product_type, &account_number)
     .await;
 
     match product {
@@ -46,18 +47,21 @@ pub async fn deposit(app_state: &AppState, customer_id: Uuid, form: DepositForm)
         return Err("You cannot deposit to accounts that is not owned by you".to_string());
     }
 
-    if !current_product.is_open_for_customer_actions() {
-        return Err("This account is not open for deposits.".to_string());
-    }
+    // if !current_product.is_open_for_customer_actions() {
+    //     return Err("This account is not open for deposits.".to_string());
+    // }
 
     if current_product.projected_balance_after_deposit(amount).is_none() {
         return Err("This deposit cannot be applied to the account.".to_string());
     }
 
-    let _guard = app_state.account_mutex.lock().await;
+    //let _guard = app_state.account_mutex.lock().await;
 
     let (updated_product, _) = product_repository::deposit_into_product(&app_state.db, &customer_id, account_number, amount.cents(), description.as_deref()).await
-    .map_err(|_| "Deposit failed. Please try again later.".to_string())?;
+    .map_err(|e| {
+        println!("error from database: {}", e.to_string());
+        "Deposit failed. Please try again later.".to_string()
+    })?;
 
     // let (updated_account, _) = account_repository::deposit_to_primary_account(
     //     &app_state.db,
@@ -69,6 +73,70 @@ pub async fn deposit(app_state: &AppState, customer_id: Uuid, form: DepositForm)
     // .map_err(|_| "Deposit failed. Please try again.".to_string())?;
 
     Ok(updated_product)
+}
+
+pub async fn transfer(app_state: &AppState, customer_id: Uuid, form: TransferForm) -> Result<bool, String> {
+    println!("transfer ran");
+    let amount = Money::parse_dollars(&form.amount)?;
+    let note = clean_optional_text(&form.note);
+    let account_number = &form.account_number;
+    let transfer_method = &form.method;
+    let recipient_info = &form.recipient_info;
+    let sender_product = product_repository::get_product_by_account_number(&app_state.db, &account_number)
+        .await
+        .map_err(|_| "Could not load your bank account.".to_string())?
+        .ok_or_else(|| "No bank account was found under this number.".to_string())?;
+
+    let recipient_product: Product = match transfer_method.as_str() {
+        "local" => product_repository::get_product_by_account_number(&app_state.db, recipient_info)
+            .await
+            .map_err(|_| "Could not load recipient bank account.".to_string())?
+            .ok_or_else(|| "No bank account was found under this account number.".to_string())?,
+        _ => return Err("Invalid transfer method".to_string())
+        
+    };
+
+    // let recipient_product = product_repository::get_product_by_account_number(&app_state.db, &account_number)
+    // .await
+    // .map_err(|_| "Could not load your bank account.".to_string())?
+    // .ok_or_else(|| "No bank account was found under this number.".to_string())?;
+
+    if sender_product.customer_id != customer_id {
+        return Err("You cannot perform this action".to_string());
+    }
+
+    if sender_product.account_number == recipient_product.account_number {
+        return Err("You cannot transfer to the same bank account".to_string());
+    }
+
+    if !sender_product.is_open_for_customer_actions() || !recipient_product.is_open_for_customer_actions() {
+        return Err("You cannot perform this action".to_string());
+    }
+
+    // if sender_product.projected_balance_after_deposit(amount).is_none() {
+    //     return Err("This deposit cannot be applied to the account.".to_string());
+    // }
+
+    //let _guard = app_state.account_mutex.lock().await;
+
+    match product_repository::transfer(&app_state.db, &account_number, &customer_id, &recipient_product.customer_id, &recipient_product.account_number, amount.cents(), note.as_deref()).await {
+        Ok((true, _)) => Ok(true),
+        Ok((false, Some(err_msg))) => Err(err_msg),
+        Ok((false, None)) => Err("Transfer failed due to an unknown rule.".to_string()),
+        Err(e) => {
+            println!("error from database: {}", e.to_string());
+            Err("A fatal database error occurred.".to_string())
+        },
+    }
+
+    // let (updated_account, _) = account_repository::deposit_to_primary_account(
+    //     &app_state.db,
+    //     user_id,
+    //     amount.cents(),
+    //     description.as_deref(),
+    // )
+    // .await
+    // .map_err(|_| "Deposit failed. Please try again.".to_string())?;
 }
 
 

@@ -4,6 +4,7 @@ use crate::views::{ErrorTemplate, OnboardingFormTemplate, OnboardingFormTemplate
 
 pub struct ProductDetails {
     pub name: String,
+    pub product_type: String,
     pub summary: String,
     pub rate: String,
     pub minimum: String,
@@ -26,6 +27,7 @@ pub fn get_product_details(id: &str) -> Option<ProductDetails> {
     match id.to_uppercase().as_str() {
         "XS" => Some(ProductDetails {
             name: "Everyday Savings".to_string(),
+            product_type: "savings".to_string(),
             summary: "A flexible savings account for everyday spending and simple digital banking.".to_string(),
             rate: "0.75%".to_string(),
             minimum: "1".to_string(),
@@ -38,6 +40,7 @@ pub fn get_product_details(id: &str) -> Option<ProductDetails> {
         }),
         "SM" => Some(ProductDetails {
             name: "Smart Saver".to_string(),
+            product_type: "savings".to_string(),
             summary: "Higher interest for regular savers with easy access and low account costs.".to_string(),
             rate: "1.20%".to_string(),
             minimum: "1".to_string(),
@@ -50,6 +53,7 @@ pub fn get_product_details(id: &str) -> Option<ProductDetails> {
         }),
         "PL" => Some(ProductDetails {
             name: "Personal Loan".to_string(),
+            product_type: "loan".to_string(),
             summary: "A straight-through loan product for personal expenses with clear repayment terms.".to_string(),
             rate: "5.88%".to_string(),
             minimum: "0".to_string(),

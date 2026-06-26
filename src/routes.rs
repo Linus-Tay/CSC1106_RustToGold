@@ -30,6 +30,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                 .route("/deposit", web::get().to(controllers::deposit_page))
                 .route("/deposit", web::post().to(controllers::deposit))
                 .route("/transfer", web::get().to(controllers::transfer_page))
+                .route("/transfer", web::post().to(controllers::transfer))
                 .route("/transactions", web::get().to(controllers::transactions))
                 .route("/loans", web::get().to(controllers::loans_page))
                 .route("/loans/apply", web::get().to(controllers::loan_apply_page))

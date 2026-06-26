@@ -19,10 +19,10 @@ pub struct Transaction {
 impl Transaction {
     pub fn transaction_type_display(&self) -> String {
         match self.transaction_type.as_str() {
-            "DEPOSIT" => "Deposit".to_string(),
-            "WITHDRAWAL" => "Withdrawal".to_string(),
-            "TRANSFER_IN" => "Transfer In".to_string(),
-            "TRANSFER_OUT" => "Transfer Out".to_string(),
+            "deposit" => "Deposit".to_string(),
+            "withdrawal" => "Withdrawal".to_string(),
+            "transfer_in" => "Transfer In".to_string(),
+            "transfer_out" => "Transfer Out".to_string(),
             value => title_case_code(value),
         }
     }

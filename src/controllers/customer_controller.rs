@@ -1,11 +1,11 @@
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::require_customer;
+use crate::forms::account_forms::TransferForm;
 use crate::forms::{DepositForm, ProfileForm};
 use crate::repositories::{account_repository, product_repository};
 use crate::services;
 use crate::views::{
-    render, CustomerPageTemplate, DashboardTemplate, DepositTemplate, ProfileTemplate,
-    TransactionsTemplate,
+    CustomerPageTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate, ProfileTemplate, TransactionsTemplate, render,
 };
 use crate::AppState;
 use actix_session::Session;
@@ -64,15 +64,14 @@ pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result
     })
 }
 
-pub async fn deposit(app_state: web::Data<AppState>, session: Session, form: web::Form<DepositForm>,
-) -> Result<HttpResponse> {
+pub async fn deposit(app_state: web::Data<AppState>, session: Session, form: web::Form<DepositForm>) -> Result<HttpResponse> {
     // let user = match require_customer(&data, &session).await {
     //     Ok(user) => user,
     //     Err(response) => return Ok(response),
     // };
 
 
-   let uuid: Option<Uuid> = Uuid::parse_str("5fb16131-993e-46a6-873d-7a2c49dd0edc").ok();
+   let uuid: Option<Uuid> = Uuid::parse_str("53514d80-ac70-416a-b553-d958a2bdf1be").ok();
    let account_number = form.account_number.clone();
 
     match services::deposit(&app_state, uuid.unwrap(), form.into_inner()).await {
@@ -114,13 +113,33 @@ pub async fn deposit(app_state: web::Data<AppState>, session: Session, form: web
     }
 }
 
-pub async fn transfer(app_state: web::Data<AppState>, session: Session, form: web::Form<DepositForm>) {
+pub async fn transfer(app_state: web::Data<AppState>, session: Session, form: web::Form<TransferForm>) -> Result<HttpResponse> {
     // let user = match require_customer(&data, &session).await {
     //     Ok(user) => user,
     //     Err(response) => return Ok(response),
     // };
 
-    
+
+   let uuid: Option<Uuid> = Uuid::parse_str("53514d80-ac70-416a-b553-d958a2bdf1be").ok();
+   let account_number = form.account_number.clone();
+
+
+    match services::transfer(&app_state, uuid.unwrap(), form.into_inner()).await {
+        Ok(true) => {
+            println!("works");
+            render(ErrorTemplate)
+        },
+        Ok(false) => {
+            println!("um wtf?");
+            render(ErrorTemplate)
+        }
+        Err(e) => {
+            println!("error: {}", e);
+            render(ErrorTemplate)
+        }
+    }
+
+
 }
 
 pub async fn transactions(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {

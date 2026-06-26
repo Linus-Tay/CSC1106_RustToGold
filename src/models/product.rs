@@ -10,6 +10,7 @@ pub struct Product {
     pub customer_id: Uuid,
     pub account_number: String,
     pub product_id: String,
+    pub product_type: String,
     pub balance_cents: i64,
     pub status: String,
     pub created_at: DateTime<Utc>,

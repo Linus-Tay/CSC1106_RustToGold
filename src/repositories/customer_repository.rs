@@ -57,7 +57,7 @@ pub async fn create_customer(db: &PgPool, new_customer: &NewCustomer<'_>) -> Res
             occupation,
             employer_name,
             industry,
-            monthly_income_range,
+            monthly_income_range
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
         RETURNING id, full_name, nric, date_of_birth, gender, nationality, residency, race,

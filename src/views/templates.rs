@@ -10,7 +10,7 @@ pub struct HomeTemplate;
 pub struct OnboardingTemplate {
     pub product_available: bool,
     pub product_id: String,
-    pub channel: String,
+    pub product_type: String,
     pub product_name: String,
     pub product_summary: String,
     pub product_rate: String,

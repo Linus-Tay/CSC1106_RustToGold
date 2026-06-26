@@ -1,8 +1,9 @@
 DROP TABLE IF EXISTS transactions;
 --DROP TABLE IF EXISTS bank_accounts;
 DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS customer_products;
 DROP TABLE IF EXISTS account_creation_links;
+DROP TABLE IF EXISTS registered_paynow;
+DROP TABLE IF EXISTS customer_products;
 DROP TABLE IF EXISTS customers;
 
     -- CREATE TYPE gender_type AS ENUM ('MALE', 'FEMALE');
@@ -59,7 +60,7 @@ CREATE TABLE customer_products (
 
 CREATE TABLE users (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email               VARCHAR(255) NOT NULL UNIQUE,
+    username             VARCHAR(255) NOT NULL UNIQUE,
     password_hash       TEXT NOT NULL,
     role                VARCHAR(30) NOT NULL DEFAULT 'customer',
     status              VARCHAR(30)  NOT NULL DEFAULT 'active',
@@ -106,6 +107,19 @@ CREATE TABLE account_creation_links (
     created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     CONSTRAINT status_check CHECK (status IN ('pending', 'expired', 'used'))
 );
+
+CREATE TABLE registered_paynow (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id         UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    paynow_type         VARCHAR(20) NOT NULL,
+    paynow_id           VARCHAR(20) NOT NULL,
+    linked_account_id   UUID NOT NULL REFERENCES customer_products(id) ON DELETE CASCADE,
+    registered_at       TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    status              VARCHAR(20) NOT NULL,
+    CONSTRAINT paynow_type_check CHECK (paynow_type IN ('phone_number', 'nric')),
+    CONSTRAINT status_check CHECK (status IN ('active', 'inactive'))
+);
+
 
 CREATE INDEX idx_users_email ON users(email);
 --CREATE INDEX idx_bank_accounts_user_id ON bank_accounts(user_id);
