@@ -1,9 +1,9 @@
 DROP TABLE IF EXISTS transactions;
-DROP TABLE IF EXISTS bank_accounts;
+--DROP TABLE IF EXISTS bank_accounts;
 DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS customer_products;
 DROP TABLE IF EXISTS account_creation_links;
+DROP TABLE IF EXISTS customers;
 
     -- CREATE TYPE gender_type AS ENUM ('MALE', 'FEMALE');
     -- CREATE TYPE residency_type AS ENUM ('CITIZEN', 'PR', 'FOREIGNER');
@@ -46,13 +46,15 @@ CREATE TABLE customer_products (
     id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id          UUID NOT NULL REFERENCES customers(id),
     product_id           VARCHAR(50) NOT NULL,
+    product_type         VARCHAR(20) NOT NULL,
     account_number       VARCHAR(20) UNIQUE NOT NULL,
     status               VARCHAR(20) DEFAULT 'inactive',
 	balance_cents		 BIGINT NOT NULL DEFAULT 0,
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     CONSTRAINT product_status_check CHECK (status IN ('active', 'inactive', 'closed')),
-    CONSTRAINT          transactions_amount_positive CHECK (balance_cents >= 0)
+    CONSTRAINT          transactions_amount_positive CHECK (balance_cents >= 0),
+    CONSTRAINT          product_type_check CHECK (product_type IN ('savings', 'spending', 'fixed_deposit', 'investment'))
 );
 
 CREATE TABLE users (

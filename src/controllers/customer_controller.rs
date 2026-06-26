@@ -115,6 +115,11 @@ pub async fn deposit(app_state: web::Data<AppState>, session: Session, form: web
 }
 
 pub async fn transfer(app_state: web::Data<AppState>, session: Session, form: web::Form<DepositForm>) {
+    // let user = match require_customer(&data, &session).await {
+    //     Ok(user) => user,
+    //     Err(response) => return Ok(response),
+    // };
+
     
 }
 
