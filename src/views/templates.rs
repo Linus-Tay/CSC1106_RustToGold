@@ -6,6 +6,26 @@ use askama::Template;
 pub struct HomeTemplate;
 
 #[derive(Template)]
+#[template(path = "about.html")]
+pub struct AboutTemplate;
+
+#[derive(Template)]
+#[template(path = "banking.html")]
+pub struct BankingTemplate;
+
+#[derive(Template)]
+#[template(path = "contact.html")]
+pub struct ContactTemplate;
+
+#[derive(Template)]
+#[template(path = "faq.html")]
+pub struct FaqTemplate;
+
+#[derive(Template)]
+#[template(path = "security.html")]
+pub struct SecurityTemplate;
+
+#[derive(Template)]
 #[template(path = "onboarding/onboarding.html")]
 pub struct OnboardingTemplate {
     pub product_available: bool,

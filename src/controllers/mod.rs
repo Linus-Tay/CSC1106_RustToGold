@@ -17,4 +17,6 @@ pub use self::customer_controller::{
     loan_apply_page, loans_page, profile_page, transactions, transfer, transfer_page, update_profile, approve_product
 };
 pub use self::error_controller::{forbidden, not_found};
-pub use self::public_controller::home;
+pub use self::public_controller::{
+    about_page, banking_page, contact_page, faq_page, home, security_page,
+};

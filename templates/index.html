@@ -1,138 +1,202 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <!-- Askama template: index.html -->
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RustToGold | Secure Digital Banking</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css" />
-</head>
-<body>
+{% extends "layouts/public.html" %}
 
-  <nav class="c-navbar" aria-label="Primary navigation">
-    <div class="u-container c-navbar__inner">
-      <a class="c-navbar__brand" href="/" data-route="/">
-        <span class="c-navbar__logo-wrap" aria-hidden="true">
-          <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
-        </span>
-        <span>RustToGold</span>
-      </a>
-      <ul class="c-navbar__links">
-        <li><a class="c-navbar__link" href="/#accounts" data-route="/#accounts">Accounts</a></li>
-        <li><a class="c-navbar__link" href="/#transfers" data-route="/#transfers">Transfers</a></li>
-        <li><a class="c-navbar__link" href="/#savings" data-route="/#savings">Savings</a></li>
-        <li><a class="c-navbar__link" href="/#loans" data-route="/#loans">Loans</a></li>
-        <li><a class="c-navbar__link" href="/#security" data-route="/#security">Security</a></li>
-        <li><a class="c-navbar__link" href="/#help" data-route="/#help">Help</a></li>
-      </ul>
-      <div class="c-navbar__actions">
-        <a class="c-navbar__login " href="/login" data-route="/login">Login</a>
-        <a class="c-button c-button--gold" href="/signup" data-route="/signup"><i data-lucide="user-plus"></i> Open Account</a>
+{% block title %}RustToGold | Secure Digital Banking{% endblock %}
+{% block meta_description %}RustToGold is a polished academic digital banking simulation for accounts, cards, money transfers, fixed deposits, loans, dashboards, and security controls.{% endblock %}
+
+{% block content %}
+<main id="top">
+  <section class="home-hero section-shell grid gap-16 py-16 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:py-24">
+    <div class="hero-copy" data-reveal>
+      <p class="c-kicker">A better digital banking portal</p>
+      <h1 class="hero-title mt-5">Banking that feels clear, secure, and in control.</h1>
+      <p class="lead-copy mt-7 max-w-2xl">
+        RustToGold brings everyday accounts, cards, transfers, fixed deposits, loans, and security controls into one clean online banking experience.
+      </p>
+
+      <div class="mt-10 flex flex-wrap gap-3">
+        <a href="/signup" class="btn-primary"><i data-lucide="user-plus" class="h-4 w-4"></i> Open Account</a>
+        <a href="/banking" class="btn-secondary">Explore banking <i data-lucide="arrow-right" class="h-4 w-4"></i></a>
+      </div>
+
+      <div class="hero-assurance mt-11" aria-label="Key banking capabilities">
+        <div class="assurance-item">
+          <i data-lucide="wallet-cards" class="h-5 w-5"></i>
+          <span>
+            <strong>Accounts that stay organised</strong>
+            <small>Check balances, link products, and keep account activity easy to follow.</small>
+          </span>
+        </div>
+        <div class="assurance-item">
+          <i data-lucide="credit-card" class="h-5 w-5"></i>
+          <span>
+            <strong>Cards with clear controls</strong>
+            <small>View card status, linked accounts, and spending-related actions in one place.</small>
+          </span>
+        </div>
+        <div class="assurance-item">
+          <i data-lucide="shield-check" class="h-5 w-5"></i>
+          <span>
+            <strong>OTP-ready verification</strong>
+            <small>Add extra checks for higher-risk actions such as larger transfers.</small>
+          </span>
+        </div>
       </div>
     </div>
-  </nav>
 
+    <div class="banking-preview" aria-label="RustToGold banking dashboard preview" data-reveal>
+      <div class="preview-glow preview-glow-blue"></div>
+      <div class="preview-glow preview-glow-gold"></div>
 
-  <main>
-    <section class="landing-hero" id="hero">
-      <div class="u-container landing-hero__grid">
-        <div class="landing-hero__content">
-          <div class="c-kicker">Digital Banking Portal</div>
-          <h1 class="landing-hero__title"><span>Banking Made Simple, Secure, and Accessible</span></h1>
-          <p class="landing-hero__description">
-            Manage your money with RustToGold — view your account, transfer funds, track transactions, apply for loans,
-            and grow your savings through fixed deposits, all from one secure online banking portal.
-          </p>
-          <div class="landing-hero__actions">
-            <a class="c-button c-button--primary" href="/signup" data-route="/signup"><i data-lucide="user-plus"></i> Open Account</a>
-            <a class="c-button c-button--secondary" href="/login" data-route="/login"><i data-lucide="log-in"></i> Login</a>
+      <div class="preview-card account-card-preview">
+        <div class="preview-card-top">
+          <div>
+            <span class="preview-label">RustToGold Everyday</span>
+            <h2>S$12,480.55</h2>
           </div>
-          <div class="landing-hero__trust-line">
-            <span><i data-lucide="shield-check"></i> Secure access</span>
-            <span><i data-lucide="receipt-text"></i> Clear transactions</span>
-            <span><i data-lucide="wallet-cards"></i> Better control over your money</span>
+          <span class="status-badge">Active</span>
+        </div>
+
+        <div class="account-meta-row">
+          <span>•••• 4821</span>
+          <span>Savings Account</span>
+        </div>
+
+        <div class="quick-action-row">
+          <span><i data-lucide="send" class="h-4 w-4"></i> Transfer</span>
+          <span><i data-lucide="credit-card" class="h-4 w-4"></i> Cards</span>
+          <span><i data-lucide="piggy-bank" class="h-4 w-4"></i> Deposit</span>
+        </div>
+      </div>
+
+      <div class="preview-dashboard-grid">
+        <div class="preview-card activity-preview">
+          <div class="preview-section-heading">
+            <span>Today’s activity</span>
+            <a href="/banking#dashboard">View all</a>
+          </div>
+
+          <div class="activity-row">
+            <span class="activity-icon blue"><i data-lucide="send" class="h-4 w-4"></i></span>
+            <div>
+              <strong>Transfer completed</strong>
+              <small>To Ali Tan · FAST transfer</small>
+            </div>
+            <b>-S$850.00</b>
+          </div>
+
+          <div class="activity-row">
+            <span class="activity-icon green"><i data-lucide="shield-check" class="h-4 w-4"></i></span>
+            <div>
+              <strong>Security check passed</strong>
+              <small>OTP verified for transfer</small>
+            </div>
+            <b>Ready</b>
           </div>
         </div>
 
-        <div class="landing-preview" aria-hidden="true">
-          <div class="landing-preview__card">
-            <div class="landing-preview__top">
-              <div class="landing-preview__bank">RustToGold Bank</div>
-              <div class="landing-preview__chip"></div>
-            </div>
-            <div class="landing-preview__label">Available Balance</div>
-            <div class="landing-preview__amount">$12,480.55</div>
-            <div class="landing-preview__meta">
-              <span>•••• 4821</span>
-              <span>Everyday Account</span>
-            </div>
+        <div class="preview-card security-preview">
+          <div class="preview-section-heading">
+            <span>Controls</span>
           </div>
-          <div class="landing-preview__mini">
-            <div class="landing-preview__mini-label"><i data-lucide="lock-keyhole"></i> Account Protection</div>
-            <h2 class="landing-preview__mini-title">Secure session active</h2>
-            <p class="landing-preview__mini-text">Important actions are protected with login checks, OTP confirmation, and activity tracking.</p>
+
+          <div class="control-list">
+            <span><i data-lucide="lock-keyhole" class="h-4 w-4"></i> Card freeze <strong>Ready</strong></span>
+            <span><i data-lucide="bell-ring" class="h-4 w-4"></i> Alerts <strong>On</strong></span>
+            <span><i data-lucide="timer" class="h-4 w-4"></i> FD maturity <strong>12 months</strong></span>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="c-section" id="services">
-      <div class="u-container">
-        <div class="c-section-header">
-          <div class="c-kicker">Core Services</div>
-          <h2 class="c-section-title">A clearer way to manage everyday banking</h2>
-          <p class="c-section-description">
-            RustToGold brings the main customer banking actions into one organised portal, from viewing accounts to moving funds, placing deposits, and managing loan applications.
-          </p>
+  <section id="banking-areas" class="banking-area-section py-20">
+    <div class="section-shell">
+      <div class="section-heading-row" data-reveal>
+        <div>
+          <p class="c-kicker">Banking areas</p>
+          <h2 class="section-title mt-4">Choose what you want to manage.</h2>
         </div>
+        <p class="lead-copy">
+          Clear entry points for the main banking workflows: accounts, cards, transfers, fixed deposits, loans, and security. Each area leads to a focused section with more detail.
+        </p>
+      </div>
 
-        <div class="c-feature-grid">
-          <article class="c-feature-card" id="accounts">
-            <div class="c-feature-card__icon"><i data-lucide="landmark"></i></div>
-            <h2 class="c-feature-card__title">Your Account, Clearly Organised</h2>
-            <p class="c-feature-card__text">View your account balance, account number, account status, and recent banking activity from a simple dashboard.</p>
-            <a class="c-feature-card__link" href="/customer/dashboard" data-route="/customer/dashboard">View customer dashboard <i data-lucide="arrow-right"></i></a>
-          </article>
-          <article class="c-feature-card" id="transfers">
-            <div class="c-feature-card__icon"><i data-lucide="send"></i></div>
-            <h2 class="c-feature-card__title">Transfer Money with Confidence</h2>
-            <p class="c-feature-card__text">Send money through a guided process that helps customers review details and confirm approval before funds are moved.</p>
-            <a class="c-feature-card__link" href="/customer/transfer" data-route="/customer/transfer">Start transfer <i data-lucide="arrow-right"></i></a>
-          </article>
-          <article class="c-feature-card c-feature-card--gold" id="savings">
-            <div class="c-feature-card__icon"><i data-lucide="piggy-bank"></i></div>
-            <h2 class="c-feature-card__title">Grow Your Savings with Fixed Deposits</h2>
-            <p class="c-feature-card__text">Place funds into fixed deposits and view maturity dates, rates, and estimated returns before confirming.</p>
-            <a class="c-feature-card__link" href="/customer/fixed-deposits" data-route="/customer/fixed-deposits">Explore deposits <i data-lucide="arrow-right"></i></a>
-          </article>
-          <article class="c-feature-card" id="loans">
-            <div class="c-feature-card__icon"><i data-lucide="file-signature"></i></div>
-            <h2 class="c-feature-card__title">Apply for Loans Online</h2>
-            <p class="c-feature-card__text">Submit loan details through the portal and track the application from review to outcome.</p>
-            <a class="c-feature-card__link" href="/customer/loans" data-route="/customer/loans">View loans <i data-lucide="arrow-right"></i></a>
-          </article>
-          <article class="c-feature-card c-feature-card--green" id="security">
-            <div class="c-feature-card__icon"><i data-lucide="shield-check"></i></div>
-            <h2 class="c-feature-card__title">Designed to Keep Your Account Protected</h2>
-            <p class="c-feature-card__text">Secure login, protected sessions, OTP verification, and account activity monitoring support safer banking.</p>
-            <a class="c-feature-card__link" href="/login" data-route="/login">Access securely <i data-lucide="arrow-right"></i></a>
-          </article>
-          <article class="c-feature-card" id="help">
-            <div class="c-feature-card__icon"><i data-lucide="circle-help"></i></div>
-            <h2 class="c-feature-card__title">Need Help Managing Your Account?</h2>
-            <p class="c-feature-card__text">Navigate accounts, transfers, transactions, loans, and fixed deposits from one clear dashboard.</p>
-            <a class="c-feature-card__link" href="/">View all previews <i data-lucide="arrow-right"></i></a>
-          </article>
+      <div class="banking-service-grid mt-12">
+        <a href="/banking#accounts" class="banking-service-card" data-reveal>
+          <div class="service-card-head">
+            <span class="service-icon"><i data-lucide="wallet-cards" class="h-5 w-5"></i></span>
+            <span class="service-tag">Accounts</span>
+          </div>
+          <h3>Manage everyday accounts</h3>
+          <p>View balances, application status, linked products, and account activity without digging through multiple pages.</p>
+          <span class="service-link">View account options <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        </a>
+
+        <a href="/banking#cards" class="banking-service-card" data-reveal>
+          <div class="service-card-head">
+            <span class="service-icon"><i data-lucide="credit-card" class="h-5 w-5"></i></span>
+            <span class="service-tag">Cards</span>
+          </div>
+          <h3>Apply for and control cards</h3>
+          <p>Support debit, credit, and student card flows with linked accounts, card status, and simple customer controls.</p>
+          <span class="service-link">View card products <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        </a>
+
+        <a href="/banking#money-transfers" class="banking-service-card" data-reveal>
+          <div class="service-card-head">
+            <span class="service-icon"><i data-lucide="send" class="h-5 w-5"></i></span>
+            <span class="service-tag">Transfers</span>
+          </div>
+          <h3>Send money with confidence</h3>
+          <p>Review recipient details, confirm the payment, apply OTP checks when needed, and store a clean transaction record.</p>
+          <span class="service-link">View transfer flow <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        </a>
+
+        <a href="/banking#fixed-deposits" class="banking-service-card" data-reveal>
+          <div class="service-card-head">
+            <span class="service-icon"><i data-lucide="piggy-bank" class="h-5 w-5"></i></span>
+            <span class="service-tag">Deposits</span>
+          </div>
+          <h3>Plan fixed deposit placements</h3>
+          <p>Choose placement amount, tenure, interest estimate, maturity instruction, and payout destination clearly.</p>
+          <span class="service-link">View fixed deposits <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        </a>
+
+        <a href="/banking#loans" class="banking-service-card" data-reveal>
+          <div class="service-card-head">
+            <span class="service-icon"><i data-lucide="file-signature" class="h-5 w-5"></i></span>
+            <span class="service-tag">Loans</span>
+          </div>
+          <h3>Track loan applications</h3>
+          <p>Submit applications, review approval state, record disbursement details, and show repayment progress clearly.</p>
+          <span class="service-link">View loan management <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        </a>
+
+        <a href="/security" class="banking-service-card service-card-dark" data-reveal>
+          <div class="service-card-head">
+            <span class="service-icon"><i data-lucide="shield-check" class="h-5 w-5"></i></span>
+            <span class="service-tag">Security</span>
+          </div>
+          <h3>Keep key actions protected</h3>
+          <p>Use visible security controls for OTP verification, card freeze, suspicious activity review, and audit logging.</p>
+          <span class="service-link">View security controls <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="sdic" class="sdic-section">
+    <div class="section-shell">
+      <div class="sdic-strip" data-reveal>
+        <div class="sdic-strip-logo">
+          <img src="/static/images/sdic-di-member.png" alt="SDIC Deposit Insurance Scheme member logo" />
+        </div>
+        <div>
+          <h2>Deposit Insurance Scheme</h2>
+          <p>Singapore dollar deposits of non-bank depositors are insured by the Singapore Deposit Insurance Corporation, for up to S$100,000 in aggregate per depositor per Scheme member by law. Foreign currency deposits, dual currency investments, structured deposits and other investment products are not insured.</p>
         </div>
       </div>
-    </section>
-  </main>
-
-  {% include "components/footer.html" %}
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/static/js/app.js"></script>
-</body>
-</html>
+    </div>
+  </section>
+</main>
+{% endblock %}

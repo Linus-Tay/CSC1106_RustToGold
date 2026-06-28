@@ -21,6 +21,11 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
     .service(
         web::scope("")
             .route("/", web::get().to(controllers::home))
+            .route("/banking", web::get().to(controllers::banking_page))
+            .route("/security", web::get().to(controllers::security_page))
+            .route("/about", web::get().to(controllers::about_page))
+            .route("/faq", web::get().to(controllers::faq_page))
+            .route("/contact", web::get().to(controllers::contact_page))
             .route("/login", web::get().to(controllers::login_page))
             .route("/login", web::post().to(controllers::login))
             .route("/signup", web::get().to(controllers::signup_page))
