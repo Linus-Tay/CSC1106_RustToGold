@@ -3,9 +3,9 @@ use lettre::message::{header::ContentType, Message, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Transport, AsyncSmtpTransport, AsyncTransport, Tokio1Executor};
 use std::env;
-use askama::DynTemplate;
+use askama::{DynTemplate, Template};
 
-pub async fn send_template_email(to_email: &str, subject: &str, template_data: &dyn DynTemplate) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn send_template_email<T: Template>(to_email: &str, subject: &str, template_data: T) -> Result<(), Box<dyn std::error::Error>> {
     println!("this ran");
     let config = Config::from_env();
 

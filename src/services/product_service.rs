@@ -165,7 +165,7 @@ fn luhn_check_digit(number: &str) -> u32 {
 }
 
 
-async fn generate_account_number(db: &PgPool) -> String {
+pub async fn generate_account_number(db: &PgPool) -> String {
     let mut rng: rand::prelude::ThreadRng = rng();
     let prefix = "7282";
 

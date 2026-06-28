@@ -8,14 +8,11 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .route("/onboarding/{path}", web::get().to(controllers::onboarding))
             .service(
                 web::scope("/api")
-                    .route(
-                        "/onboarding/actions/submit-step1",
-                        web::post().to(controllers::step1_post),
-                    )
-                    .route(
-                        "/onboarding/actions/submit",
-                        web::post().to(controllers::submit),
-                    ),
+                    .route("/onboarding/account", web::post().to(controllers::step1_post))
+                    .route("/onboarding/personal", web::post().to(controllers::step2_post))
+                    .route("/onboarding/contact", web::post().to(controllers::step3_post))
+                    .route("/onboarding/employment", web::post().to(controllers::step4_post))
+                    .route("/onboarding/submit", web::post().to(controllers::submit)),
             ),
     )
     .service(
@@ -38,7 +35,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("/security", web::get().to(controllers::show_signup_security))
                     .route("/security", web::post().to(controllers::post_signup_security))
                     .route("/review", web::get().to(controllers::show_signup_review))
-                    .route("/submit", web::post().to(controllers::post_signup_submit)),
+                    //.route("/submit", web::post().to(controllers::post_signup_submit)),
             )
             .route("/logout", web::get().to(controllers::logout))
             .route("/403", web::get().to(controllers::forbidden))

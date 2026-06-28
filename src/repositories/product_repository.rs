@@ -131,7 +131,7 @@ pub async fn transfer(db: &PgPool, sender_account_number: &str, sender_customer_
     println!("recipient: {} {}", recipient_customer_id, recipient_account_number);
 
 
-    let mut tx = db.begin().await?;
+    let mut tx: DbTransaction<'_, Postgres> = db.begin().await?;
 
     let (sender_product, recipient_product) = if sender_account_number < recipient_account_number {
         println!("we try to lock sender first");        

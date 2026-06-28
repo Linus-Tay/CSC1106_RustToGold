@@ -5,10 +5,10 @@ pub mod public_controller;
 pub mod onboard_controller;
 pub mod session_guard;
 
-pub use self::onboard_controller::{display_product, onboarding, redirect_to_product_information, step1_post, submit};
+pub use self::onboard_controller::{onboarding, step1_post, step2_post, step3_post, step4_post, submit};
 pub use self::auth_controller::{
     login, login_page, logout, post_signup_account, post_signup_contact, post_signup_employment,
-    post_signup_personal, post_signup_security, post_signup_submit, show_signup_account,
+    post_signup_personal, post_signup_security, show_signup_account,
     show_signup_contact, show_signup_employment, show_signup_personal, show_signup_review,
     show_signup_security, signup, signup_page,
 };

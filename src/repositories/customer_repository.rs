@@ -1,6 +1,6 @@
-use crate::models::customer::{Customer};
+use crate::models::{Product, customer::Customer};
 use chrono::NaiveDate;
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
 pub struct NewCustomer<'a> {
@@ -10,7 +10,7 @@ pub struct NewCustomer<'a> {
     pub gender: &'a str,
     pub nationality: &'a str,
     pub residency: &'a str,
-    pub race: Option<&'a str>,
+    pub race: &'a str,
     pub email: &'a str,
     pub phone_number: &'a str,
     pub residential_address: &'a str,
@@ -54,8 +54,9 @@ pub async fn get_customer_by_id(db: &PgPool, id: &Uuid) -> Result<Customer, sqlx
 }
 
 
-pub async fn create_customer(db: &PgPool, new_customer: &NewCustomer<'_>) -> Result<Customer, sqlx::Error> {
-    sqlx::query_as::<_, Customer> (
+pub async fn create_customer_and_product(db: &PgPool, new_customer: &NewCustomer<'_>, product_id: &str, product_type: &str, account_number: &str) -> Result<(Customer, Product), sqlx::Error> {
+    let mut tx: DbTransaction<'_, Postgres> = db.begin().await?;
+    let customer = sqlx::query_as::<_, Customer> (
         r#"
         INSERT INTO customers (
             full_name,
@@ -100,8 +101,26 @@ pub async fn create_customer(db: &PgPool, new_customer: &NewCustomer<'_>) -> Res
     .bind(new_customer.employer_name)
     .bind(new_customer.industry)
     .bind(new_customer.monthly_income_range)
-    .fetch_one(db)
-    .await
+    .fetch_one(&mut *tx)
+    .await?;
+
+    let product = sqlx::query_as::<_, Product>(
+        r#"
+        INSERT INTO customer_products (customer_id, product_id, product_type, account_number, balance_cents)
+        VALUES ($1, $2, $3, $4, 0)
+        RETURNING id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        "#,
+    )
+    .bind(customer.id)
+    .bind(product_id)
+    .bind(product_type)
+    .bind(account_number)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok((customer, product))
 }
 
 pub async fn update_customer(db: &PgPool, uuid: Uuid, new_info: &NewCustomer<'_>) -> Result<Customer, sqlx::Error> {

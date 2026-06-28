@@ -257,44 +257,44 @@ pub async fn show_signup_review(session: Session) -> Result<HttpResponse> {
     render_review_page(&draft, None)
 }
 
-pub async fn post_signup_submit(
-    data: web::Data<AppState>,
-    session: Session,
-    form: web::Form<SignupDeclarationForm>,
-) -> Result<HttpResponse> {
-    let declaration_form = form.into_inner();
-    let draft = read_signup_draft(&session)?;
+// pub async fn post_signup_submit(
+//     data: web::Data<AppState>,
+//     session: Session,
+//     form: web::Form<SignupDeclarationForm>,
+// ) -> Result<HttpResponse> {
+//     let declaration_form = form.into_inner();
+//     let draft = read_signup_draft(&session)?;
 
-    if declaration_form.opening_for_self.is_none()
-        || declaration_form.not_acting_for_others.is_none()
-        || declaration_form.funds_legitimate.is_none()
-        || declaration_form.terms_agreed.is_none()
-        || declaration_form.accuracy_confirmed.is_none()
-    {
-        return render_review_page(&draft, Some("Please confirm all declarations before submitting."));
-    }
+//     if declaration_form.opening_for_self.is_none()
+//         || declaration_form.not_acting_for_others.is_none()
+//         || declaration_form.funds_legitimate.is_none()
+//         || declaration_form.terms_agreed.is_none()
+//         || declaration_form.accuracy_confirmed.is_none()
+//     {
+//         return render_review_page(&draft, Some("Please confirm all declarations before submitting."));
+//     }
 
-    let signup_form = match build_signup_form(draft, declaration_form) {
-        Ok(signup_form) => signup_form,
-        Err(error) => {
-            let draft = read_signup_draft(&session)?;
-            return render_review_page(&draft, Some(&error));
-        }
-    };
+//     let signup_form = match build_signup_form(draft, declaration_form) {
+//         Ok(signup_form) => signup_form,
+//         Err(error) => {
+//             let draft = read_signup_draft(&session)?;
+//             return render_review_page(&draft, Some(&error));
+//         }
+//     };
 
-    match services::register_customer(&data.db, signup_form).await {
-        Ok(user) => {
-            session.remove(SIGNUP_DRAFT_KEY);
-            session.insert("user_id", user.id)?;
-            session.insert("role", user.role)?;
-            Ok(redirect("/customer/dashboard"))
-        }
-        Err(error) => {
-            let draft = read_signup_draft(&session)?;
-            render_review_page(&draft, Some(&error))
-        }
-    }
-}
+//     // match services::register_customer(&data.db, signup_form).await {
+//     //     Ok(user) => {
+//     //         session.remove(SIGNUP_DRAFT_KEY);
+//     //         session.insert("user_id", user.id)?;
+//     //         session.insert("role", user.role)?;
+//     //         Ok(redirect("/customer/dashboard"))
+//     //     }
+//     //     Err(error) => {
+//     //         let draft = read_signup_draft(&session)?;
+//     //         render_review_page(&draft, Some(&error))
+//     //     }
+//     // }
+// }
 
 pub async fn logout(session: Session) -> Result<HttpResponse> {
     session.purge();

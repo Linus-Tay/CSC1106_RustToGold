@@ -1,10 +1,11 @@
 use crate::controllers::session_guard::{redirect, session_user_id};
-use crate::forms::{OnboardingForm, Step1Form};
+use crate::forms::onboard_forms::{Step3Form, Step4Form};
+use crate::forms::{OnboardingForm, Step1Form, Step2Form};
 use crate::models::Customer;
-use crate::services::{self, get_product_details, get_path_template};
+use crate::services::{self};
 use crate::views::renderer::render_html;
-use crate::views::templates::AccountCreationTemplate;
-use crate::views::{ErrorTemplate, OnboardingFormTemplate, OnboardingResultTemplate, OnboardingTemplate, render};
+use crate::views::templates::{AccountCreationTemplate, OnboardingContactTemplate, OnboardingEmploymentTemplate, OnboardingReviewTemplate};
+use crate::views::{ErrorTemplate, NotFoundTemplate, OnboardingAccountTemplate, OnboardingPersonalTemplate, OnboardingResultTemplate, OnboardingTemplate, render};
 use actix_session::Session;
 use askama::DynTemplate;
 use chrono::NaiveDate;
@@ -12,36 +13,23 @@ use crate::AppState;
 use actix_web::{web, HttpResponse, Result};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
-pub struct OnboardingQuery {
-    #[serde(rename = "productId")]
-    pub product_id: Option<String>,
-    #[serde(rename = "Channel")]
-    pub channel: Option<String>,
-}
 
-pub async fn onboarding(path: web::Path<String>, query: web::Query<OnboardingQuery>, session: Session) -> Result<HttpResponse> {
+pub async fn onboarding(path: web::Path<String>, session: Session) -> Result<HttpResponse> {
 
     let onboarding_path = path.into_inner();
-
-    println!("test: {}", onboarding_path);
+    let form_data = session.get::<OnboardingForm>("onboarding_form_data")?.unwrap_or_default();
     
     match onboarding_path.to_lowercase().as_str() {
-        "init" => {
-            return redirect_to_product_information(query, session).await
-        },
-        "product-information" => {
-            return display_product(session).await
-        },
         _ => {
-            let (path_template, step_number) = get_path_template(&onboarding_path);
+            let path_template = get_path_template(&onboarding_path, form_data, None);
 
             match path_template {
                 Some(template) => {
-                    return render_form(session, template.dyn_render().map_err(actix_web::error::ErrorInternalServerError)?, step_number).await
+                    return render_html(template.dyn_render().map_err(actix_web::error::ErrorInternalServerError)?);
+                    //return render_form(session, template.dyn_render().map_err(actix_web::error::ErrorInternalServerError)?).await
                 }
                 None => {
-                    Ok(redirect("/onboarding/init"))
+                    render(NotFoundTemplate)
                 }
             }
         }
@@ -50,129 +38,293 @@ pub async fn onboarding(path: web::Path<String>, query: web::Query<OnboardingQue
 
 pub async fn submit(data: web::Data<AppState>,session: Session) -> Result<HttpResponse> {
     let mut form_data = session.get::<OnboardingForm>("onboarding_form_data")?.unwrap_or_default();
-    let product_id = match session.get::<String>("onboarding_product_id")? {
+    let product_id = match form_data.step1.as_ref().and_then(|s| s.selected_account_type.clone()) {
         Some(id) => id,
-        None => return render(OnboardingResultTemplate {
-            result_message: String::from("Missing product_id")
-        }),
+        None => {
+            return Ok(redirect("/onboarding/account")); 
+        }
     };
-
-    let result = services::customer_service::create_customer(&data.db, form_data).await;
+    let result = services::customer_service::create_customer_with_product(&data.db, &form_data, "savings".to_string()).await;
 
     match result {
-        Ok(customer) => {
-            println!("{}", product_id);
-            let test = services::product_service::create_product(&data.db, customer.id, product_id, "savings".to_string()).await;
-            match test {
-                Ok(test) => println!("nice"),
-                Err(e) => println!("An error occured: {}", e)
-            }
-
-            session.remove("onboarding_step");
+        Ok((customer, product)) => {
             session.remove("onboarding_form_data");
-            session.remove("onboarding_product_id");
-            session.remove("onboarding_product_type");
 
             render(OnboardingResultTemplate {
-                result_message: String::from("Your application has been submitted. It will take 3 - 5 working days to process your application")
+                reference_no: product.id.to_string(),
+                created_at: customer.created_at.to_string()
             })
         },
-        Err(error_msg) => render(OnboardingResultTemplate {
-            result_message: error_msg
-        })
+        Err(e) => {
+            render_form(form_data, "review".to_string(), Some("Something went wrong with our end, we are unable to process this application currently. Please try again later.")).await
+
+        }
     }
-
-    // let template = AccountCreationTemplate {
-    //     account_creation_link: String::from("http://localhost:3000/")
-    // };
-
-    // let result = services::email_service::send_template_email(&String::from("jiayong.kok@hotmail.com"), &String::from("Welcome to Rust To Gold Bank!"), &template).await;
-
-
-    // match result {
-    //     Ok(()) => println!("works"),
-    //     Err(e) => println!("{}", e.to_string())
-    // }
-    // render(ErrorTemplate)
 }
 
 pub async fn step1_post(session: Session, form: web::Form<Step1Form>) -> Result<HttpResponse> {
     let mut form_data = session.get::<OnboardingForm>("onboarding_form_data")?
     .unwrap_or_default();
 
-    form_data.step1 = Some(form.into_inner());
+    let mut form = form.into_inner();
+    let selected_account_type = clean_text(form.selected_account_type.clone().unwrap());
+    let account_purpose = clean_text(form.account_purpose.clone());
+
+    if !matches!(
+        selected_account_type.as_str(),
+        "everyday_savings" | "high_yield_savings"
+    ) {
+        return render_form(form_data, "account".to_string() , Some("Please choose an account type.")).await;
+    }
+
+    if account_purpose.is_empty() {
+        return render_form(form_data, "account".to_string(), Some("Please select the main purpose of this account.")).await;
+    }
+
+    form.form_completed = true;
+
+    form_data.step1 = Some(form);
     session.insert("onboarding_form_data", &form_data)?;
-    session.insert("onboarding_step", 1);
 
-    Ok(redirect("/onboarding/additional-details"))
+    Ok(redirect("/onboarding/personal"))
 }
 
-pub async fn render_form(session: Session, form_template: String, step_number: i32) -> Result<HttpResponse> {
+pub async fn step2_post(session: Session, form: web::Form<Step2Form>) -> Result<HttpResponse> {
+    let mut form_data = session.get::<OnboardingForm>("onboarding_form_data")?
+    .unwrap_or_default();
 
-    let product_id = session.get::<String>("onboarding_product_id").ok().flatten();
-    let onboarding_step = session.get::<i32>("onboarding_step").ok().flatten();
+    let mut form = form.into_inner();
+    let full_name = clean_text(form.full_name.clone());
+    let nric_fin = clean_text(form.nric.clone()).to_uppercase();
+    let date_of_birth = clean_text(form.dob.clone());
+    let nationality = clean_text(form.nationality.clone());
+    let residential_status = clean_text(form.residential_status.clone());
+    let residential_address = clean_text(form.residential_address.clone());
 
-    let product = product_id.as_ref().and_then(|id| get_product_details(id));
-
-    match (onboarding_step, product) {
-        (None, Some(_)) => {
-            session.insert("onboarding_step", 1);    
-
-            render_html(form_template)
-        }
-        (Some(step), Some(_)) if step_number <= step => {
-            println!("Works: {} {}", step, step_number);  
-            render_html(form_template)
-        }
-        _ => {
-            println!("{}, {}", onboarding_step.unwrap_or(0), step_number);
-            render(ErrorTemplate )
-        },
+    if full_name.len() < 2 {
+        return render_form(form_data, "account".to_string(), Some("Enter your full name as shown on your ID.")).await;
     }
+
+    if nric_fin.len() < 5 {
+        return render_form(form_data, "account".to_string(), Some("Enter a valid NRIC or FIN.")).await;
+    }
+
+    if date_of_birth.is_empty()
+        || nationality.is_empty()
+        || residential_status.is_empty()
+        || residential_address.is_empty()
+    {
+        return render_form(form_data, "account".to_string(), Some("Please complete all required personal details.")).await;
+    }
+
+    if form.identity_confirmed.is_none() {
+        return render_form(form_data, "account".to_string(), Some("Please confirm that the identity details are accurate.")).await;
+    }
+
+    form.form_completed = true;
+
+    form_data.step2 = Some(form);
+    session.insert("onboarding_form_data", &form_data)?;
+
+    Ok(redirect("/onboarding/contact"))
 }
 
-pub async fn redirect_to_product_information(query: web::Query<OnboardingQuery>, session: Session) -> Result<HttpResponse> {
-    session.remove("onboarding_step");
-    if let Some(product_id  ) = query.product_id.as_deref().filter(|v| !v.is_empty()) {
-        session.insert("onboarding_product_id", product_id)?;
+pub async fn step3_post(session: Session, form: web::Form<Step3Form>) -> Result<HttpResponse> {
+    let mut form_data = session.get::<OnboardingForm>("onboarding_form_data")?
+    .unwrap_or_default();
+
+    let mut form = form.into_inner();
+    let email = clean_text(form.email.clone()).to_lowercase();
+    let phone_number = clean_text(form.phone_number.clone());
+
+
+    if !email.contains('@') || email.len() < 5 {
+        return render_form(form_data, "contact".to_string(), Some("Enter a valid email address.")).await;
     }
 
-    if let Some(channel) = query.channel.as_deref().filter(|v| !v.is_empty()) {
-        session.insert("onboarding_channel", channel)?;
+    if phone_number.len() < 8 {
+        return render_form(form_data, "contact".to_string(), Some("Enter a valid mobile number.")).await;
     }
 
-    Ok(redirect("/onboarding/product-information"))
+    form.form_completed = true;
+
+    form_data.step3 = Some(form);
+    session.insert("onboarding_form_data", &form_data)?;
+
+    Ok(redirect("/onboarding/employment"))
 }
 
-pub async fn display_product(session: Session) -> Result<HttpResponse> {
-    let product_id = session.get::<String>("onboarding_product_id").ok().flatten();
-    //let channel = session.get::<String>("onboarding_channel").ok().flatten().unwrap_or_else(|| "PERSONAL".to_string());
 
-    let product = product_id.as_ref().and_then(|id| get_product_details(id));
-    match product {
-        Some(product) => {
-            render(OnboardingTemplate {
-                product_available: true,
-                product_id: product_id.clone().unwrap(),
-                product_type: "savings".to_string(),
-                product_name: product.name,
-                product_summary: product.summary,
-                product_rate: product.rate,
-                product_minimum: product.minimum,
-                product_features: product.features.clone(),
-            })
+pub async fn step4_post(session: Session, form: web::Form<Step4Form>) -> Result<HttpResponse> {
+    let mut form_data = session.get::<OnboardingForm>("onboarding_form_data")?
+    .unwrap_or_default();
+
+    let mut form = form.into_inner();
+    let employment_status = clean_text(form.employment_status.clone());
+
+
+    if employment_status.is_empty() {
+        return render_form(form_data, "employment".to_string(), Some("Please select your employment status.")).await;
+    }
+
+    form.form_completed = true;
+
+    form_data.step4 = Some(form);
+    session.insert("onboarding_form_data", &form_data)?;
+
+    Ok(redirect("/onboarding/review"))
+}
+
+async fn render_form(form_data: OnboardingForm, form_path: String, error: Option<&str>) -> Result<HttpResponse> {
+    let path_template = get_path_template(&form_path, form_data, error);
+
+    match path_template {
+        Some(template) => {
+            return render_html(template.dyn_render().map_err(actix_web::error::ErrorInternalServerError)?);
         }
         None => {
-            render(OnboardingTemplate {
-                product_available: false,
-                product_id: String::new(),
-                product_type: "savings".to_string(),
-                product_name: String::new(),
-                product_summary: String::new(),
-                product_rate: String::new(),
-                product_minimum: String::new(),
-                product_features: Vec::new(),
-            })
+            render(NotFoundTemplate)
         }
     }
+
 }
+
+fn get_path_template(id: &str, form_data: OnboardingForm, error: Option<&str>) -> Option<Box<dyn DynTemplate>> {
+
+    let step1_data = form_data.step1.unwrap_or_default();
+    let step2_data = form_data.step2.unwrap_or_default();
+    let step3_data = form_data.step3.unwrap_or_default();
+    let step4_data = form_data.step4.unwrap_or_default();
+
+    println!("{}", step4_data.source_initial_deposit.clone().unwrap_or_default());
+
+    match id.to_lowercase().as_str() {
+        "account" => Some(Box::new(OnboardingAccountTemplate {
+                error: error.unwrap_or_default().to_string(),
+                has_error: error.is_some(),
+                selected_account_type: step1_data.selected_account_type.unwrap_or("everyday_savings".to_string()),
+                preferred_account_name: String::new(),
+                account_purpose: step1_data.account_purpose
+            })),
+        "personal" => Some(Box::new(OnboardingPersonalTemplate {
+                 error: error.unwrap_or_default().to_string(),
+                has_error: error.is_some(),
+                full_name: step2_data.full_name,
+                nric: step2_data.nric,
+                gender: step2_data.gender,
+                race: step2_data.race,
+                dob: step2_data.dob,
+                nationality: step2_data.nationality,
+                residential_status: step2_data.residential_status,
+                residential_address: step2_data.residential_address,
+                step1_completed: step1_data.form_completed,
+                identity_confirmed: step2_data.identity_confirmed.is_some()
+            })),
+        "contact" => Some(Box::new(OnboardingContactTemplate {
+                 error: error.unwrap_or_default().to_string(),
+                has_error: error.is_some(),
+                email: step3_data.email,
+                phone_number: step3_data.phone_number,
+                mailing_address: step3_data.mailing_address.unwrap_or_default(),
+                step1_completed: step1_data.form_completed,
+                step2_completed: step2_data.form_completed
+            })),
+        "employment" => Some(Box::new(OnboardingEmploymentTemplate {
+                error: error.unwrap_or_default().to_string(),
+                has_error: error.is_some(),
+                employment_status: step4_data.employment_status,
+                occupation: step4_data.occupation.unwrap_or_default(),
+                employer_name: step4_data.employer_name.unwrap_or_default(),
+                monthly_income_range: step4_data.monthly_income_range.unwrap_or_default(),
+                source_initial_deposit: step4_data.source_initial_deposit.unwrap_or_default(),
+                step1_completed: step1_data.form_completed,
+                step2_completed: step2_data.form_completed,
+                step3_completed: step3_data.form_completed
+            })),
+        "review" => Some(Box::new(OnboardingReviewTemplate {
+             error: error.unwrap_or_default().to_string(),
+            has_error: error.is_some(),
+            selected_account_type: account_type_label(
+                &step1_data.selected_account_type.unwrap_or("everyday_savings".to_string()),
+            )
+            .to_string(),
+            preferred_account_name: String::new(),
+            account_purpose: String::new(),
+            full_name: step2_data.full_name,
+            nric_fin: step2_data.nric,
+            date_of_birth: step2_data.dob,
+            nationality: step2_data.nationality,
+            residential_status: step2_data.residential_status,
+            residential_address: step2_data.residential_address,
+            email: step3_data.email,
+            phone_number: step3_data.phone_number,
+            mailing_address: step3_data.mailing_address.unwrap_or_default(),
+            employment_status: step4_data.employment_status,
+            occupation: step4_data.occupation.unwrap_or_default(),
+            employer_name: step4_data.employer_name.unwrap_or_default(),
+            monthly_income_range: step4_data.monthly_income_range.unwrap_or_default(),
+            source_initial_deposit: step4_data.source_initial_deposit.unwrap_or_default(),
+            step1_completed: step1_data.form_completed,
+            step2_completed: step2_data.form_completed,
+            step3_completed: step3_data.form_completed,
+            step4_completed: step4_data.form_completed
+        })),
+        _ => None,
+    }
+}
+
+fn account_type_label(value: &str) -> &'static str {
+    match value {
+        "high_yield_savings" => "RustToGold High Yield Savings Account",
+        _ => "RustToGold Everyday Savings Account",
+    }
+}
+
+fn clean_text(value: String) -> String {
+    value.trim().to_string()
+}
+// pub async fn redirect_to_product_information(session: Session) -> Result<HttpResponse> {
+//     session.remove("onboarding_step");
+//     if let Some(product_id  ) = query.product_id.as_deref().filter(|v| !v.is_empty()) {
+//         session.insert("onboarding_product_id", product_id)?;
+//     }
+
+//     if let Some(channel) = query.channel.as_deref().filter(|v| !v.is_empty()) {
+//         session.insert("onboarding_channel", channel)?;
+//     }
+
+//     Ok(redirect("/onboarding/product-information"))
+// }
+
+// pub async fn display_product(session: Session) -> Result<HttpResponse> {
+//     let product_id = session.get::<String>("onboarding_product_id").ok().flatten();
+//     //let channel = session.get::<String>("onboarding_channel").ok().flatten().unwrap_or_else(|| "PERSONAL".to_string());
+
+//     let product = product_id.as_ref().and_then(|id| get_product_details(id));
+//     match product {
+//         Some(product) => {
+//             render(OnboardingTemplate {
+//                 product_available: true,
+//                 product_id: product_id.clone().unwrap(),
+//                 product_type: "savings".to_string(),
+//                 product_name: product.name,
+//                 product_summary: product.summary,
+//                 product_rate: product.rate,
+//                 product_minimum: product.minimum,
+//                 product_features: product.features.clone(),
+//             })
+//         }
+//         None => {
+//             render(OnboardingTemplate {
+//                 product_available: false,
+//                 product_id: String::new(),
+//                 product_type: "savings".to_string(),
+//                 product_name: String::new(),
+//                 product_summary: String::new(),
+//                 product_rate: String::new(),
+//                 product_minimum: String::new(),
+//                 product_features: Vec::new(),
+//             })
+//         }
+//     }
+// }

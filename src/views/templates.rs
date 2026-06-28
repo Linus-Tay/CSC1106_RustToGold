@@ -19,21 +19,92 @@ pub struct OnboardingTemplate {
 }
 
 #[derive(Template)]
-#[template(path= "onboarding/forms/onboarding_form1.html")]
-pub struct OnboardingFormTemplate {
-    pub test: bool,
+#[template(path= "onboarding/forms/onboarding_account.html")]
+pub struct OnboardingAccountTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub selected_account_type: String,
+    pub preferred_account_name: String,
+    pub account_purpose: String,
 }
 
 #[derive(Template)]
-#[template(path= "onboarding/forms/onboarding_form2.html")]
-pub struct OnboardingFormTemplate1 {
-    pub test: bool,
+#[template(path= "onboarding/forms/onboarding_personal.html")]
+pub struct OnboardingPersonalTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub full_name: String,
+    pub nric: String,
+    pub dob: String,
+    pub nationality: String,
+    pub residential_status: String,
+    pub residential_address: String,
+    pub step1_completed: bool,
+    pub gender: String,
+    pub race: String,
+    pub identity_confirmed: bool
+}
+
+#[derive(Template)]
+#[template(path= "onboarding/forms/onboarding_contact.html")]
+pub struct OnboardingContactTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub email: String,
+    pub phone_number: String,
+    pub mailing_address: String,
+    pub step1_completed: bool,
+    pub step2_completed: bool
+}
+
+#[derive(Template)]
+#[template(path= "onboarding/forms/onboarding_employment.html")]
+pub struct OnboardingEmploymentTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub employment_status: String,
+    pub occupation: String,
+    pub employer_name: String,
+    pub monthly_income_range: String,
+    pub source_initial_deposit: String,
+    pub step1_completed: bool,
+    pub step2_completed: bool,
+    pub step3_completed: bool
+}
+
+#[derive(Template)]
+#[template(path= "onboarding/forms/onboarding_review.html")]
+pub struct OnboardingReviewTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub selected_account_type: String,
+    pub preferred_account_name: String,
+    pub account_purpose: String,
+    pub full_name: String,
+    pub nric_fin: String,
+    pub date_of_birth: String,
+    pub nationality: String,
+    pub residential_status: String,
+    pub residential_address: String,
+    pub email: String,
+    pub phone_number: String,
+    pub mailing_address: String,
+    pub employment_status: String,
+    pub occupation: String,
+    pub employer_name: String,
+    pub monthly_income_range: String,
+    pub source_initial_deposit: String,
+    pub step1_completed: bool,
+    pub step2_completed: bool,
+    pub step3_completed: bool,
+    pub step4_completed: bool
 }
 
 #[derive(Template)]
 #[template(path= "onboarding/onboarding_result.html")]
 pub struct OnboardingResultTemplate {
-    pub result_message: String,
+    pub reference_no: String,
+    pub created_at: String,
 }
 
 #[derive(Template)]
@@ -196,3 +267,8 @@ pub struct ErrorTemplate;
 pub struct AccountCreationTemplate {
     pub account_creation_link: String,
 }
+
+#[derive(Template)]
+#[template(path = "email/application_received.html")]
+pub struct ApplicationReceivedTemplate {}
+

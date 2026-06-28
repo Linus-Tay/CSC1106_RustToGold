@@ -17,7 +17,7 @@ CREATE TABLE customers (
     full_name            TEXT NOT NULL,
     nric                 TEXT UNIQUE NOT NULL,
     date_of_birth        DATE NOT NULL,
-    gender               TEXT NOT NULL DEFAULT 'Not collected',
+    gender               TEXT NOT NULL,
     nationality          TEXT NOT NULL,
     residency            TEXT NOT NULL,
     race                 TEXT NULL,
@@ -40,12 +40,9 @@ CREATE TABLE customers (
 );
 
 CREATE TABLE users (
-    id             BIGSERIAL PRIMARY KEY,
-    customer_id    UUID NOT NULL DEFAULT gen_random_uuid(),
-    full_name      TEXT NOT NULL,
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id    UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
     email          TEXT NOT NULL UNIQUE,
-    phone_number   TEXT NOT NULL,
-    date_of_birth  DATE NOT NULL,
     password_hash  TEXT NOT NULL,
     role           TEXT NOT NULL DEFAULT 'customer',
     status         TEXT NOT NULL DEFAULT 'active',
@@ -53,30 +50,29 @@ CREATE TABLE users (
     created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT users_customer_id_unique UNIQUE (customer_id),
     CONSTRAINT users_role_check
         CHECK (role IN ('customer', 'staff', 'admin')),
     CONSTRAINT users_status_check
         CHECK (status IN ('active', 'suspended', 'closed'))
 );
 
-CREATE TABLE bank_accounts (
-    id             BIGSERIAL PRIMARY KEY,
-    user_id        BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    account_number TEXT NOT NULL UNIQUE,
-    account_type   TEXT NOT NULL DEFAULT 'everyday_savings',
-    balance_cents  BIGINT NOT NULL DEFAULT 0,
-    status         TEXT NOT NULL DEFAULT 'active',
-    created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+-- CREATE TABLE bank_accounts (
+--     id             BIGSERIAL PRIMARY KEY,
+--     user_id        BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+--     account_number TEXT NOT NULL UNIQUE,
+--     account_type   TEXT NOT NULL DEFAULT 'everyday_savings',
+--     balance_cents  BIGINT NOT NULL DEFAULT 0,
+--     status         TEXT NOT NULL DEFAULT 'active',
+--     created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+--     updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT bank_accounts_type_check
-        CHECK (account_type IN ('everyday_savings', 'high_yield_savings', 'savings', 'current')),
-    CONSTRAINT bank_accounts_status_check
-        CHECK (status IN ('active', 'frozen', 'closed')),
-    CONSTRAINT bank_accounts_balance_non_negative
-        CHECK (balance_cents >= 0)
-);
+--     CONSTRAINT bank_accounts_type_check
+--         CHECK (account_type IN ('everyday_savings', 'high_yield_savings', 'savings', 'current')),
+--     CONSTRAINT bank_accounts_status_check
+--         CHECK (status IN ('active', 'frozen', 'closed')),
+--     CONSTRAINT bank_accounts_balance_non_negative
+--         CHECK (balance_cents >= 0)
+-- );
 
 CREATE TABLE customer_products (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -84,7 +80,7 @@ CREATE TABLE customer_products (
     product_id     TEXT NOT NULL,
     product_type   TEXT NOT NULL,
     account_number TEXT NOT NULL UNIQUE,
-    status         TEXT NOT NULL DEFAULT 'active',
+    status         TEXT NOT NULL DEFAULT 'inactive',
     balance_cents  BIGINT NOT NULL DEFAULT 0,
     created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -101,8 +97,6 @@ CREATE TABLE customer_products (
 
 CREATE TABLE transactions (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    account_id          BIGINT NULL REFERENCES bank_accounts(id) ON DELETE SET NULL,
-    user_id             BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
     product_id          UUID NULL REFERENCES customer_products(id) ON DELETE SET NULL,
     customer_id         UUID NULL REFERENCES customers(id) ON DELETE SET NULL,
     transaction_type    TEXT NOT NULL,
@@ -147,9 +141,9 @@ CREATE TABLE registered_paynow (
 
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_customer_id ON users(customer_id);
-CREATE INDEX idx_bank_accounts_user_id ON bank_accounts(user_id);
+--CREATE INDEX idx_bank_accounts_user_id ON bank_accounts(user_id);
 CREATE INDEX idx_customer_products_customer_id ON customer_products(customer_id);
 CREATE INDEX idx_customer_products_account_number ON customer_products(account_number);
-CREATE INDEX idx_transactions_user_id_created_at ON transactions(user_id, created_at DESC);
+--CREATE INDEX idx_transactions_user_id_created_at ON transactions(user_id, created_at DESC);
 CREATE INDEX idx_transactions_customer_id_created_at ON transactions(customer_id, created_at DESC);
 CREATE INDEX idx_transactions_product_id_created_at ON transactions(product_id, created_at DESC);
