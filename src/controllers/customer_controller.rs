@@ -2,8 +2,9 @@ use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::require_customer;
 use crate::forms::account_forms::TransferForm;
 use crate::forms::{DepositForm, ProfileForm};
+use crate::models::customer;
 use crate::repositories::{account_repository, product_repository};
-use crate::services::{self, product_service};
+use crate::services::{self, customer_service, product_service};
 use crate::views::{
     CustomerPageTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate, ProfileTemplate, TransactionsTemplate, render,
 };
@@ -308,17 +309,17 @@ pub async fn fixed_deposit_new_page(
     })
 }
 
-pub async fn approve_product(data: web::Data<AppState>, path: web::Path<String>, session: Session) -> Result<HttpResponse> {
-    let account_id = match Uuid::parse_str(&path.into_inner()) {
-        Ok(account_id) => account_id,
+pub async fn approve_customer_with_product(data: web::Data<AppState>, path: web::Path<String>, session: Session) -> Result<HttpResponse> {
+    let customer_id = match Uuid::parse_str(&path.into_inner()) {
+        Ok(customer_id) => customer_id,
         Err(e) => {
-            println!("ok");
+            println!("Error parsing string to UUID: {}", e.to_string());
             return render(ErrorTemplate)
         }
     };
 
-    match product_service::approve_product(&data, account_id).await {
-        Ok(updated_product) => {
+    match customer_service::approve_customer_with_product(&data, customer_id).await {
+        Ok((customer, updated_product)) => {
             println!("works!");
             render(ErrorTemplate)
         },

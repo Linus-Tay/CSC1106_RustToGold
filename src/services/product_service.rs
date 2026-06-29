@@ -110,39 +110,39 @@ pub async fn transfer(app_state: &AppState, customer_id: Uuid, form: TransferFor
     }
 }
 
-pub async fn approve_product(app_state: &AppState, account_id: Uuid) -> Result<Product, String> {
-    let pending_product = product_repository::get_product_by_account_id(&app_state.db, &account_id)
-        .await
-        .map_err(|e| {
-            println!("error from database: {}", e.to_string());
-            "An error occurred when retrieving the account.".to_string()
-        })?;
+// pub async fn approve_product(app_state: &AppState, account_id: Uuid) -> Result<Product, String> {
+//     let pending_product = product_repository::get_product_by_account_id(&app_state.db, &account_id)
+//         .await
+//         .map_err(|e| {
+//             println!("error from database: {}", e.to_string());
+//             "An error occurred when retrieving the account.".to_string()
+//         })?;
 
-    let customer = customer_repository::get_customer_by_id(&app_state.db, &pending_product.customer_id)
-        .await
-        .map_err(|e| {
-            println!("error from database: {}", e.to_string());
-            "An error occurred when retrieving customer data.".to_string()
-        })?;
+//     let customer = customer_repository::get_customer_by_id(&app_state.db, &pending_product.customer_id)
+//         .await
+//         .map_err(|e| {
+//             println!("error from database: {}", e.to_string());
+//             "An error occurred when retrieving customer data.".to_string()
+//         })?;
 
-    if customer.kyc_status != "approved" {
-        customer_repository::approve_customer(&app_state.db, &customer.id)
-            .await
-            .map_err(|e| {
-                println!("error from database: {}", e.to_string());
-                "KYC approval failed. Please try again later.".to_string()
-            })?;
-    }
+//     if customer.kyc_status != "approved" {
+//         customer_repository::approve_customer(&app_state.db, &customer.id)
+//             .await
+//             .map_err(|e| {
+//                 println!("error from database: {}", e.to_string());
+//                 "KYC approval failed. Please try again later.".to_string()
+//             })?;
+//     }
 
-    let updated_product = product_repository::approve_product(&app_state.db, &account_id)
-        .await
-        .map_err(|e| {
-            println!("error from database: {}", e.to_string());
-            "Account approval failed. Please try again later.".to_string()
-        })?;
+//     let updated_product = product_repository::approve_product(&app_state.db, &account_id)
+//         .await
+//         .map_err(|e| {
+//             println!("error from database: {}", e.to_string());
+//             "Account approval failed. Please try again later.".to_string()
+//         })?;
 
-    Ok(updated_product)
-}
+//     Ok(updated_product)
+// }
 
 fn luhn_check_digit(number: &str) -> u32 {
     let sum: u32 = number

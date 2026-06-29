@@ -177,8 +177,9 @@ pub async fn update_customer(db: &PgPool, uuid: Uuid, new_info: &NewCustomer<'_>
     .await
 }
 
-pub async fn approve_customer(db: &PgPool, account_id: &Uuid) -> Result<Customer, sqlx::Error> {
-    let updated_product = sqlx::query_as::<_, Customer>(
+pub async fn approve_customer_and_product(db: &PgPool, customer_id: &Uuid, product_id: &Uuid) -> Result<(Customer, Product), sqlx::Error> {
+    let mut tx: DbTransaction<'_, Postgres> = db.begin().await?;
+    let updated_customer = sqlx::query_as::<_, Customer>(
         r#"
         UPDATE customers
         SET kyc_status = 'approved', updated_at = NOW()
@@ -189,12 +190,25 @@ pub async fn approve_customer(db: &PgPool, account_id: &Uuid) -> Result<Customer
             kyc_status, created_at, updated_at
         "#,
     )
-    .bind(account_id)
-    .fetch_one(db)
+    .bind(customer_id)
+    .fetch_one(&mut *tx)
     .await?;
 
-    Ok(updated_product)
+    let updated_product = sqlx::query_as::<_, Product>(
+        r#"
+        UPDATE customer_products
+        SET status = 'active', updated_at = NOW()
+        WHERE id = $1 AND status = 'inactive'
+        RETURNING id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        "#,
+    )
+    .bind(product_id)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    Ok((updated_customer, updated_product))
 }
+
 pub async fn create_customer_profile_for_user(
     db: &PgPool,
     customer_id: Uuid,

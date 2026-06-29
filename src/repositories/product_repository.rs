@@ -235,6 +235,17 @@ pub async fn approve_product(db: &PgPool, account_id: &Uuid) -> Result<Product, 
     Ok(updated_product)
 }
 
+pub async fn get_first_product_by_customer_id(db: &PgPool, customer_id: &Uuid) -> Result<Product, sqlx::Error> {
+    let product = sqlx::query_as::<_, Product>(
+    "SELECT * FROM customer_products WHERE customer_id = $1 AND status = 'inactive'"
+    )
+    .bind(customer_id)
+    .fetch_one(db)
+    .await?;
+
+    Ok(product)
+}
+
 async fn lock_product(tx: &mut DbTransaction<'_, Postgres>, customer_id: &Uuid, account_number: &str) -> Result<Product, sqlx::Error> {
     println!("shit here");
     println!("{} {}", customer_id, account_number);

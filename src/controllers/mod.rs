@@ -14,7 +14,7 @@ pub use self::auth_controller::{
 };
 pub use self::customer_controller::{
     dashboard, deposit, deposit_page, fixed_deposit_new_page, fixed_deposits_page,
-    loan_apply_page, loans_page, profile_page, transactions, transfer, transfer_page, update_profile, approve_product
+    loan_apply_page, loans_page, profile_page, transactions, transfer, transfer_page, update_profile, approve_customer_with_product
 };
 pub use self::error_controller::{forbidden, not_found};
 pub use self::public_controller::home;
