@@ -1,4 +1,4 @@
-use crate::controllers;
+use crate::controllers::{self, account_creation_init};
 use actix_web::{guard, web};
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
@@ -6,13 +6,17 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         web::scope("")
             .guard(guard::Host("apply.localhost"))
             .route("/onboarding/{path}", web::get().to(controllers::onboarding))
+            .route("/account-creation/init", web::get().to(controllers::account_creation_init))
+            .route("/account-creation", web::get().to(controllers::account_creation))
+
             .service(
                 web::scope("/api")
                     .route("/onboarding/account", web::post().to(controllers::step1_post))
                     .route("/onboarding/personal", web::post().to(controllers::step2_post))
                     .route("/onboarding/contact", web::post().to(controllers::step3_post))
                     .route("/onboarding/employment", web::post().to(controllers::step4_post))
-                    .route("/onboarding/submit", web::post().to(controllers::submit)),
+                    .route("/onboarding/submit", web::post().to(controllers::submit))
+                    .route("/account-creation/submit", web::post().to(controllers::account_creation_submit))
             ),
     )
     .service(
@@ -41,7 +45,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .route("/403", web::get().to(controllers::forbidden))
             .service(
                 web::scope("/customer")
-                    .route("/dashboard", web::get().to(controllers::dashboard))
+                    //.route("/dashboard", web::get().to(controllers::dashboard))
                     .route("/deposit", web::get().to(controllers::deposit_page))
                     .route("/deposit", web::post().to(controllers::deposit))
                     .route("/transfer", web::get().to(controllers::transfer_page))
@@ -51,8 +55,8 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("/loans/apply", web::get().to(controllers::loan_apply_page))
                     .route("/fixed-deposits", web::get().to(controllers::fixed_deposits_page))
                     .route("/fixed-deposits/new", web::get().to(controllers::fixed_deposit_new_page))
-                    .route("/profile", web::get().to(controllers::profile_page))
-                    .route("/profile", web::post().to(controllers::update_profile))
+                    //.route("/profile", web::get().to(controllers::profile_page))
+                    //.route("/profile", web::post().to(controllers::update_profile))
                     .route("/approve/{path}", web::post().to(controllers::approve_customer_with_product))
             ),
     );

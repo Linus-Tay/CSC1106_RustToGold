@@ -5,6 +5,7 @@ pub mod transaction;
 pub mod user;
 pub mod customer;
 pub mod product;
+pub mod account_creation_link;
 
 pub use self::account::{AccountWorkflow, BankAccount};
 pub use self::customer::Customer;

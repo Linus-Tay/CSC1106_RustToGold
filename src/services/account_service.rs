@@ -1,63 +1,22 @@
-use crate::models::{AccountWorkflow, BankAccount, Customer, Money, Transaction};
+use crate::forms::auth_forms::AccountCreationForm;
+use crate::models::{AccountWorkflow, BankAccount, Customer, Money, Transaction, User};
 use crate::repositories::customer_repository::NewCustomer;
-use crate::repositories::{account_repository, customer_repository, transaction_repository};
+use crate::repositories::{account_repository, customer_repository, transaction_repository, user_repository};
 use crate::services::support::clean_optional_text;
 use crate::AppState;
 use chrono::NaiveDate;
 use sqlx::PgPool;
+use uuid::Uuid;
 
-// pub async fn register_customer(db: &PgPool, form: OnboardingForm) -> Result<Customer, String> {
-//     // This replaces your entire first `if let` block
-//     let step1 = form.step1.as_ref().ok_or("Missing onboarding step1 data")?;
+pub async fn register_user(db: &PgPool, customer_id: &Uuid, customer_email: &str, form: AccountCreationForm) -> Result<User, String> {
+    let username = form.username;
+    let password_hash = form.password_hash;
+    let user = user_repository::create_user(db, customer_id, &username, customer_email, &password_hash)
+    .await
+    .map_err(|_| "Could not create user".to_string())?;
 
-//     println!("{}", step1.nric);
-
-//     let customer_option = customer_repository::get_customer_by_nric(db, step1.nric.clone())
-//         .await
-//         .map_err(|e| e.to_string())?;
-
-//     println!("{}", step1.full_name);
-//     //println!("{}", customer_option.clone().unwrap().id);
-
-//     let new_customer_data = NewCustomer {
-//         // Other mandatory fields...
-//         full_name: &step1.full_name.clone(),
-//         nric: &step1.nric.clone(),
-//         residency: &step1.residential_status.clone(),
-//         date_of_birth: NaiveDate::from_ymd_opt(2026, 01, 01).unwrap(),
-//         gender: &String::from("Male"),
-//         nationality: &String::from("Singaporean"),
-//         race: Some(&String::from("Chinese")),
-//         email: &String::from("test@gmail.com"),
-//         phone_number: &String::from("911111112"),
-//         mailing_address: Some(&String::from("Random Address")),
-//         residential_address: &String::from("Random Address"),
-//         employment_status: &String::from("Unemployed"),
-//         preferred_contact: None,
-//         occupation: None,
-//         employer_name: None,
-//         monthly_income_range: None,
-//         industry: None,
-//         kyc_status: None,
-//     };
-
-//     let final_customer = match customer_option {
-//         Some(existing_customer) => {
-//             println!("some: {}", existing_customer.id);
-//             customer_repository::update_customer(db, existing_customer.id, &new_customer_data)
-//                 .await
-//                 .map_err(|e| e.to_string())?
-//         },
-//         None => {
-//             println!("None ran");
-//             customer_repository::create_customer(db, &new_customer_data)
-//                 .await
-//                 .map_err(|e| e.to_string())?
-//         }
-//     };
-
-//     Ok(final_customer)
-// }
+    Ok(user)
+}
 
 pub async fn load_customer_dashboard(
     db: &PgPool,

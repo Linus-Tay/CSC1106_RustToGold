@@ -1,5 +1,5 @@
-use crate::models::{Product, customer::Customer};
-use chrono::NaiveDate;
+use crate::models::{Product, account, account_creation_link::AccountCreationLink, customer::Customer};
+use chrono::{NaiveDate, Utc, Duration};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
@@ -206,7 +206,50 @@ pub async fn approve_customer_and_product(db: &PgPool, customer_id: &Uuid, produ
     .fetch_one(&mut *tx)
     .await?;
 
+    tx.commit().await?;
+
     Ok((updated_customer, updated_product))
+}
+
+pub async fn create_user_account_creation_link_for_customer(db: &PgPool, customer_id: &Uuid) -> Result<AccountCreationLink, sqlx::Error> {
+    let account_creation_link = sqlx::query_as::<_, AccountCreationLink>(
+        r#"
+        INSERT INTO account_creation_links (customer_id, status, expires_at)
+        VALUES ($1, 'pending', $2)
+        RETURNING id, customer_id, status, expires_at, created_at
+        "#,
+    )
+    .bind(customer_id)
+    .bind(Utc::now() + Duration::try_hours(72).expect("valid duration"))
+    .fetch_one(db)
+    .await?;
+
+    Ok(account_creation_link)
+}
+
+pub async fn get_account_creation_link(db: &PgPool, account_creation_link: &Uuid) -> Result<Option<AccountCreationLink>, sqlx::Error> {
+    sqlx::query_as::<_, AccountCreationLink>(
+        r#"SELECT id, customer_id, status, expires_at, created_at
+                  FROM account_creation_links
+                  WHERE id = $1
+                  "#
+    )
+    .bind(account_creation_link)
+    .fetch_optional(db)
+    .await
+}
+
+pub async fn invalidate_account_creation_link(db: &PgPool, account_creation_link: &Uuid) -> Result<AccountCreationLink, sqlx::Error> {
+    sqlx::query_as::<_, AccountCreationLink>(
+        r#"UPDATE account_creation_links
+                SET status = 'expired'
+                WHERE id = $1
+                RETURNING id, customer_id, status, expires_at, created_at
+                  "#
+    )
+    .bind(account_creation_link)
+    .fetch_one(db)
+    .await
 }
 
 pub async fn create_customer_profile_for_user(

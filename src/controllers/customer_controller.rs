@@ -3,6 +3,7 @@ use crate::controllers::session_guard::require_customer;
 use crate::forms::account_forms::TransferForm;
 use crate::forms::{DepositForm, ProfileForm};
 use crate::models::customer;
+use crate::repositories::customer_repository::get_customer_by_id;
 use crate::repositories::{account_repository, product_repository};
 use crate::services::{self, customer_service, product_service};
 use crate::views::{
@@ -18,29 +19,30 @@ fn display_money_without_symbol(value: String) -> String {
     value.trim_start_matches('$').to_string()
 }
 
-pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
-    let user = match require_customer(&data, &session).await {
-        Ok(user) => user,
-        Err(response) => return Ok(response),
-    };
+// [NEED TO FIX, GRAB STUFF FROM CUSTOMERS]
+// pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+//     let user = match require_customer(&data, &session).await {
+//         Ok(user) => user,
+//         Err(response) => return Ok(response),
+//     };
 
-    match services::load_customer_dashboard(&data.db, user.id).await {
-        Ok((account, transactions)) => {
-            let has_transactions = !transactions.is_empty();
-            let balance = display_money_without_symbol(account.balance_display());
-            let account_number = account.account_number;
+//     match services::load_customer_dashboard(&data.db, user.id).await {
+//         Ok((account, transactions)) => {
+//             let has_transactions = !transactions.is_empty();
+//             let balance = display_money_without_symbol(account.balance_display());
+//             let account_number = account.account_number;
 
-            render(DashboardTemplate {
-                full_name: user.full_name,
-                account_number,
-                balance,
-                recent_transactions: transactions,
-                has_transactions,
-            })
-        }
-        Err(message) => render_error("Dashboard unavailable", message),
-    }
-}
+//             render(DashboardTemplate {
+//                 full_name: user.full_name,
+//                 account_number,
+//                 balance,
+//                 recent_transactions: transactions,
+//                 has_transactions,
+//             })
+//         }
+//         Err(message) => render_error("Dashboard unavailable", message),
+//     }
+// }
 
 pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
@@ -162,66 +164,67 @@ pub async fn transactions(data: web::Data<AppState>, session: Session) -> Result
     }
 }
 
-pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
-    let user = match require_customer(&data, &session).await {
-        Ok(user) => user,
-        Err(response) => return Ok(response),
-    };
+// [NEED TO FIX, GRAB STUFF FROM CUSTOMERS]
+// pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+//     let user = match require_customer(&data, &session).await {
+//         Ok(user) => user,
+//         Err(response) => return Ok(response),
+//     };
 
-    let account = match account_repository::find_primary_account_by_user_id(&data.db, user.id).await {
-        Ok(Some(account)) => account,
-        _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
-    };
+//     let account = match account_repository::find_primary_account_by_user_id(&data.db, user.id).await {
+//         Ok(Some(account)) => account,
+//         _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
+//     };
 
-    let date_of_birth = user.date_of_birth_display();
-    let last_login = user.last_login_display();
-    let created_at = account.created_at.format("%d %b %Y").to_string();
+//     let date_of_birth = user.date_of_birth_display();
+//     let last_login = user.last_login_display();
+//     let created_at = account.created_at.format("%d %b %Y").to_string();
 
-    render(ProfileTemplate {
-        full_name: user.full_name,
-        email: user.email,
-        phone: user.phone_number,
-        date_of_birth,
-        account_number: account.account_number,
-        created_at,
-        last_login,
-    })
-}
+//     render(ProfileTemplate {
+//         full_name: user.full_name,
+//         email: user.email,
+//         phone: user.phone_number,
+//         date_of_birth,
+//         account_number: account.account_number,
+//         created_at,
+//         last_login,
+//     })
+// }
 
-pub async fn update_profile(
-    data: web::Data<AppState>,
-    session: Session,
-    form: web::Form<ProfileForm>,
-) -> Result<HttpResponse> {
-    let user = match require_customer(&data, &session).await {
-        Ok(user) => user,
-        Err(response) => return Ok(response),
-    };
+// pub async fn update_profile(
+//     data: web::Data<AppState>,
+//     session: Session,
+//     form: web::Form<ProfileForm>,
+// ) -> Result<HttpResponse> {
+//     let user = match require_customer(&data, &session).await {
+//         Ok(user) => user,
+//         Err(response) => return Ok(response),
+//     };
 
-    let account = match account_repository::find_primary_account_by_user_id(&data.db, user.id).await {
-        Ok(Some(account)) => account,
-        _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
-    };
+//     let account = match account_repository::find_primary_account_by_user_id(&data.db, user.id).await {
+//         Ok(Some(account)) => account,
+//         _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
+//     };
 
-    let updated_user = match services::update_customer_profile(&data.db, user.id, form.into_inner()).await {
-        Ok(updated_user) => updated_user,
-        Err(_) => user,
-    };
+//     let updated_user = match services::update_customer_profile(&data.db, user.id, form.into_inner()).await {
+//         Ok(updated_user) => updated_user,
+//         Err(_) => user,
+//     };
 
-    let date_of_birth = updated_user.date_of_birth_display();
-    let last_login = updated_user.last_login_display();
-    let created_at = account.created_at.format("%d %b %Y").to_string();
+//     let date_of_birth = updated_user.date_of_birth_display();
+//     let last_login = updated_user.last_login_display();
+//     let created_at = account.created_at.format("%d %b %Y").to_string();
 
-    render(ProfileTemplate {
-        full_name: updated_user.full_name,
-        email: updated_user.email,
-        phone: updated_user.phone_number,
-        date_of_birth,
-        account_number: account.account_number,
-        created_at,
-        last_login,
-    })
-}
+//     render(ProfileTemplate {
+//         full_name: updated_user.full_name,
+//         email: updated_user.email,
+//         phone: updated_user.phone_number,
+//         date_of_birth,
+//         account_number: account.account_number,
+//         created_at,
+//         last_login,
+//     })
+// }
 
 pub async fn transfer_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     if let Err(response) = require_customer(&data, &session).await {

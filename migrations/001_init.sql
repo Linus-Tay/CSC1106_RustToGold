@@ -42,6 +42,7 @@ CREATE TABLE customers (
 CREATE TABLE users (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id    UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    username       TEXT NOT NULL UNIQUE,
     email          TEXT NOT NULL UNIQUE,
     password_hash  TEXT NOT NULL,
     role           TEXT NOT NULL DEFAULT 'customer',

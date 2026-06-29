@@ -6,10 +6,8 @@ use uuid::Uuid;
 pub struct User {
     pub id: i64,
     pub customer_id: Uuid,
-    pub full_name: String,
+    pub username: String,
     pub email: String,
-    pub phone_number: String,
-    pub date_of_birth: NaiveDate,
     pub password_hash: String,
     pub role: String,
     pub status: String,
@@ -25,10 +23,6 @@ impl User {
 
     pub fn is_customer(&self) -> bool {
         self.role == "customer"
-    }
-
-    pub fn date_of_birth_display(&self) -> String {
-        self.date_of_birth.format("%d %b %Y").to_string()
     }
 
     pub fn joined_display(&self) -> String {

@@ -1,10 +1,10 @@
 use crate::forms::{DepositForm, OnboardingForm};
-use crate::models::{AccountWorkflow, BankAccount, Customer, Money, Product, Transaction};
+use crate::models::{AccountWorkflow, BankAccount, Customer, Money, Product, Transaction, account_creation_link};
 use crate::repositories::customer_repository::NewCustomer;
 use crate::repositories::{account_repository, customer_repository, product_repository, transaction_repository};
 use crate::services::email_service;
 use crate::services::support::clean_optional_text;
-use crate::views::templates::ApplicationReceivedTemplate;
+use crate::views::templates::{AccountCreationEmailTemplate, ApplicationReceivedEmailTemplate};
 use crate::{AppState, services};
 use askama::DynTemplate;
 use chrono::NaiveDate;
@@ -66,7 +66,7 @@ pub async fn create_customer_with_product(db: &PgPool, form: &OnboardingForm, pr
 
     let email_to_send = step3.email.clone();
     let subject_to_send = format!("Rust To Gold Application received {}", product.id);
-    let template = ApplicationReceivedTemplate {};
+    let template = ApplicationReceivedEmailTemplate {};
 
     tokio::spawn(async move {
         let result = services::send_template_email(
@@ -76,7 +76,7 @@ pub async fn create_customer_with_product(db: &PgPool, form: &OnboardingForm, pr
         ).await;
         
         if let Err(e) = result {
-            println!("Background task failed to send email: {}", e);
+            println!("Background task failed to send application received email: {}", e);
         }
     });
 
@@ -98,6 +98,33 @@ pub async fn approve_customer_with_product(app_state: &AppState, customer_id: Uu
             return Err("Account approval failed. Please try again later".to_string())
         }
     };
+
+    let account_creation_link = customer_repository::create_user_account_creation_link_for_customer(&app_state.db, &customer_id)
+    .await
+    .map_err(|e| {
+        println!("Error while creating account creation link: {}", e.to_string());
+        "Failed to send account creation email".to_string()
+    })?;
+
+
+
+    let email_to_send = customer.email.clone();
+    let subject_to_send = format!("Welcome to Rust To Gold, your application has been activated {}", product.id);
+    let template = AccountCreationEmailTemplate {
+        account_creation_link: format!("http://apply.localhost:3000/account-creation?link={}", account_creation_link.get_link())
+    };
+
+    tokio::spawn(async move {
+        let result = services::send_template_email(
+            &email_to_send, 
+            &subject_to_send, 
+            &template
+        ).await;
+        
+        if let Err(e) = result {
+            println!("Background task failed to send account creation email: {}", e);
+        }
+    });
 
     // let customer = customer_repository::get_customer_by_id(&app_state.db, &pending_product.customer_id)
     //     .await
@@ -123,4 +150,59 @@ pub async fn approve_customer_with_product(app_state: &AppState, customer_id: Uu
     //     })?;
 
     Ok((customer, product))
+}
+
+pub async fn validate_account_creation_link(app_state: &AppState, account_creation_link: &str) -> Result<bool, String> {
+    let link_uuid = Uuid::parse_str(account_creation_link).map_err(|e| "Failed to parse UUID".to_string())?;
+    let account_creation_link = match customer_repository::get_account_creation_link(&app_state.db, &link_uuid).await {
+        Ok(Some(account_creation_link)) => account_creation_link,
+        Ok(None) => {
+            return Ok(false);
+        },
+        Err(e) => {
+            println!("Error getting acocunt creation link: {}", e.to_string());
+            return Err("Invalid account creation link".to_string());
+        }
+    };
+
+    if account_creation_link.is_valid() == false {
+        return Ok(false);
+    }
+
+    Ok(true)
+}
+
+pub async fn get_customer_by_account_creation_link(app_state: &AppState, account_creation_link: &str) -> Result<Customer, String> {
+    let link_uuid = Uuid::parse_str(account_creation_link).map_err(|e| "Failed to parse UUID".to_string())?;
+    let account_creation_link = match customer_repository::get_account_creation_link(&app_state.db, &link_uuid).await {
+        Ok(Some(account_creation_link)) => account_creation_link,
+        Ok(None) => {
+            return Err("Error getting account creation link".to_string());
+        },
+        Err(e) => {
+            println!("Error getting acocunt creation link: {}", e.to_string());
+            return Err("Invalid account creation link".to_string());
+        }
+    };
+
+    if account_creation_link.is_valid() == false {
+        return Err("Invalid or expired link".to_string());
+    }
+
+    let customer = customer_repository::get_customer_by_id(&app_state.db, &account_creation_link.get_customer_id())
+    .await
+    .map_err(|e| {
+        println!("Error getting customer: {}", e.to_string());
+        "Error getting customer".to_string()
+    })?;
+
+    Ok(customer)
+}
+
+pub async fn invalidate_account_creation_link(app_state: &AppState, account_creation_link: &str) -> Result<bool, String> {
+    let link_uuid = Uuid::parse_str(account_creation_link).map_err(|e| "Failed to parse UUID".to_string())?;
+    match customer_repository::invalidate_account_creation_link(&app_state.db, &link_uuid).await {
+        Ok(account_creation_link) => Ok(true),
+        Err(e) => Ok(false)
+    }
 }

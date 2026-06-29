@@ -108,6 +108,19 @@ pub struct OnboardingResultTemplate {
 }
 
 #[derive(Template)]
+#[template(path ="onboarding/account_creation.html")]
+pub struct AccountCreationTemplate {
+    pub email: String
+}
+
+#[derive(Template)]
+#[template(path = "onboarding/account_creation_success.html")]
+pub struct AccountCreationSuccessTemplate {
+    pub username: String,
+    pub email: String,
+}
+
+#[derive(Template)]
 #[template(path = "auth/login.html")]
 pub struct LoginTemplate {
     pub error: String,
@@ -263,12 +276,12 @@ pub struct NotFoundTemplate;
 pub struct ErrorTemplate;
 
 #[derive(Template)]
-#[template(path = "email/account_creation.html")]
-pub struct AccountCreationTemplate {
+#[template(path = "email/account_creation_email.html")]
+pub struct AccountCreationEmailTemplate {
     pub account_creation_link: String,
 }
 
 #[derive(Template)]
-#[template(path = "email/application_received.html")]
-pub struct ApplicationReceivedTemplate {}
+#[template(path = "email/application_received_email.html")]
+pub struct ApplicationReceivedEmailTemplate {}
 

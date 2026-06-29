@@ -6,6 +6,15 @@ pub struct LoginForm {
     pub password: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct AccountCreationForm {
+    pub username: String,
+    pub password_hash: String,
+    pub transaction_alerts: bool,
+    pub login_notifications: bool,
+    pub promotions_and_offers: bool
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SignupDraft {
     pub selected_account_type: Option<String>,

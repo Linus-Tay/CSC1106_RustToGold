@@ -1,10 +1,11 @@
 use crate::controllers::session_guard::{redirect, session_user_id};
+use crate::forms::auth_forms::AccountCreationForm;
 use crate::forms::onboard_forms::{Step3Form, Step4Form};
 use crate::forms::{OnboardingForm, Step1Form, Step2Form};
-use crate::models::Customer;
+use crate::models::{Customer, customer};
 use crate::services::{self};
 use crate::views::renderer::render_html;
-use crate::views::templates::{AccountCreationTemplate, OnboardingContactTemplate, OnboardingEmploymentTemplate, OnboardingReviewTemplate};
+use crate::views::templates::{AccountCreationSuccessTemplate, AccountCreationTemplate, OnboardingContactTemplate, OnboardingEmploymentTemplate, OnboardingReviewTemplate};
 use crate::views::{ErrorTemplate, NotFoundTemplate, OnboardingAccountTemplate, OnboardingPersonalTemplate, OnboardingResultTemplate, OnboardingTemplate, render};
 use actix_session::Session;
 use askama::DynTemplate;
@@ -12,6 +13,11 @@ use chrono::NaiveDate;
 use crate::AppState;
 use actix_web::{web, HttpResponse, Result};
 use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize)]
+pub struct AccountCreationQueryParams {
+    link: String
+}
 
 
 pub async fn onboarding(path: web::Path<String>, session: Session) -> Result<HttpResponse> {
@@ -34,7 +40,91 @@ pub async fn onboarding(path: web::Path<String>, session: Session) -> Result<Htt
             }
         }
     }
-} 
+}
+
+
+pub async fn account_creation_init(query: web::Query<AccountCreationQueryParams>, data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    println!("im still runinnglol");
+    match services::validate_account_creation_link(&data, &query.link).await {
+        Ok(true) => {
+            session.insert("account_creation_link", query.link.clone());
+            Ok(redirect("/account-creation"))
+        },
+        _ => {
+            render(NotFoundTemplate)
+        }
+    }
+}
+
+
+pub async fn account_creation(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    let account_creation_link = match session.get::<String>("account_creation_link")? {
+        Some(link) => link,
+        None => {
+            return render(NotFoundTemplate);
+        }
+    };
+
+    match services::get_customer_by_account_creation_link(&data, &account_creation_link).await {
+        Ok(customer) => {
+            render(AccountCreationTemplate {
+                email: customer.email
+            })
+        },
+        Err(e) => {
+            render(NotFoundTemplate)
+        }
+    }
+
+    // match services::validate_account_creation_link(&data, &query.link).await {
+    //     Ok(true) => {
+    //         session.insert("account_creation_link", query.link.clone());
+    //         Ok(redirect("/account-creation/"))
+    //     },
+    //     Ok(false) => {
+    //         render(NotFoundTemplate)
+    //     }
+    //     Err(e) => {
+    //         render(NotFoundTemplate)
+    //     }
+    // }
+}
+
+pub async fn account_creation_submit(data: web::Data<AppState>, form: web::Form<AccountCreationForm>, session: Session) -> Result<HttpResponse> {
+    let mut form = form.into_inner();
+    let link = match session.get::<String>("account_creation_link")? {
+        Some(link) => link,
+        None => {
+            return render(ErrorTemplate);
+        }
+    };
+
+    let customer = match services::get_customer_by_account_creation_link(&data, &link).await {
+        Ok(customer) => customer,
+        Err(e) => {
+            return render(ErrorTemplate)
+        }
+    };
+
+    match services::register_user(&data.db, &customer.id, &customer.email, form).await {
+        Ok(user) => {
+
+            services::invalidate_account_creation_link(&data, &link)
+            .await
+            .map_err(|e| println!("An error occured while invalidating account creation link: {}", e));
+
+            render(AccountCreationSuccessTemplate {
+                username: user.username,
+                email: user.email
+            })
+        },
+        Err(e) => {
+            println!("Error creating user: {}", e);
+            render(ErrorTemplate)
+        }
+    }
+}
+
 
 pub async fn submit(data: web::Data<AppState>,session: Session) -> Result<HttpResponse> {
     let mut form_data = session.get::<OnboardingForm>("onboarding_form_data")?.unwrap_or_default();

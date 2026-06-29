@@ -5,7 +5,7 @@ pub mod public_controller;
 pub mod onboard_controller;
 pub mod session_guard;
 
-pub use self::onboard_controller::{onboarding, step1_post, step2_post, step3_post, step4_post, submit};
+pub use self::onboard_controller::{onboarding, step1_post, step2_post, step3_post, step4_post, submit, account_creation, account_creation_init, account_creation_submit};
 pub use self::auth_controller::{
     login, login_page, logout, post_signup_account, post_signup_contact, post_signup_employment,
     post_signup_personal, post_signup_security, show_signup_account,
@@ -13,8 +13,8 @@ pub use self::auth_controller::{
     show_signup_security, signup, signup_page,
 };
 pub use self::customer_controller::{
-    dashboard, deposit, deposit_page, fixed_deposit_new_page, fixed_deposits_page,
-    loan_apply_page, loans_page, profile_page, transactions, transfer, transfer_page, update_profile, approve_customer_with_product
+    deposit, deposit_page, fixed_deposit_new_page, fixed_deposits_page,
+    loan_apply_page, loans_page, transactions, transfer, transfer_page, approve_customer_with_product
 };
 pub use self::error_controller::{forbidden, not_found};
 pub use self::public_controller::home;
