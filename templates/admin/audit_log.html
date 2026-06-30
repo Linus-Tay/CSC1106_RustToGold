@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold Admin | Audit Log</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#F8FAFC] text-slate-900">
+  {% include "partials/admin_nav.html" %}
+
+  <main class="mx-auto max-w-7xl px-6 py-10">
+    <section class="rounded-[2rem] bg-[#0B1F3A] p-8 text-white shadow-xl shadow-[#0B1F3A]/20">
+      <p class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.24em] text-[#D6A54A]"><i data-lucide="scroll-text" class="h-4 w-4"></i> Audit Trail</p>
+      <h1 class="text-4xl font-black tracking-tight">Audit Log</h1>
+      <p class="mt-4 max-w-3xl text-white/70">Tracks admin and staff actions such as approvals, rejections, staff changes, user suspension, product freezing and product closure.</p>
+    </section>
+
+    {% if has_error %}
+    <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">{{ error }}</div>
+    {% endif %}
+
+    <section class="mt-8 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+      {% if has_logs %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+          <thead class="bg-slate-50 text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+            <tr>
+              <th class="px-5 py-4">Time</th>
+              <th class="px-5 py-4">Actor</th>
+              <th class="px-5 py-4">Action</th>
+              <th class="px-5 py-4">Entity</th>
+              <th class="px-5 py-4">Details</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for log in logs %}
+            <tr class="align-top">
+              <td class="px-5 py-4 font-semibold text-slate-500">{{ log.created_at_display() }}</td>
+              <td class="px-5 py-4 font-black text-[#0B1F3A]">{{ log.actor_display() }}</td>
+              <td class="px-5 py-4"><span class="rounded-full bg-[#1D4ED8]/10 px-3 py-1 text-xs font-black text-[#1D4ED8]">{{ log.action_display() }}</span></td>
+              <td class="px-5 py-4 font-semibold text-slate-700">{{ log.entity_display() }}</td>
+              <td class="px-5 py-4 text-slate-500">{{ log.details_display() }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="p-10 text-center">
+        <div class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-slate-500"><i data-lucide="scroll-text" class="h-7 w-7"></i></div>
+        <h2 class="text-2xl font-black text-[#0B1F3A]">No audit records yet</h2>
+        <p class="mt-2 text-sm text-slate-500">Admin actions will appear here after approval or account-control actions are performed.</p>
+      </div>
+      {% endif %}
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

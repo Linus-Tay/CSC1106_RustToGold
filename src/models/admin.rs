@@ -164,6 +164,7 @@ impl AdminCustomerApplication {
 pub struct AdminPersonalLoanRecord {
     pub id: Uuid,
     pub customer_id: Uuid,
+    pub funding_product_id: Uuid,
     pub customer_name: String,
     pub customer_email: String,
     pub customer_phone: String,
@@ -381,6 +382,168 @@ impl AdminHomeLoanRecord {
         } else {
             "Application has already been reviewed."
         }
+    }
+}
+
+
+#[derive(Debug, Clone, FromRow)]
+pub struct AdminStaffUser {
+    pub id: i64,
+    pub username: String,
+    pub full_name: String,
+    pub email: String,
+    pub phone_number: String,
+    pub role: String,
+    pub status: String,
+    pub last_login_at: Option<chrono::NaiveDateTime>,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+impl AdminStaffUser {
+    pub fn role_display(&self) -> String {
+        title_case(&self.role)
+    }
+
+    pub fn status_display(&self) -> String {
+        title_status(&self.status, &[("active", "Active"), ("suspended", "Suspended"), ("closed", "Closed")])
+    }
+
+    pub fn joined_display(&self) -> String {
+        self.created_at.format("%d %b %Y").to_string()
+    }
+
+    pub fn last_login_display(&self) -> String {
+        self.last_login_at
+            .map(|value| value.format("%d %b %Y, %I:%M %p").to_string())
+            .unwrap_or_else(|| "Not recorded".to_string())
+    }
+
+    pub fn is_active_status(&self) -> bool {
+        self.status == "active"
+    }
+
+    pub fn can_delete(&self) -> bool {
+        self.role == "staff"
+    }
+}
+
+#[derive(Debug, Clone, FromRow)]
+pub struct AdminCustomerAccountRecord {
+    pub product_id: Uuid,
+    pub customer_id: Uuid,
+    pub customer_name: String,
+    pub customer_email: String,
+    pub customer_kyc_status: String,
+    pub user_id: Option<i64>,
+    pub username: Option<String>,
+    pub user_status: Option<String>,
+    pub account_number: String,
+    pub account_product_id: String,
+    pub product_type: String,
+    pub product_status: String,
+    pub balance_cents: i64,
+    pub created_at: DateTime<Utc>,
+}
+
+impl AdminCustomerAccountRecord {
+    pub fn balance_display(&self) -> String {
+        Money::from_cents(self.balance_cents).display()
+    }
+
+    pub fn product_display(&self) -> String {
+        title_case(&self.account_product_id)
+    }
+
+    pub fn product_type_display(&self) -> String {
+        title_case(&self.product_type)
+    }
+
+    pub fn product_status_display(&self) -> String {
+        title_status(&self.product_status, &[("active", "Active"), ("inactive", "Pending/Inactive"), ("frozen", "Frozen"), ("closed", "Closed")])
+    }
+
+    pub fn user_status_display(&self) -> String {
+        self.user_status
+            .as_deref()
+            .map(|value| title_status(value, &[("active", "Active"), ("suspended", "Suspended"), ("closed", "Closed")]))
+            .unwrap_or_else(|| "Online banking not created".to_string())
+    }
+
+    pub fn username_display(&self) -> String {
+        option_display(&self.username, "Not created")
+    }
+
+    pub fn kyc_status_display(&self) -> String {
+        title_status(&self.customer_kyc_status, &[("pending", "Pending Review"), ("approved", "Approved"), ("rejected", "Rejected")])
+    }
+
+    pub fn created_at_display(&self) -> String {
+        self.created_at.format("%d %b %Y").to_string()
+    }
+
+    pub fn can_activate_product(&self) -> bool {
+        matches!(self.product_status.as_str(), "inactive" | "frozen") && self.customer_kyc_status == "approved"
+    }
+
+    pub fn can_freeze_product(&self) -> bool {
+        self.product_status == "active"
+    }
+
+    pub fn can_close_product(&self) -> bool {
+        self.product_status != "closed"
+    }
+
+    pub fn can_suspend_user(&self) -> bool {
+        self.user_status.as_deref() == Some("active")
+    }
+
+    pub fn can_activate_user(&self) -> bool {
+        self.user_status.as_deref() == Some("suspended")
+    }
+
+    pub fn user_action_id(&self) -> i64 {
+        self.user_id.unwrap_or(0)
+    }
+}
+
+#[derive(Debug, Clone, FromRow)]
+pub struct AdminAuditLogRecord {
+    pub id: Uuid,
+    pub actor_user_id: Option<i64>,
+    pub actor_username: Option<String>,
+    pub action: String,
+    pub entity_type: String,
+    pub entity_id: Option<String>,
+    pub details: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+impl AdminAuditLogRecord {
+    pub fn actor_display(&self) -> String {
+        self.actor_username
+            .as_deref()
+            .map(ToString::to_string)
+            .or_else(|| self.actor_user_id.map(|id| format!("User #{id}")))
+            .unwrap_or_else(|| "System".to_string())
+    }
+
+    pub fn action_display(&self) -> String {
+        title_case(&self.action)
+    }
+
+    pub fn entity_display(&self) -> String {
+        match &self.entity_id {
+            Some(id) if !id.is_empty() => format!("{} · {}", title_case(&self.entity_type), id),
+            _ => title_case(&self.entity_type),
+        }
+    }
+
+    pub fn details_display(&self) -> String {
+        option_display(&self.details, "No extra details")
+    }
+
+    pub fn created_at_display(&self) -> String {
+        self.created_at.format("%d %b %Y, %I:%M %p").to_string()
     }
 }
 

@@ -52,6 +52,61 @@ pub async fn get_product_by_account_number(
     .await
 }
 
+
+pub async fn list_products_by_customer(
+    db: &PgPool,
+    customer_id: &Uuid,
+) -> Result<Vec<Product>, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
+        r#"
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE customer_id = $1
+        ORDER BY
+            CASE status WHEN 'active' THEN 0 WHEN 'inactive' THEN 1 WHEN 'frozen' THEN 2 ELSE 3 END,
+            created_at ASC
+        "#,
+    )
+    .bind(customer_id)
+    .fetch_all(db)
+    .await
+}
+
+pub async fn list_active_products_by_customer(
+    db: &PgPool,
+    customer_id: &Uuid,
+) -> Result<Vec<Product>, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
+        r#"
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE customer_id = $1 AND status = 'active'
+        ORDER BY created_at ASC
+        "#,
+    )
+    .bind(customer_id)
+    .fetch_all(db)
+    .await
+}
+
+pub async fn get_active_product_for_customer_by_account_number(
+    db: &PgPool,
+    customer_id: &Uuid,
+    account_number: &str,
+) -> Result<Product, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
+        r#"
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE customer_id = $1 AND account_number = $2 AND status = 'active'
+        "#,
+    )
+    .bind(customer_id)
+    .bind(account_number)
+    .fetch_one(db)
+    .await
+}
+
 pub async fn insert_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -63,6 +118,29 @@ pub async fn insert_product(
         r#"
         INSERT INTO customer_products (customer_id, product_id, product_type, account_number, balance_cents)
         VALUES ($1, $2, $3, $4, 0)
+        RETURNING id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        "#,
+    )
+    .bind(customer_id)
+    .bind(product_id)
+    .bind(product_type)
+    .bind(account_number)
+    .fetch_one(db)
+    .await
+}
+
+
+pub async fn insert_active_product(
+    db: &PgPool,
+    customer_id: &Uuid,
+    product_id: &str,
+    product_type: &str,
+    account_number: &str,
+) -> Result<Product, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
+        r#"
+        INSERT INTO customer_products (customer_id, product_id, product_type, account_number, balance_cents, status)
+        VALUES ($1, $2, $3, $4, 0, 'active')
         RETURNING id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
         "#,
     )

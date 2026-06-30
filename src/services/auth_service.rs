@@ -60,7 +60,7 @@ pub async fn submit_customer_application(
         return Err("Please confirm the account opening declarations.".to_string());
     }
 
-    if customer_repository::get_customer_by_nric(db, &nric_fin)
+    if customer_repository::get_non_rejected_customer_by_nric(db, &nric_fin)
         .await
         .map_err(|error| {
             eprintln!("SIGNUP NRIC lookup failed for {nric_fin}: {error:?}");
@@ -68,7 +68,7 @@ pub async fn submit_customer_application(
         })?
         .is_some()
     {
-        return Err("An account application already exists for this NRIC or FIN.".to_string());
+        return Err("An application with these identity details is already pending or approved.".to_string());
     }
 
     if user_repository::find_user_by_login(db, &email)
@@ -150,7 +150,7 @@ pub async fn register_user(
         .map_err(|_| "Could not check username availability.".to_string())?
         .is_some()
     {
-        return Err("This username is already taken.".to_string());
+        return Err("This username is already in use.".to_string());
     }
 
     let customer = customer_repository::get_customer_by_id(db, customer_id)

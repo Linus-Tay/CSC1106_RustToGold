@@ -2,13 +2,14 @@ use crate::forms::{CreateFixedDepositForm, FixedDepositPlanForm};
 use crate::models::{
     FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, Money, Product,
 };
-use crate::repositories::{fixed_deposit_repository, loan_repository};
+use crate::repositories::{fixed_deposit_repository, product_repository};
 use chrono::{Duration, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
 pub struct FixedDepositDashboard {
     pub account: Product,
+    pub accounts: Vec<Product>,
     pub summary: FixedDepositSummary,
     pub fixed_deposits: Vec<FixedDeposit>,
 }
@@ -21,9 +22,14 @@ pub async fn load_fixed_deposit_dashboard(
         .await
         .map_err(|_| "Could not refresh fixed deposit maturity statuses.".to_string())?;
 
-    let account = loan_repository::find_primary_active_product(db, customer_id)
+    let accounts = product_repository::list_active_products_by_customer(db, &customer_id)
         .await
-        .map_err(|_| "No active customer account was found for fixed deposits.".to_string())?;
+        .map_err(|_| "Could not load active customer accounts.".to_string())?;
+
+    let account = accounts
+        .first()
+        .cloned()
+        .ok_or_else(|| "No active customer account was found for fixed deposits.".to_string())?;
 
     let fixed_deposits = fixed_deposit_repository::list_fixed_deposits_by_customer(db, customer_id)
         .await
@@ -33,6 +39,7 @@ pub async fn load_fixed_deposit_dashboard(
 
     Ok(FixedDepositDashboard {
         account,
+        accounts,
         summary,
         fixed_deposits,
     })
@@ -41,16 +48,21 @@ pub async fn load_fixed_deposit_dashboard(
 pub async fn load_fixed_deposit_create_page(
     db: &PgPool,
     customer_id: Uuid,
-) -> Result<(Product, Vec<FixedDepositPlan>), String> {
-    let account = loan_repository::find_primary_active_product(db, customer_id)
+) -> Result<(Product, Vec<Product>, Vec<FixedDepositPlan>), String> {
+    let accounts = product_repository::list_active_products_by_customer(db, &customer_id)
         .await
-        .map_err(|_| "No active customer account was found for fixed deposits.".to_string())?;
+        .map_err(|_| "Could not load active customer accounts.".to_string())?;
+
+    let account = accounts
+        .first()
+        .cloned()
+        .ok_or_else(|| "No active customer account was found for fixed deposits.".to_string())?;
 
     let plans = fixed_deposit_repository::list_active_plans(db)
         .await
         .map_err(|_| "Could not load fixed deposit plans.".to_string())?;
 
-    Ok((account, plans))
+    Ok((account, accounts, plans))
 }
 
 pub async fn create_fixed_deposit(
@@ -77,9 +89,13 @@ pub async fn create_fixed_deposit(
         ));
     }
 
-    let account = loan_repository::find_primary_active_product(db, customer_id)
-        .await
-        .map_err(|_| "No active customer account was found.".to_string())?;
+    let account = product_repository::get_active_product_for_customer_by_account_number(
+        db,
+        &customer_id,
+        form.account_number.trim(),
+    )
+    .await
+    .map_err(|_| "Choose an active funding account for this fixed deposit.".to_string())?;
 
     if account.balance_cents < amount.cents() {
         return Err(format!(

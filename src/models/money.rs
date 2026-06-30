@@ -59,7 +59,7 @@ impl Money {
         }
 
         if total_cents > 100_000_000_00 {
-            return Err("Amount is too large for this academic simulation.".to_string());
+            return Err("Amount is above the allowed demo limit for this operation.".to_string());
         }
 
         Ok(Self::from_cents(total_cents))

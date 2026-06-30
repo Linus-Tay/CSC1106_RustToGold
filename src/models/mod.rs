@@ -13,7 +13,7 @@ pub mod user;
 
 pub use self::account::{AccountWorkflow, BankAccount};
 pub use self::account_creation_link::AccountCreationLink;
-pub use self::admin::{AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord};
+pub use self::admin::{AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser};
 pub use self::customer::Customer;
 pub use self::fixed_deposit::{FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary};
 pub use self::home_loan::{HomeLoanApplication, HomeLoanSummary};

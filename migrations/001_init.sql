@@ -4,6 +4,7 @@
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+DROP TABLE IF EXISTS audit_logs CASCADE;
 DROP TABLE IF EXISTS fixed_deposits CASCADE;
 DROP TABLE IF EXISTS fixed_deposit_plans CASCADE;
 DROP TABLE IF EXISTS home_loan_applications CASCADE;
@@ -18,13 +19,13 @@ DROP TABLE IF EXISTS customers CASCADE;
 CREATE TABLE customers (
     id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     full_name            TEXT NOT NULL,
-    nric                 TEXT UNIQUE NOT NULL,
+    nric                 TEXT NOT NULL,
     date_of_birth        DATE NOT NULL,
     gender               TEXT NOT NULL,
     nationality          TEXT NOT NULL,
     residency            TEXT NOT NULL,
     race                 TEXT NULL,
-    email                TEXT UNIQUE NOT NULL,
+    email                TEXT NOT NULL,
     phone_number         TEXT NOT NULL,
     residential_address  TEXT NOT NULL,
     mailing_address      TEXT NULL,
@@ -79,10 +80,8 @@ CREATE TABLE customer_products (
     created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT customer_products_unique_customer_product
-        UNIQUE (customer_id, product_id),
     CONSTRAINT customer_products_status_check
-        CHECK (status IN ('active', 'inactive', 'closed')),
+        CHECK (status IN ('active', 'inactive', 'frozen', 'closed')),
     CONSTRAINT customer_products_balance_non_negative
         CHECK (balance_cents >= 0),
     CONSTRAINT customer_products_type_check
@@ -196,6 +195,17 @@ CREATE TABLE account_creation_links (
         CHECK (status IN ('pending', 'expired', 'used'))
 );
 
+
+CREATE TABLE audit_logs (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    actor_user_id   BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    action          TEXT NOT NULL,
+    entity_type     TEXT NOT NULL,
+    entity_id       TEXT NULL,
+    details         TEXT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE registered_paynow (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id       UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
@@ -210,6 +220,14 @@ CREATE TABLE registered_paynow (
     CONSTRAINT registered_paynow_status_check
         CHECK (status IN ('active', 'inactive'))
 );
+
+CREATE UNIQUE INDEX idx_customers_active_nric_unique
+    ON customers (lower(nric))
+    WHERE kyc_status <> 'rejected';
+
+CREATE UNIQUE INDEX idx_customers_active_email_unique
+    ON customers (lower(email))
+    WHERE kyc_status <> 'rejected';
 
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
@@ -226,6 +244,8 @@ CREATE INDEX idx_home_loan_applications_customer_id ON home_loan_applications(cu
 CREATE INDEX idx_home_loan_applications_status ON home_loan_applications(status);
 CREATE INDEX idx_fixed_deposits_customer_id ON fixed_deposits(customer_id);
 CREATE INDEX idx_fixed_deposits_status_maturity ON fixed_deposits(status, maturity_date);
+CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
+CREATE INDEX idx_audit_logs_actor_created_at ON audit_logs(actor_user_id, created_at DESC);
 
 INSERT INTO fixed_deposit_plans (plan_name, tenure_months, annual_rate_bps, minimum_amount_cents, is_active)
 VALUES

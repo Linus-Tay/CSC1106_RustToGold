@@ -27,6 +27,7 @@ pub async fn fixed_deposits_page(
 
     match services::load_fixed_deposit_dashboard(&data.db, user.customer_id).await {
         Ok(dashboard) => {
+            let accounts = dashboard.accounts.clone();
             let success = if query.created.is_some() {
                 "Fixed deposit placed successfully.".to_string()
             } else if query.withdrawn.is_some() {
@@ -41,6 +42,7 @@ pub async fn fixed_deposits_page(
             render(FixedDepositDashboardTemplate {
                 account_number: dashboard.account.account_number.clone(),
                 balance: display_money_without_symbol(dashboard.account.balance_display()),
+                accounts,
                 summary: dashboard.summary,
                 has_fixed_deposits: !dashboard.fixed_deposits.is_empty(),
                 fixed_deposits: dashboard.fixed_deposits,
@@ -64,9 +66,10 @@ pub async fn fixed_deposit_new_page(
     };
 
     match services::load_fixed_deposit_create_page(&data.db, user.customer_id).await {
-        Ok((account, plans)) => render(FixedDepositCreateTemplate {
+        Ok((account, accounts, plans)) => render(FixedDepositCreateTemplate {
             account_number: account.account_number.clone(),
             balance: display_money_without_symbol(account.balance_display()),
+            accounts,
             has_plans: !plans.is_empty(),
             plans,
             error: String::new(),
@@ -90,9 +93,10 @@ pub async fn create_fixed_deposit(
         Ok(_) => Ok(redirect("/customer/fixed-deposits?created=1")),
         Err(error) => {
             match services::load_fixed_deposit_create_page(&data.db, user.customer_id).await {
-                Ok((account, plans)) => render(FixedDepositCreateTemplate {
+                Ok((account, accounts, plans)) => render(FixedDepositCreateTemplate {
                     account_number: account.account_number.clone(),
                     balance: display_money_without_symbol(account.balance_display()),
+                    accounts,
                     has_plans: !plans.is_empty(),
                     plans,
                     error,

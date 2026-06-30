@@ -4,6 +4,7 @@ use crate::repositories::customer_repository::NewCustomer;
 use crate::repositories::{customer_repository, product_repository};
 use crate::views::templates::{AccountCreationEmailTemplate, ApplicationReceivedEmailTemplate};
 use crate::{services, AppState};
+use askama::DynTemplate;
 use chrono::NaiveDate;
 use sqlx::PgPool;
 use std::env;
@@ -32,12 +33,12 @@ pub async fn create_customer_with_product(
     let step3 = form.step3.as_ref().ok_or("Missing contact details")?;
     let step4 = form.step4.as_ref().ok_or("Missing employment details")?;
 
-    if customer_repository::get_customer_by_nric(db, &step2.nric)
+    if customer_repository::get_non_rejected_customer_by_nric(db, &step2.nric)
         .await
         .map_err(|error| error.to_string())?
         .is_some()
     {
-        return Err("An account application already exists for this NRIC or FIN.".to_string());
+        return Err("An application with these identity details is already pending or approved.".to_string());
     }
 
     let dob = NaiveDate::parse_from_str(&step2.dob, "%Y-%m-%d")
@@ -89,11 +90,18 @@ pub async fn create_customer_with_product(
     let template = ApplicationReceivedEmailTemplate {};
 
     println!(
-        "APPLICATION EMAIL: sending application-received email to {email_to_send}. This is not the activation email."
+        "APPLICATION EMAIL: queueing application-received email to {email_to_send}. This is not the activation email."
     );
 
-    if let Err(error) = services::send_template_email(&email_to_send, &subject_to_send, &template).await {
-        eprintln!("Application received email failed: {error}");
+    match template.dyn_render() {
+        Ok(html_body) => {
+            tokio::spawn(async move {
+                if let Err(error) = services::send_html_email(&email_to_send, &subject_to_send, html_body).await {
+                    eprintln!("Application received email failed: {error}");
+                }
+            });
+        }
+        Err(error) => eprintln!("Application received email render failed: {error}"),
     }
 
     Ok(result)

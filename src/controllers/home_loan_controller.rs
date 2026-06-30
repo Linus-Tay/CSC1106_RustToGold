@@ -19,6 +19,7 @@ pub async fn home_loans_page(data: web::Data<AppState>, session: Session) -> Res
     match services::load_home_loan_dashboard(&data.db, user.customer_id).await {
         Ok(dashboard) => render(HomeLoanDashboardTemplate {
             account: dashboard.account,
+            accounts: dashboard.accounts,
             summary: dashboard.summary,
             has_applications: !dashboard.applications.is_empty(),
             applications: dashboard.applications,
@@ -33,11 +34,19 @@ pub async fn home_loan_apply_page(
     data: web::Data<AppState>,
     session: Session,
 ) -> Result<HttpResponse> {
-    if let Err(response) = require_customer(&data, &session).await {
-        return Ok(response);
-    }
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    let accounts = match services::list_active_customer_products(&data.db, user.customer_id).await {
+        Ok(accounts) => accounts,
+        Err(error) => return render_error("Home loan application unavailable", error),
+    };
 
     render(HomeLoanApplyTemplate {
+        has_accounts: !accounts.is_empty(),
+        accounts,
         error: String::new(),
         has_error: false,
     })
@@ -57,10 +66,17 @@ pub async fn create_home_loan_application(
         .await
     {
         Ok(_) => Ok(redirect("/customer/home-loans")),
-        Err(error) => render(HomeLoanApplyTemplate {
-            error,
-            has_error: true,
-        }),
+        Err(error) => {
+            let accounts = services::list_active_customer_products(&data.db, user.customer_id)
+                .await
+                .unwrap_or_default();
+            render(HomeLoanApplyTemplate {
+                has_accounts: !accounts.is_empty(),
+                accounts,
+                error,
+                has_error: true,
+            })
+        }
     }
 }
 
@@ -134,12 +150,7 @@ pub async fn approve_home_loan(
 
     let application_id = match Uuid::parse_str(&path.into_inner()) {
         Ok(value) => value,
-        Err(_) => {
-            return render_error(
-                "Invalid home loan",
-                "The selected application ID is invalid.".to_string(),
-            )
-        }
+        Err(_) => return render_error("Invalid home loan", "The selected application ID is invalid.".to_string()),
     };
 
     match services::approve_home_loan(&data.db, staff.id, application_id).await {
@@ -160,12 +171,7 @@ pub async fn reject_home_loan(
 
     let application_id = match Uuid::parse_str(&path.into_inner()) {
         Ok(value) => value,
-        Err(_) => {
-            return render_error(
-                "Invalid home loan",
-                "The selected application ID is invalid.".to_string(),
-            )
-        }
+        Err(_) => return render_error("Invalid home loan", "The selected application ID is invalid.".to_string()),
     };
 
     match services::reject_home_loan(&data.db, staff.id, application_id).await {

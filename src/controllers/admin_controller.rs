@@ -2,12 +2,35 @@ use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_admin};
 use crate::services;
 use crate::views::{
-    render, AdminCustomerApplicationsTemplate, AdminDashboardTemplate, AdminPersonalLoansTemplate,
+    render, AdminAuditLogTemplate, AdminCustomerAccountsTemplate,
+    AdminCustomerApplicationsTemplate, AdminDashboardTemplate, AdminPersonalLoansTemplate,
+    AdminStaffTemplate,
 };
 use crate::AppState;
 use actix_session::Session;
 use actix_web::{web, HttpResponse, Result};
+use serde::Deserialize;
 use uuid::Uuid;
+
+#[derive(Debug, Deserialize)]
+pub struct StaffCreateForm {
+    pub username: String,
+    pub full_name: String,
+    pub email: String,
+    pub phone_number: String,
+    pub role: String,
+    pub password: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct StaffUpdateForm {
+    pub full_name: String,
+    pub email: String,
+    pub phone_number: String,
+    pub role: String,
+    pub status: String,
+    pub password: Option<String>,
+}
 
 pub async fn admin_dashboard(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     if let Err(response) = require_admin(&data, &session).await {
@@ -49,16 +72,17 @@ pub async fn approve_customer_application(
     session: Session,
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
-    if let Err(response) = require_admin(&data, &session).await {
-        return Ok(response);
-    }
+    let staff = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
 
     let customer_id = match parse_uuid(path.into_inner()) {
         Ok(value) => value,
         Err(response) => return Ok(response),
     };
 
-    match services::approve_customer_application(&data, customer_id).await {
+    match services::approve_customer_application(&data, staff.id, customer_id).await {
         Ok(_) => Ok(redirect("/admin/signups")),
         Err(error) => render_error("Customer approval failed", error),
     }
@@ -69,16 +93,17 @@ pub async fn reject_customer_application(
     session: Session,
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
-    if let Err(response) = require_admin(&data, &session).await {
-        return Ok(response);
-    }
+    let staff = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
 
     let customer_id = match parse_uuid(path.into_inner()) {
         Ok(value) => value,
         Err(response) => return Ok(response),
     };
 
-    match services::reject_customer_application(&data.db, customer_id).await {
+    match services::reject_customer_application(&data.db, staff.id, customer_id).await {
         Ok(_) => Ok(redirect("/admin/signups")),
         Err(error) => render_error("Customer rejection failed", error),
     }
@@ -148,6 +173,260 @@ pub async fn reject_personal_loan(
         Ok(_) => Ok(redirect("/admin/personal-loans")),
         Err(error) => render_error("Personal loan rejection failed", error),
     }
+}
+
+pub async fn admin_staff_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    let user = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    match services::list_admin_staff(&data.db).await {
+        Ok(staff_users) => render(AdminStaffTemplate {
+            staff_users,
+            has_error: false,
+            error: String::new(),
+            has_success: false,
+            success: String::new(),
+            current_admin_id: user.id,
+        }),
+        Err(error) => render(AdminStaffTemplate {
+            staff_users: Vec::new(),
+            has_error: true,
+            error,
+            has_success: false,
+            success: String::new(),
+            current_admin_id: user.id,
+        }),
+    }
+}
+
+pub async fn create_staff_user(
+    data: web::Data<AppState>,
+    session: Session,
+    form: web::Form<StaffCreateForm>,
+) -> Result<HttpResponse> {
+    let user = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+    if !user.is_admin() {
+        return Ok(redirect("/403"));
+    }
+
+    let form = form.into_inner();
+    match services::create_staff_user(
+        &data.db,
+        user.id,
+        form.username,
+        form.full_name,
+        form.email,
+        form.phone_number,
+        form.role,
+        form.password,
+    )
+    .await
+    {
+        Ok(_) => Ok(redirect("/admin/staff")),
+        Err(error) => render_staff_with_message(&data, user.id, error, false).await,
+    }
+}
+
+pub async fn update_staff_user(
+    data: web::Data<AppState>,
+    session: Session,
+    path: web::Path<i64>,
+    form: web::Form<StaffUpdateForm>,
+) -> Result<HttpResponse> {
+    let user = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+    if !user.is_admin() {
+        return Ok(redirect("/403"));
+    }
+
+    let staff_user_id = path.into_inner();
+    let form = form.into_inner();
+    match services::update_staff_user(
+        &data.db,
+        user.id,
+        staff_user_id,
+        form.full_name,
+        form.email,
+        form.phone_number,
+        form.role,
+        form.status,
+        form.password,
+    )
+    .await
+    {
+        Ok(_) => Ok(redirect("/admin/staff")),
+        Err(error) => render_staff_with_message(&data, user.id, error, false).await,
+    }
+}
+
+pub async fn delete_staff_user(
+    data: web::Data<AppState>,
+    session: Session,
+    path: web::Path<i64>,
+) -> Result<HttpResponse> {
+    let user = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+    if !user.is_admin() {
+        return Ok(redirect("/403"));
+    }
+
+    match services::delete_staff_user(&data.db, user.id, path.into_inner()).await {
+        Ok(_) => Ok(redirect("/admin/staff")),
+        Err(error) => render_staff_with_message(&data, user.id, error, false).await,
+    }
+}
+
+pub async fn admin_customer_accounts_page(
+    data: web::Data<AppState>,
+    session: Session,
+) -> Result<HttpResponse> {
+    if let Err(response) = require_admin(&data, &session).await {
+        return Ok(response);
+    }
+
+    match services::list_admin_customer_accounts(&data.db).await {
+        Ok(accounts) => render(AdminCustomerAccountsTemplate {
+            has_accounts: !accounts.is_empty(),
+            accounts,
+            has_error: false,
+            error: String::new(),
+        }),
+        Err(error) => render(AdminCustomerAccountsTemplate {
+            has_accounts: false,
+            accounts: Vec::new(),
+            has_error: true,
+            error,
+        }),
+    }
+}
+
+pub async fn suspend_customer_user(
+    data: web::Data<AppState>,
+    session: Session,
+    path: web::Path<i64>,
+) -> Result<HttpResponse> {
+    set_customer_user_status(data, session, path.into_inner(), "suspended").await
+}
+
+pub async fn activate_customer_user(
+    data: web::Data<AppState>,
+    session: Session,
+    path: web::Path<i64>,
+) -> Result<HttpResponse> {
+    set_customer_user_status(data, session, path.into_inner(), "active").await
+}
+
+async fn set_customer_user_status(
+    data: web::Data<AppState>,
+    session: Session,
+    target_user_id: i64,
+    status: &str,
+) -> Result<HttpResponse> {
+    let staff = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    match services::set_customer_user_status(&data.db, staff.id, target_user_id, status).await {
+        Ok(_) => Ok(redirect("/admin/accounts")),
+        Err(error) => render_error("Customer user update failed", error),
+    }
+}
+
+pub async fn activate_customer_product(
+    data: web::Data<AppState>,
+    session: Session,
+    path: web::Path<String>,
+) -> Result<HttpResponse> {
+    set_customer_product_status(data, session, path.into_inner(), "active").await
+}
+
+pub async fn freeze_customer_product(
+    data: web::Data<AppState>,
+    session: Session,
+    path: web::Path<String>,
+) -> Result<HttpResponse> {
+    set_customer_product_status(data, session, path.into_inner(), "frozen").await
+}
+
+pub async fn close_customer_product(
+    data: web::Data<AppState>,
+    session: Session,
+    path: web::Path<String>,
+) -> Result<HttpResponse> {
+    set_customer_product_status(data, session, path.into_inner(), "closed").await
+}
+
+async fn set_customer_product_status(
+    data: web::Data<AppState>,
+    session: Session,
+    product_id: String,
+    status: &str,
+) -> Result<HttpResponse> {
+    let staff = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    let product_id = match parse_uuid(product_id) {
+        Ok(value) => value,
+        Err(response) => return Ok(response),
+    };
+
+    match services::set_customer_product_status(&data.db, staff.id, product_id, status).await {
+        Ok(_) => Ok(redirect("/admin/accounts")),
+        Err(error) => render_error("Customer product update failed", error),
+    }
+}
+
+pub async fn admin_audit_log_page(
+    data: web::Data<AppState>,
+    session: Session,
+) -> Result<HttpResponse> {
+    if let Err(response) = require_admin(&data, &session).await {
+        return Ok(response);
+    }
+
+    match services::list_audit_logs(&data.db).await {
+        Ok(logs) => render(AdminAuditLogTemplate {
+            has_logs: !logs.is_empty(),
+            logs,
+            has_error: false,
+            error: String::new(),
+        }),
+        Err(error) => render(AdminAuditLogTemplate {
+            has_logs: false,
+            logs: Vec::new(),
+            has_error: true,
+            error,
+        }),
+    }
+}
+
+async fn render_staff_with_message(
+    data: &web::Data<AppState>,
+    current_admin_id: i64,
+    message: String,
+    success: bool,
+) -> Result<HttpResponse> {
+    let staff_users = services::list_admin_staff(&data.db).await.unwrap_or_default();
+    render(AdminStaffTemplate {
+        staff_users,
+        has_error: !success,
+        error: if success { String::new() } else { message.clone() },
+        has_success: success,
+        success: if success { message } else { String::new() },
+        current_admin_id,
+    })
 }
 
 fn parse_uuid(value: String) -> Result<Uuid, HttpResponse> {

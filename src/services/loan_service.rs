@@ -1,25 +1,31 @@
 use crate::forms::{LoanApplicationForm, LoanPaymentForm};
 use crate::models::{Money, PersonalLoan, Product};
-use crate::repositories::loan_repository;
+use crate::repositories::{loan_repository, product_repository};
 use crate::services::support::clean_optional_text;
 use sqlx::PgPool;
 use uuid::Uuid;
 
 pub struct LoanDashboard {
     pub account: Product,
+    pub accounts: Vec<Product>,
     pub loans: Vec<PersonalLoan>,
 }
 
 pub async fn load_loan_dashboard(db: &PgPool, customer_id: Uuid) -> Result<LoanDashboard, String> {
-    let account = loan_repository::find_primary_active_product(db, customer_id)
+    let accounts = product_repository::list_active_products_by_customer(db, &customer_id)
         .await
-        .map_err(|_| "No active customer account was found for loan repayments.".to_string())?;
+        .map_err(|_| "Could not load active customer accounts.".to_string())?;
+
+    let account = accounts
+        .first()
+        .cloned()
+        .ok_or_else(|| "No active customer account was found for loan repayments.".to_string())?;
 
     let loans = loan_repository::list_personal_loans_by_customer(db, customer_id)
         .await
         .map_err(|_| "Could not load personal loans.".to_string())?;
 
-    Ok(LoanDashboard { account, loans })
+    Ok(LoanDashboard { account, accounts, loans })
 }
 
 pub async fn apply_personal_loan(
@@ -28,6 +34,10 @@ pub async fn apply_personal_loan(
     form: LoanApplicationForm,
 ) -> Result<PersonalLoan, String> {
     let amount = Money::parse_dollars(&form.amount)?;
+    if amount.cents() > 200_000_00 {
+        return Err("Personal loan amount is above the allowed limit for this simulation.".to_string());
+    }
+
     let purpose = clean_optional_text(&form.purpose)
         .filter(|value| !value.trim().is_empty())
         .ok_or_else(|| "Loan purpose is required.".to_string())?;
@@ -37,9 +47,13 @@ pub async fn apply_personal_loan(
         return Err("Choose a loan term between 6 and 84 months.".to_string());
     }
 
-    let account = loan_repository::find_primary_active_product(db, customer_id)
-        .await
-        .map_err(|_| "No active customer account was found to receive the loan.".to_string())?;
+    let account = product_repository::get_active_product_for_customer_by_account_number(
+        db,
+        &customer_id,
+        form.account_number.trim(),
+    )
+    .await
+    .map_err(|_| "Choose an active account to receive the loan disbursement.".to_string())?;
 
     let annual_rate_bps = 550;
     let monthly_payment_cents =
@@ -69,15 +83,37 @@ pub async fn pay_personal_loan(
     form: LoanPaymentForm,
 ) -> Result<PersonalLoan, String> {
     let amount = Money::parse_dollars(&form.amount)?;
-    let account = loan_repository::find_primary_active_product(db, customer_id)
-        .await
-        .map_err(|_| "No active customer account was found for repayment.".to_string())?;
 
-    if account.balance_cents < amount.cents() {
-        return Err("Insufficient balance for this repayment.".to_string());
+    let current_loan = loan_repository::list_personal_loans_by_customer(db, customer_id)
+        .await
+        .map_err(|_| "Could not load the personal loan before repayment.".to_string())?
+        .into_iter()
+        .find(|loan| loan.id == loan_id && loan.status == "active")
+        .ok_or_else(|| "This personal loan is not active or cannot be repaid.".to_string())?;
+
+    if amount.cents() > current_loan.outstanding_cents {
+        return Err(format!(
+            "Repayment cannot exceed the outstanding loan amount of {}.",
+            Money::from_cents(current_loan.outstanding_cents).display()
+        ));
     }
 
-    loan_repository::pay_personal_loan(db, customer_id, loan_id, amount.cents())
+    let account = product_repository::get_active_product_for_customer_by_account_number(
+        db,
+        &customer_id,
+        form.account_number.trim(),
+    )
+    .await
+    .map_err(|_| "Choose an active account for repayment.".to_string())?;
+
+    if account.balance_cents < amount.cents() {
+        return Err(format!(
+            "Insufficient balance for this repayment. Selected account balance is {}.",
+            Money::from_cents(account.balance_cents).display()
+        ));
+    }
+
+    loan_repository::pay_personal_loan(db, customer_id, loan_id, account.id, amount.cents())
         .await
         .map_err(|error| {
             println!("personal loan payment failed: {}", error);

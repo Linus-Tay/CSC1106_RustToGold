@@ -34,6 +34,70 @@ pub async fn create_product(
         .map_err(|error| error.to_string())
 }
 
+
+pub async fn list_customer_products(
+    db: &PgPool,
+    customer_id: Uuid,
+) -> Result<Vec<Product>, String> {
+    product_repository::list_products_by_customer(db, &customer_id)
+        .await
+        .map_err(|_| "Could not load your bank accounts.".to_string())
+}
+
+pub async fn list_active_customer_products(
+    db: &PgPool,
+    customer_id: Uuid,
+) -> Result<Vec<Product>, String> {
+    product_repository::list_active_products_by_customer(db, &customer_id)
+        .await
+        .map_err(|_| "Could not load your active bank accounts.".to_string())
+}
+
+pub async fn create_bank_account(
+    db: &PgPool,
+    customer_id: Uuid,
+    account_type: &str,
+) -> Result<Product, String> {
+    let active_accounts = product_repository::list_active_products_by_customer(db, &customer_id)
+        .await
+        .map_err(|_| "Could not check your existing bank accounts.".to_string())?;
+
+    if active_accounts.len() >= 5 {
+        return Err("A customer can hold up to 5 active accounts in this simulation.".to_string());
+    }
+
+    let (product_id, product_type) = match account_type {
+        "high_yield_savings" => ("high_yield_savings", "savings"),
+        "spending_account" => ("spending_account", "spending"),
+        _ => ("everyday_savings", "savings"),
+    };
+
+    let account_number = generate_account_number(db).await;
+
+    product_repository::insert_active_product(
+        db,
+        &customer_id,
+        product_id,
+        product_type,
+        &account_number,
+    )
+    .await
+    .map_err(|error| {
+        eprintln!("create bank account failed: {error:?}");
+        "Could not create the new bank account.".to_string()
+    })
+}
+
+pub async fn load_active_product_by_account_number(
+    db: &PgPool,
+    customer_id: Uuid,
+    account_number: &str,
+) -> Result<Product, String> {
+    product_repository::get_active_product_for_customer_by_account_number(db, &customer_id, account_number)
+        .await
+        .map_err(|_| "Selected account is not active or does not belong to you.".to_string())
+}
+
 pub async fn deposit(
     app_state: &AppState,
     customer_id: Uuid,
@@ -41,7 +105,7 @@ pub async fn deposit(
 ) -> Result<Product, String> {
     let amount = Money::parse_dollars(&form.amount)?;
     if amount.cents() > 1_000_000_00 {
-        return Err("Single customer deposits are capped at $1000000.00 for this academic simulation.".to_string());
+        return Err("Single customer deposits are capped at $1,000,000.00 for this demo environment.".to_string());
     }
 
     let description = clean_optional_text(&form.description);

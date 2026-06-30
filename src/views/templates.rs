@@ -1,5 +1,5 @@
 use crate::models::{
-    AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord,
+    AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser,
     FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, HomeLoanApplication,
     HomeLoanSummary, PersonalLoan, Product, Transaction,
 };
@@ -271,12 +271,18 @@ pub struct SignupReviewTemplate {
 pub struct DashboardTemplate {
     pub full_name: String,
     pub balance: String,
+    pub primary_account_number: String,
+    pub accounts: Vec<Product>,
+    pub has_accounts: bool,
+    pub create_account_error: String,
+    pub has_create_account_error: bool,
 }
 
 #[derive(Template)]
 #[template(path = "customer/deposit.html")]
 pub struct DepositTemplate {
-    pub account_number: String,
+    pub accounts: Vec<Product>,
+    pub selected_account_number: String,
     pub balance: String,
     pub error: String,
     pub has_error: bool,
@@ -287,7 +293,8 @@ pub struct DepositTemplate {
 #[derive(Template)]
 #[template(path = "customer/transfer.html")]
 pub struct TransferTemplate {
-    pub account_number: String,
+    pub accounts: Vec<Product>,
+    pub selected_account_number: String,
     pub balance: String,
     pub error: String,
     pub has_error: bool,
@@ -363,6 +370,7 @@ pub struct AccountCreationTemplate {
 #[template(path = "customer/loans.html")]
 pub struct LoanDashboardTemplate {
     pub account: Product,
+    pub accounts: Vec<Product>,
     pub loans: Vec<PersonalLoan>,
     pub has_loans: bool,
     pub error: String,
@@ -372,6 +380,8 @@ pub struct LoanDashboardTemplate {
 #[derive(Template)]
 #[template(path = "customer/loan_apply.html")]
 pub struct LoanApplyTemplate {
+    pub accounts: Vec<Product>,
+    pub has_accounts: bool,
     pub error: String,
     pub has_error: bool,
 }
@@ -380,6 +390,7 @@ pub struct LoanApplyTemplate {
 #[template(path = "customer/home_loans.html")]
 pub struct HomeLoanDashboardTemplate {
     pub account: Product,
+    pub accounts: Vec<Product>,
     pub summary: HomeLoanSummary,
     pub applications: Vec<HomeLoanApplication>,
     pub has_applications: bool,
@@ -390,6 +401,8 @@ pub struct HomeLoanDashboardTemplate {
 #[derive(Template)]
 #[template(path = "customer/home_loan_apply.html")]
 pub struct HomeLoanApplyTemplate {
+    pub accounts: Vec<Product>,
+    pub has_accounts: bool,
     pub error: String,
     pub has_error: bool,
 }
@@ -405,6 +418,36 @@ pub struct AdminDashboardTemplate {
 pub struct AdminCustomerApplicationsTemplate {
     pub applications: Vec<AdminCustomerApplication>,
     pub has_applications: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+
+#[derive(Template)]
+#[template(path = "admin/staff.html")]
+pub struct AdminStaffTemplate {
+    pub staff_users: Vec<AdminStaffUser>,
+    pub current_admin_id: i64,
+    pub error: String,
+    pub has_error: bool,
+    pub success: String,
+    pub has_success: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/accounts.html")]
+pub struct AdminCustomerAccountsTemplate {
+    pub accounts: Vec<AdminCustomerAccountRecord>,
+    pub has_accounts: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/audit_log.html")]
+pub struct AdminAuditLogTemplate {
+    pub logs: Vec<AdminAuditLogRecord>,
+    pub has_logs: bool,
     pub error: String,
     pub has_error: bool,
 }
@@ -432,6 +475,7 @@ pub struct AdminHomeLoansTemplate {
 pub struct FixedDepositDashboardTemplate {
     pub account_number: String,
     pub balance: String,
+    pub accounts: Vec<Product>,
     pub summary: FixedDepositSummary,
     pub fixed_deposits: Vec<FixedDeposit>,
     pub has_fixed_deposits: bool,
@@ -446,6 +490,7 @@ pub struct FixedDepositDashboardTemplate {
 pub struct FixedDepositCreateTemplate {
     pub account_number: String,
     pub balance: String,
+    pub accounts: Vec<Product>,
     pub plans: Vec<FixedDepositPlan>,
     pub has_plans: bool,
     pub error: String,

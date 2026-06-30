@@ -3177,3 +3177,33 @@ select:-webkit-autofill {
     flex-direction: column;
   }
 }
+
+/* Phase 1 validation/UI helpers */
+.info-callout {
+  min-height: 3rem;
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid rgba(29, 78, 216, 0.16);
+  background: rgba(29, 78, 216, 0.06);
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  color: #0b1f3a;
+}
+
+.info-callout strong {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.info-callout span {
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.badge--danger,
+.status-pill--rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}

@@ -27,7 +27,7 @@
         <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <div class="mb-3 flex flex-wrap items-center gap-2">
-              <span class="rounded-full bg-[#1D4ED8]/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-[#1D4ED8]">{{ loan.status_display() }}</span>
+              {% if loan.status == "rejected" %}<span class="rounded-full bg-red-100 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-red-700">{{ loan.status_display() }}</span>{% else %}<span class="rounded-full bg-[#1D4ED8]/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-[#1D4ED8]">{{ loan.status_display() }}</span>{% endif %}
               <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">KYC: {{ loan.kyc_status_display() }}</span>
               <span class="rounded-full bg-[#D6A54A]/15 px-3 py-1 text-xs font-bold text-[#0B1F3A]">{{ loan.principal_display() }}</span>
             </div>

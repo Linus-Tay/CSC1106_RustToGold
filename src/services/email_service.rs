@@ -25,6 +25,15 @@ pub async fn send_template_email(
     subject: &str,
     template_data: &dyn DynTemplate,
 ) -> Result<(), Box<dyn Error>> {
+    let html_body = template_data.dyn_render()?;
+    send_html_email(to_email, subject, html_body).await
+}
+
+pub async fn send_html_email(
+    to_email: &str,
+    subject: &str,
+    html_body: String,
+) -> Result<(), Box<dyn Error>> {
     let Some(smtp_host) = read_env("SMTP_HOST") else {
         smtp_missing_message(to_email, subject, "SMTP_HOST");
         return Ok(());
@@ -44,8 +53,6 @@ pub async fn send_template_email(
     let smtp_port = read_env("SMTP_PORT")
         .and_then(|value| value.parse::<u16>().ok())
         .unwrap_or(587);
-
-    let html_body = template_data.dyn_render()?;
 
     let email = Message::builder()
         .from(smtp_from.parse()?)

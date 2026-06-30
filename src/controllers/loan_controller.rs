@@ -17,6 +17,7 @@ pub async fn loans_page(data: web::Data<AppState>, session: Session) -> Result<H
     match services::load_loan_dashboard(&data.db, user.customer_id).await {
         Ok(dashboard) => render(LoanDashboardTemplate {
             account: dashboard.account,
+            accounts: dashboard.accounts,
             has_loans: !dashboard.loans.is_empty(),
             loans: dashboard.loans,
             error: String::new(),
@@ -27,11 +28,19 @@ pub async fn loans_page(data: web::Data<AppState>, session: Session) -> Result<H
 }
 
 pub async fn loan_apply_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
-    if let Err(response) = require_customer(&data, &session).await {
-        return Ok(response);
-    }
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    let accounts = match services::list_active_customer_products(&data.db, user.customer_id).await {
+        Ok(accounts) => accounts,
+        Err(error) => return render_error("Loan application unavailable", error),
+    };
 
     render(LoanApplyTemplate {
+        has_accounts: !accounts.is_empty(),
+        accounts,
         error: String::new(),
         has_error: false,
     })
@@ -49,10 +58,17 @@ pub async fn create_personal_loan(
 
     match services::apply_personal_loan(&data.db, user.customer_id, form.into_inner()).await {
         Ok(_) => Ok(redirect("/customer/loans")),
-        Err(error) => render(LoanApplyTemplate {
-            error,
-            has_error: true,
-        }),
+        Err(error) => {
+            let accounts = services::list_active_customer_products(&data.db, user.customer_id)
+                .await
+                .unwrap_or_default();
+            render(LoanApplyTemplate {
+                has_accounts: !accounts.is_empty(),
+                accounts,
+                error,
+                has_error: true,
+            })
+        }
     }
 }
 

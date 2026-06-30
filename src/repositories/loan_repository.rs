@@ -83,6 +83,7 @@ pub async fn pay_personal_loan(
     db: &PgPool,
     customer_id: Uuid,
     loan_id: Uuid,
+    payment_product_id: Uuid,
     amount_cents: i64,
 ) -> Result<PersonalLoan, sqlx::Error> {
     let mut tx = db.begin().await?;
@@ -101,7 +102,7 @@ pub async fn pay_personal_loan(
     .fetch_one(&mut *tx)
     .await?;
 
-    let product = lock_product_by_id(&mut tx, customer_id, loan.funding_product_id).await?;
+    let product = lock_product_by_id(&mut tx, customer_id, payment_product_id).await?;
     let payment_cents = amount_cents.min(loan.outstanding_cents);
     let new_product_balance = product.balance_cents - payment_cents;
     let new_outstanding = loan.outstanding_cents - payment_cents;

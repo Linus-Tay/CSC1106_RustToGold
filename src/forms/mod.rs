@@ -6,7 +6,7 @@ pub mod loan_forms;
 pub mod onboard_forms;
 pub mod profile_forms;
 
-pub use self::account_forms::DepositForm;
+pub use self::account_forms::{CreateBankAccountForm, DepositForm};
 pub use self::auth_forms::{
     AccountCreationForm, LoginForm, SignupAccountForm, SignupContactForm, SignupDeclarationForm, SignupDraft,
     SignupEmploymentForm, SignupForm, SignupPersonalForm, SignupSecurityForm,

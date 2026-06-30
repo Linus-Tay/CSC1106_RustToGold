@@ -4,6 +4,7 @@ use serde::Deserialize;
 pub struct CreateFixedDepositForm {
     pub plan_id: i64,
     pub amount: String,
+    pub account_number: String,
 }
 
 #[derive(Debug, Deserialize)]

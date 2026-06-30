@@ -43,6 +43,29 @@ pub async fn get_customer_by_nric(
         .await
 }
 
+
+pub async fn get_non_rejected_customer_by_nric(
+    db: &PgPool,
+    nric: &str,
+) -> Result<Option<Customer>, sqlx::Error> {
+    let query = format!("{} WHERE lower(nric) = lower($1) AND kyc_status <> 'rejected'", CUSTOMER_SELECT);
+    sqlx::query_as::<_, Customer>(&query)
+        .bind(nric)
+        .fetch_optional(db)
+        .await
+}
+
+pub async fn get_non_rejected_customer_by_email(
+    db: &PgPool,
+    email: &str,
+) -> Result<Option<Customer>, sqlx::Error> {
+    let query = format!("{} WHERE lower(email) = lower($1) AND kyc_status <> 'rejected'", CUSTOMER_SELECT);
+    sqlx::query_as::<_, Customer>(&query)
+        .bind(email)
+        .fetch_optional(db)
+        .await
+}
+
 pub async fn get_customer_by_id(db: &PgPool, id: &Uuid) -> Result<Customer, sqlx::Error> {
     let query = format!("{} WHERE id = $1", CUSTOMER_SELECT);
     sqlx::query_as::<_, Customer>(&query)

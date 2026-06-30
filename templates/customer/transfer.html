@@ -10,49 +10,70 @@
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body class="customer-body">
-  <header class="customer-topbar">
-    <div class="customer-container customer-topbar__inner">
-      <a class="customer-brand" href="/customer/dashboard"><span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="" /></span><span>RustToGold</span></a>
-      <div class="customer-topbar__actions"><a class="customer-pill" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</a><a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a></div>
-    </div>
-  </header>
+  {% include "partials/customer_nav.html" %}
 
   <main class="customer-main">
     <div class="customer-container customer-narrow">
       <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+
       <section class="customer-card form-card">
         <div class="customer-card__header">
           <div>
             <p class="customer-kicker">Everyday Banking</p>
             <h1>Transfer Money</h1>
-            <p>Send money to another RustToGold account number.</p>
+            <p>Select the source account before sending money to another RustToGold account.</p>
           </div>
-          <div class="mini-balance"><span>Available</span><strong>${{ balance }}</strong><small>From {{ account_number }}</small></div>
+          <div class="mini-balance">
+            <span>Selected Balance</span>
+            <strong>${{ balance }}</strong>
+            <small>{{ selected_account_number }}</small>
+          </div>
         </div>
+
         <div class="customer-card__body">
-          {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+          {% if has_error %}
+          <div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>
+          {% endif %}
 
           <form class="form clean-form" action="/customer/transfer" method="post">
-            <input type="hidden" name="account_number" value="{{ account_number }}" />
+            <div class="form-field">
+              <label class="form-label" for="account_number">Transfer from account</label>
+              <select class="form-select" id="account_number" name="account_number" required>
+                {% for account in accounts %}
+                <option value="{{ account.account_number }}" {% if account.account_number == selected_account_number %}selected{% endif %}>
+                  {{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
             <input type="hidden" name="method" value="local" />
+
             <div class="form-field">
               <label class="form-label" for="recipient_info">Recipient Account Number</label>
               <input class="form-input" id="recipient_info" name="recipient_info" placeholder="7282-1234567-8" required />
             </div>
+
             <div class="form-field">
               <label class="form-label" for="amount">Transfer Amount</label>
               <input class="form-input" id="amount" name="amount" inputmode="decimal" placeholder="e.g. 250.00" required />
             </div>
+
             <div class="form-field">
-              <label class="form-label" for="note">Transfer Note</label>
-              <input class="form-input" id="note" name="note" placeholder="Rent, meal split, allowance..." />
+              <label class="form-label" for="note">Note</label>
+              <input class="form-input" id="note" name="note" placeholder="Dinner, rent, savings transfer..." />
             </div>
-            <button class="c-button c-button--primary" type="submit"><i data-lucide="send"></i> Send Transfer</button>
+
+            <button class="c-button c-button--primary" type="submit">
+              <i data-lucide="send"></i> Confirm Transfer
+            </button>
           </form>
         </div>
       </section>
     </div>
   </main>
-  <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
 </body>
 </html>

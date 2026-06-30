@@ -1,6 +1,6 @@
 use crate::models::{
-    AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord,
-    Product,
+    AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary,
+    AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser, Product,
 };
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
@@ -210,7 +210,7 @@ pub async fn approve_personal_loan(
         .fetch_one(&mut *tx)
         .await?;
 
-    let product = lock_customer_product(&mut tx, loan.customer_id).await?;
+    let product = lock_customer_product_by_id(&mut tx, loan.customer_id, loan.funding_product_id).await?;
     let new_balance = product.balance_cents + loan.principal_cents;
 
     sqlx::query(
@@ -254,6 +254,16 @@ pub async fn approve_personal_loan(
     .execute(&mut *tx)
     .await?;
 
+    insert_audit_log_tx(
+        &mut tx,
+        Some(staff_user_id),
+        "approve_personal_loan",
+        "personal_loan",
+        Some(loan.id.to_string()),
+        Some(format!("Approved and disbursed {} to account {}", loan.principal_display(), product.account_number)),
+    )
+    .await?;
+
     tx.commit().await
 }
 
@@ -262,6 +272,8 @@ pub async fn reject_personal_loan(
     staff_user_id: i64,
     loan_id: Uuid,
 ) -> Result<(), sqlx::Error> {
+    let mut tx = db.begin().await?;
+
     sqlx::query(
         r#"
         UPDATE personal_loans
@@ -271,10 +283,347 @@ pub async fn reject_personal_loan(
     )
     .bind(staff_user_id)
     .bind(loan_id)
+    .execute(&mut *tx)
+    .await?;
+
+    insert_audit_log_tx(
+        &mut tx,
+        Some(staff_user_id),
+        "reject_personal_loan",
+        "personal_loan",
+        Some(loan_id.to_string()),
+        Some("Personal loan application rejected".to_string()),
+    )
+    .await?;
+
+    tx.commit().await
+}
+
+pub async fn record_audit_log(
+    db: &PgPool,
+    actor_user_id: Option<i64>,
+    action: &str,
+    entity_type: &str,
+    entity_id: Option<String>,
+    details: Option<String>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, details)
+        VALUES ($1, $2, $3, $4, $5)
+        "#,
+    )
+    .bind(actor_user_id)
+    .bind(action)
+    .bind(entity_type)
+    .bind(entity_id)
+    .bind(details)
     .execute(db)
     .await?;
 
     Ok(())
+}
+
+pub async fn list_staff_users(db: &PgPool) -> Result<Vec<AdminStaffUser>, sqlx::Error> {
+    sqlx::query_as::<_, AdminStaffUser>(
+        r#"
+        SELECT id, username, full_name, email, phone_number, role, status, last_login_at, created_at
+        FROM users
+        WHERE role IN ('staff', 'admin')
+        ORDER BY CASE role WHEN 'admin' THEN 0 ELSE 1 END, created_at DESC
+        "#,
+    )
+    .fetch_all(db)
+    .await
+}
+
+pub async fn create_staff_user(
+    db: &PgPool,
+    username: &str,
+    full_name: &str,
+    email: &str,
+    phone_number: &str,
+    role: &str,
+    password_hash: &str,
+    actor_user_id: i64,
+) -> Result<(), sqlx::Error> {
+    let mut tx = db.begin().await?;
+
+    let staff_user_id = sqlx::query_scalar::<_, i64>(
+        r#"
+        INSERT INTO users (username, full_name, email, phone_number, date_of_birth, password_hash, role, status)
+        VALUES ($1, $2, $3, $4, DATE '1990-01-01', $5, $6, 'active')
+        RETURNING id
+        "#,
+    )
+    .bind(username)
+    .bind(full_name)
+    .bind(email)
+    .bind(phone_number)
+    .bind(password_hash)
+    .bind(role)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    insert_audit_log_tx(
+        &mut tx,
+        Some(actor_user_id),
+        "create_staff_user",
+        "user",
+        Some(staff_user_id.to_string()),
+        Some(format!("Created {role} user {username}")),
+    )
+    .await?;
+
+    tx.commit().await
+}
+
+pub async fn update_staff_user(
+    db: &PgPool,
+    staff_user_id: i64,
+    full_name: &str,
+    email: &str,
+    phone_number: &str,
+    role: &str,
+    status: &str,
+    password_hash: Option<&str>,
+    actor_user_id: i64,
+) -> Result<(), sqlx::Error> {
+    let mut tx = db.begin().await?;
+
+    if let Some(hash) = password_hash {
+        sqlx::query(
+            r#"
+            UPDATE users
+            SET full_name = $1, email = $2, phone_number = $3, role = $4, status = $5, password_hash = $6, updated_at = NOW()
+            WHERE id = $7 AND role IN ('staff', 'admin')
+            "#,
+        )
+        .bind(full_name)
+        .bind(email)
+        .bind(phone_number)
+        .bind(role)
+        .bind(status)
+        .bind(hash)
+        .bind(staff_user_id)
+        .execute(&mut *tx)
+        .await?;
+    } else {
+        sqlx::query(
+            r#"
+            UPDATE users
+            SET full_name = $1, email = $2, phone_number = $3, role = $4, status = $5, updated_at = NOW()
+            WHERE id = $6 AND role IN ('staff', 'admin')
+            "#,
+        )
+        .bind(full_name)
+        .bind(email)
+        .bind(phone_number)
+        .bind(role)
+        .bind(status)
+        .bind(staff_user_id)
+        .execute(&mut *tx)
+        .await?;
+    }
+
+    insert_audit_log_tx(
+        &mut tx,
+        Some(actor_user_id),
+        "update_staff_user",
+        "user",
+        Some(staff_user_id.to_string()),
+        Some(format!("Updated staff/admin user details; status={status}")),
+    )
+    .await?;
+
+    tx.commit().await
+}
+
+pub async fn delete_staff_user(
+    db: &PgPool,
+    staff_user_id: i64,
+    actor_user_id: i64,
+) -> Result<(), sqlx::Error> {
+    let mut tx = db.begin().await?;
+
+    sqlx::query("DELETE FROM users WHERE id = $1 AND role = 'staff'")
+        .bind(staff_user_id)
+        .execute(&mut *tx)
+        .await?;
+
+    insert_audit_log_tx(
+        &mut tx,
+        Some(actor_user_id),
+        "delete_staff_user",
+        "user",
+        Some(staff_user_id.to_string()),
+        Some("Deleted staff user".to_string()),
+    )
+    .await?;
+
+    tx.commit().await
+}
+
+pub async fn list_customer_accounts(db: &PgPool) -> Result<Vec<AdminCustomerAccountRecord>, sqlx::Error> {
+    sqlx::query_as::<_, AdminCustomerAccountRecord>(
+        r#"
+        SELECT
+            cp.id AS product_id,
+            cp.customer_id,
+            c.full_name AS customer_name,
+            c.email AS customer_email,
+            c.kyc_status AS customer_kyc_status,
+            u.id AS user_id,
+            u.username,
+            u.status AS user_status,
+            cp.account_number,
+            cp.product_id AS account_product_id,
+            cp.product_type,
+            cp.status AS product_status,
+            cp.balance_cents,
+            cp.created_at
+        FROM customer_products cp
+        JOIN customers c ON c.id = cp.customer_id
+        LEFT JOIN users u ON u.customer_id = c.id AND u.role = 'customer'
+        ORDER BY c.full_name ASC, cp.created_at ASC
+        "#,
+    )
+    .fetch_all(db)
+    .await
+}
+
+pub async fn set_user_status(
+    db: &PgPool,
+    target_user_id: i64,
+    status: &str,
+    actor_user_id: i64,
+) -> Result<(), sqlx::Error> {
+    let mut tx = db.begin().await?;
+
+    sqlx::query(
+        r#"
+        UPDATE users
+        SET status = $1, updated_at = NOW()
+        WHERE id = $2 AND role = 'customer'
+        "#,
+    )
+    .bind(status)
+    .bind(target_user_id)
+    .execute(&mut *tx)
+    .await?;
+
+    insert_audit_log_tx(
+        &mut tx,
+        Some(actor_user_id),
+        "set_customer_user_status",
+        "user",
+        Some(target_user_id.to_string()),
+        Some(format!("Customer online banking status changed to {status}")),
+    )
+    .await?;
+
+    tx.commit().await
+}
+
+pub async fn set_product_status(
+    db: &PgPool,
+    product_id: Uuid,
+    status: &str,
+    actor_user_id: i64,
+) -> Result<(), sqlx::Error> {
+    let mut tx = db.begin().await?;
+
+    sqlx::query(
+        r#"
+        UPDATE customer_products
+        SET status = $1, updated_at = NOW()
+        WHERE id = $2
+        "#,
+    )
+    .bind(status)
+    .bind(product_id)
+    .execute(&mut *tx)
+    .await?;
+
+    insert_audit_log_tx(
+        &mut tx,
+        Some(actor_user_id),
+        "set_product_status",
+        "customer_product",
+        Some(product_id.to_string()),
+        Some(format!("Customer product status changed to {status}")),
+    )
+    .await?;
+
+    tx.commit().await
+}
+
+pub async fn list_audit_logs(db: &PgPool) -> Result<Vec<AdminAuditLogRecord>, sqlx::Error> {
+    sqlx::query_as::<_, AdminAuditLogRecord>(
+        r#"
+        SELECT
+            al.id,
+            al.actor_user_id,
+            u.username AS actor_username,
+            al.action,
+            al.entity_type,
+            al.entity_id,
+            al.details,
+            al.created_at
+        FROM audit_logs al
+        LEFT JOIN users u ON u.id = al.actor_user_id
+        ORDER BY al.created_at DESC
+        LIMIT 200
+        "#,
+    )
+    .fetch_all(db)
+    .await
+}
+
+async fn insert_audit_log_tx(
+    tx: &mut DbTransaction<'_, Postgres>,
+    actor_user_id: Option<i64>,
+    action: &str,
+    entity_type: &str,
+    entity_id: Option<String>,
+    details: Option<String>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, details)
+        VALUES ($1, $2, $3, $4, $5)
+        "#,
+    )
+    .bind(actor_user_id)
+    .bind(action)
+    .bind(entity_type)
+    .bind(entity_id)
+    .bind(details)
+    .execute(&mut **tx)
+    .await?;
+
+    Ok(())
+}
+
+
+
+async fn lock_customer_product_by_id(
+    tx: &mut DbTransaction<'_, Postgres>,
+    customer_id: Uuid,
+    product_id: Uuid,
+) -> Result<Product, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
+        r#"
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE id = $1 AND customer_id = $2 AND status = 'active'
+        FOR UPDATE
+        "#,
+    )
+    .bind(product_id)
+    .bind(customer_id)
+    .fetch_one(&mut **tx)
+    .await
 }
 
 async fn lock_customer_product(
@@ -302,6 +651,7 @@ fn personal_loan_select_sql() -> &'static str {
         SELECT
             pl.id,
             pl.customer_id,
+            pl.funding_product_id,
             c.full_name AS customer_name,
             c.email AS customer_email,
             c.phone_number AS customer_phone,
@@ -337,6 +687,7 @@ fn personal_loan_select_base_sql() -> &'static str {
     SELECT
         pl.id,
         pl.customer_id,
+        pl.funding_product_id,
         c.full_name AS customer_name,
         c.email AS customer_email,
         c.phone_number AS customer_phone,

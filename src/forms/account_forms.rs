@@ -15,3 +15,9 @@ pub struct TransferForm {
     pub account_number: String,
     pub recipient_info: String,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct CreateBankAccountForm {
+    pub account_type: String,
+    pub nickname: String,
+}

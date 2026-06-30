@@ -1,8 +1,8 @@
 use crate::controllers::error_controller::render_error;
-use crate::controllers::session_guard::require_customer;
-use crate::forms::account_forms::TransferForm;
+use crate::controllers::session_guard::{redirect, require_customer};
+use crate::forms::account_forms::{CreateBankAccountForm, TransferForm};
 use crate::forms::{DepositForm, ProfileForm};
-use crate::repositories::{loan_repository, product_repository};
+use crate::repositories::loan_repository;
 use crate::services::{self, product_service};
 use crate::views::{
     render, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate,
@@ -23,12 +23,45 @@ pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<Ht
         Err(response) => return Ok(response),
     };
 
-    match services::load_customer_dashboard(&data.db, user.id).await {
-        Ok(account) => render(DashboardTemplate {
+    match services::load_customer_dashboard(&data.db, user.customer_id).await {
+        Ok(dashboard) => render(DashboardTemplate {
             full_name: user.full_name,
-            balance: display_money_without_symbol(account.balance_display()),
+            balance: display_money_without_symbol(dashboard.primary_account.balance_display()),
+            primary_account_number: dashboard.primary_account.account_number.clone(),
+            accounts: dashboard.accounts.clone(),
+            has_accounts: !dashboard.accounts.is_empty(),
+            create_account_error: String::new(),
+            has_create_account_error: false,
         }),
         Err(message) => render_error("Dashboard unavailable", message),
+    }
+}
+
+pub async fn create_bank_account(
+    data: web::Data<AppState>,
+    session: Session,
+    form: web::Form<CreateBankAccountForm>,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    let form = form.into_inner();
+    match services::create_bank_account(&data.db, user.customer_id, &form.account_type).await {
+        Ok(_) => Ok(redirect("/customer/dashboard")),
+        Err(error) => match services::load_customer_dashboard(&data.db, user.customer_id).await {
+            Ok(dashboard) => render(DashboardTemplate {
+                full_name: user.full_name,
+                balance: display_money_without_symbol(dashboard.primary_account.balance_display()),
+                primary_account_number: dashboard.primary_account.account_number.clone(),
+                accounts: dashboard.accounts.clone(),
+                has_accounts: !dashboard.accounts.is_empty(),
+                create_account_error: error,
+                has_create_account_error: true,
+            }),
+            Err(message) => render_error("Account creation failed", message),
+        },
     }
 }
 
@@ -38,13 +71,15 @@ pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result
         Err(response) => return Ok(response),
     };
 
-    let account = match loan_repository::find_primary_active_product(&data.db, user.customer_id).await {
-        Ok(account) => account,
-        _ => return render_error("Account unavailable", "No active customer product account was found.".to_string()),
+    let accounts = match services::list_active_customer_products(&data.db, user.customer_id).await {
+        Ok(accounts) if !accounts.is_empty() => accounts,
+        _ => return render_error("Account unavailable", "No active bank account was found.".to_string()),
     };
 
+    let account = accounts[0].clone();
     render(DepositTemplate {
-        account_number: account.account_number.clone(),
+        accounts,
+        selected_account_number: account.account_number.clone(),
         balance: display_money_without_symbol(account.balance_display()),
         error: String::new(),
         has_error: false,
@@ -63,26 +98,40 @@ pub async fn deposit(
         Err(response) => return Ok(response),
     };
 
-    let account_number = form.account_number.clone();
+    let form_data = form.into_inner();
+    let selected_account_number = form_data.account_number.clone();
 
-    match services::deposit(&app_state, user.customer_id, form.into_inner()).await {
-        Ok(account) => render(DepositTemplate {
-            account_number: account.account_number.clone(),
-            balance: display_money_without_symbol(account.balance_display()),
-            error: String::new(),
-            has_error: false,
-            success: "Deposit completed successfully.".to_string(),
-            has_success: true,
-        }),
+    match services::deposit(&app_state, user.customer_id, form_data).await {
+        Ok(account) => {
+            let accounts = services::list_active_customer_products(&app_state.db, user.customer_id)
+                .await
+                .unwrap_or_else(|_| vec![account.clone()]);
+            render(DepositTemplate {
+                accounts,
+                selected_account_number: account.account_number.clone(),
+                balance: display_money_without_symbol(account.balance_display()),
+                error: String::new(),
+                has_error: false,
+                success: "Deposit completed successfully.".to_string(),
+                has_success: true,
+            })
+        }
         Err(error) => {
-            let account = match product_repository::get_product_by_account_number(&app_state.db, &account_number).await {
-                Ok(Some(account)) => account,
-                _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
+            let accounts = match services::list_active_customer_products(&app_state.db, user.customer_id).await {
+                Ok(accounts) if !accounts.is_empty() => accounts,
+                _ => return render_error("Account unavailable", "No active bank account was found.".to_string()),
             };
 
+            let selected = accounts
+                .iter()
+                .find(|account| account.account_number == selected_account_number)
+                .cloned()
+                .unwrap_or_else(|| accounts[0].clone());
+
             render(DepositTemplate {
-                account_number: account.account_number.clone(),
-                balance: display_money_without_symbol(account.balance_display()),
+                accounts,
+                selected_account_number,
+                balance: display_money_without_symbol(selected.balance_display()),
                 error,
                 has_error: true,
                 success: String::new(),
@@ -98,18 +147,15 @@ pub async fn transfer_page(data: web::Data<AppState>, session: Session) -> Resul
         Err(response) => return Ok(response),
     };
 
-    let account = match loan_repository::find_primary_active_product(&data.db, user.customer_id).await {
-        Ok(account) => account,
-        _ => {
-            return render_error(
-                "Account unavailable",
-                "No active customer product account was found.".to_string(),
-            )
-        }
+    let accounts = match services::list_active_customer_products(&data.db, user.customer_id).await {
+        Ok(accounts) if !accounts.is_empty() => accounts,
+        _ => return render_error("Account unavailable", "No active bank account was found.".to_string()),
     };
 
+    let account = accounts[0].clone();
     render(TransferTemplate {
-        account_number: account.account_number.clone(),
+        accounts,
+        selected_account_number: account.account_number.clone(),
         balance: display_money_without_symbol(account.balance_display()),
         error: String::new(),
         has_error: false,
@@ -127,20 +173,26 @@ pub async fn transfer(
     };
 
     let form_data = form.into_inner();
-    let account_number = form_data.account_number.clone();
+    let selected_account_number = form_data.account_number.clone();
 
     match services::transfer(&app_state, user.customer_id, form_data).await {
-        Ok(true) => Ok(crate::controllers::session_guard::redirect("/customer/transactions")),
+        Ok(true) => Ok(redirect("/customer/transactions")),
         Ok(false) => render(ErrorTemplate),
         Err(error) => {
-            let account = match product_repository::get_product_by_account_number(&app_state.db, &account_number).await {
-                Ok(Some(account)) => account,
-                _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
+            let accounts = match services::list_active_customer_products(&app_state.db, user.customer_id).await {
+                Ok(accounts) if !accounts.is_empty() => accounts,
+                _ => return render_error("Account unavailable", "No active bank account was found.".to_string()),
             };
+            let selected = accounts
+                .iter()
+                .find(|account| account.account_number == selected_account_number)
+                .cloned()
+                .unwrap_or_else(|| accounts[0].clone());
 
             render(TransferTemplate {
-                account_number: account.account_number.clone(),
-                balance: display_money_without_symbol(account.balance_display()),
+                accounts,
+                selected_account_number,
+                balance: display_money_without_symbol(selected.balance_display()),
                 error,
                 has_error: true,
             })
@@ -302,7 +354,7 @@ pub async fn approve_product(
     };
 
     match product_service::approve_product(&data, account_id).await {
-        Ok(_) => Ok(crate::controllers::session_guard::redirect("/customer/dashboard")),
+        Ok(_) => Ok(redirect("/customer/dashboard")),
         Err(error) => render_error("Product approval failed", error),
     }
 }
