@@ -58,7 +58,8 @@ pub async fn create_fixed_deposit(
     customer_id: Uuid,
     form: CreateFixedDepositForm,
 ) -> Result<FixedDeposit, String> {
-    let amount = Money::parse_dollars(&form.amount)?;
+    let amount = Money::parse_dollars(&form.amount)
+        .map_err(|message| format!("Placement amount: {message}"))?;
     let plan = fixed_deposit_repository::find_plan_by_id(db, form.plan_id)
         .await
         .map_err(|_| "Selected fixed deposit plan was not found.".to_string())?;
@@ -69,8 +70,10 @@ pub async fn create_fixed_deposit(
 
     if amount.cents() < plan.minimum_amount_cents {
         return Err(format!(
-            "Minimum placement for this plan is {}.",
-            Money::from_cents(plan.minimum_amount_cents).display()
+            "{} requires a minimum placement of {}. You entered {}.",
+            plan.plan_name,
+            Money::from_cents(plan.minimum_amount_cents).display(),
+            amount.display()
         ));
     }
 
@@ -79,7 +82,11 @@ pub async fn create_fixed_deposit(
         .map_err(|_| "No active customer account was found.".to_string())?;
 
     if account.balance_cents < amount.cents() {
-        return Err("Insufficient balance to place this fixed deposit.".to_string());
+        return Err(format!(
+            "Insufficient balance. Your available balance is {}, but this placement is {}.",
+            Money::from_cents(account.balance_cents).display(),
+            amount.display()
+        ));
     }
 
     let interest_cents =
@@ -138,8 +145,9 @@ pub async fn create_plan(
         return Err("Plan name is required.".to_string());
     }
 
-    validate_plan_numbers(form.tenure_months, form.annual_rate_bps)?;
-    let minimum_amount = Money::parse_dollars(&form.minimum_amount)?;
+    let minimum_amount = Money::parse_dollars(&form.minimum_amount)
+        .map_err(|message| format!("Minimum amount: {message}"))?;
+    validate_plan_numbers(form.tenure_months, form.annual_rate_bps, minimum_amount.cents())?;
 
     fixed_deposit_repository::create_plan(
         db,
@@ -166,8 +174,9 @@ pub async fn update_plan(
         return Err("Plan name is required.".to_string());
     }
 
-    validate_plan_numbers(form.tenure_months, form.annual_rate_bps)?;
-    let minimum_amount = Money::parse_dollars(&form.minimum_amount)?;
+    let minimum_amount = Money::parse_dollars(&form.minimum_amount)
+        .map_err(|message| format!("Minimum amount: {message}"))?;
+    validate_plan_numbers(form.tenure_months, form.annual_rate_bps, minimum_amount.cents())?;
 
     fixed_deposit_repository::update_plan(
         db,
@@ -185,13 +194,21 @@ pub async fn update_plan(
     })
 }
 
-fn validate_plan_numbers(tenure_months: i32, annual_rate_bps: i32) -> Result<(), String> {
+fn validate_plan_numbers(
+    tenure_months: i32,
+    annual_rate_bps: i32,
+    minimum_amount_cents: i64,
+) -> Result<(), String> {
     if !(1..=60).contains(&tenure_months) {
         return Err("Tenure must be between 1 and 60 months.".to_string());
     }
 
     if !(1..=1000).contains(&annual_rate_bps) {
         return Err("Annual rate must be between 0.01% and 10.00%.".to_string());
+    }
+
+    if minimum_amount_cents < 100_000 {
+        return Err("Fixed deposit plan minimum amount must be at least $1000.00.".to_string());
     }
 
     Ok(())

@@ -6,6 +6,7 @@ use uuid::Uuid;
 pub struct User {
     pub id: i64,
     pub customer_id: Uuid,
+    pub username: String,
     pub full_name: String,
     pub email: String,
     pub phone_number: String,

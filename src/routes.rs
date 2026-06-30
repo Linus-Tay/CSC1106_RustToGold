@@ -13,6 +13,18 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                         web::post().to(controllers::step1_post),
                     )
                     .route(
+                        "/onboarding/actions/submit-step2",
+                        web::post().to(controllers::step2_post),
+                    )
+                    .route(
+                        "/onboarding/actions/submit-step3",
+                        web::post().to(controllers::step3_post),
+                    )
+                    .route(
+                        "/onboarding/actions/submit-step4",
+                        web::post().to(controllers::step4_post),
+                    )
+                    .route(
                         "/onboarding/actions/submit",
                         web::post().to(controllers::submit),
                     ),
@@ -26,6 +38,12 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .route("/about", web::get().to(controllers::about_page))
             .route("/faq", web::get().to(controllers::faq_page))
             .route("/contact", web::get().to(controllers::contact_page))
+            .route("/onboarding/{path}", web::get().to(controllers::onboarding))
+            .route("/onboarding/{path}", web::post().to(controllers::onboarding))
+            .route("/account-creation/init", web::get().to(controllers::account_creation_init))
+            .route("/account-creation", web::get().to(controllers::account_creation))
+            .route("/account-creation", web::post().to(controllers::account_creation_submit))
+            .route("/api/account-creation/submit", web::post().to(controllers::account_creation_submit))
             .route("/login", web::get().to(controllers::login_page))
             .route("/login", web::post().to(controllers::login))
             .route("/signup", web::get().to(controllers::signup_page))
@@ -44,6 +62,22 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("/security", web::post().to(controllers::post_signup_security))
                     .route("/review", web::get().to(controllers::show_signup_review))
                     .route("/submit", web::post().to(controllers::post_signup_submit)),
+            )
+            .service(
+                web::scope("/api/onboarding/actions")
+                    .route("/submit-step1", web::post().to(controllers::step1_post))
+                    .route("/submit-step2", web::post().to(controllers::step2_post))
+                    .route("/submit-step3", web::post().to(controllers::step3_post))
+                    .route("/submit-step4", web::post().to(controllers::step4_post))
+                    .route("/submit", web::post().to(controllers::submit)),
+            )
+            .service(
+                web::scope("/api/onboarding")
+                    .route("/account", web::post().to(controllers::step1_post))
+                    .route("/personal", web::post().to(controllers::step2_post))
+                    .route("/contact", web::post().to(controllers::step3_post))
+                    .route("/employment", web::post().to(controllers::step4_post))
+                    .route("/submit", web::post().to(controllers::submit)),
             )
             .route("/logout", web::get().to(controllers::logout))
             .route("/403", web::get().to(controllers::forbidden))

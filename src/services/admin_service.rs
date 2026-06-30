@@ -2,6 +2,7 @@ use crate::models::{
     AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord,
 };
 use crate::repositories::admin_repository;
+use crate::AppState;
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -25,12 +26,13 @@ pub async fn list_admin_customer_applications(
         })
 }
 
-pub async fn approve_customer_application(db: &PgPool, customer_id: Uuid) -> Result<(), String> {
-    admin_repository::approve_customer_application(db, customer_id)
+pub async fn approve_customer_application(app_state: &AppState, customer_id: Uuid) -> Result<(), String> {
+    crate::services::approve_customer_with_product(app_state, customer_id)
         .await
+        .map(|_| ())
         .map_err(|error| {
-            eprintln!("customer application approve failed: {error:?}");
-            "Could not approve the customer application.".to_string()
+            eprintln!("customer application approve failed: {error}");
+            error
         })
 }
 

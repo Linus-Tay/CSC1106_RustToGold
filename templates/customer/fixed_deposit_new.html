@@ -10,18 +10,70 @@
 </head>
 <body class="customer-body">
   <header class="customer-topbar"><div class="customer-container customer-topbar__inner"><a class="customer-brand" href="/customer/dashboard"><span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="" /></span><span>RustToGold</span></a><div class="customer-topbar__actions"><a class="customer-pill" href="/customer/fixed-deposits"><i data-lucide="piggy-bank"></i> Fixed Deposits</a><a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a></div></div></header>
-  <main class="customer-main"><div class="customer-container customer-narrow"><a class="back-link" href="/customer/fixed-deposits"><i data-lucide="arrow-left"></i> Back to fixed deposits</a><section class="customer-card form-card"><div class="customer-card__header"><div><p class="customer-kicker">Savings</p><h1>Create Fixed Deposit</h1><p>Place funds from account {{ account_number }}. Current balance: ${{ balance }}.</p></div></div><div class="customer-card__body">
-    {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
-    {% if has_plans %}
-    <form class="form clean-form" action="/customer/fixed-deposits" method="post">
-      <div class="form-field"><label class="form-label" for="plan_id">Fixed Deposit Plan</label><select class="form-select" id="plan_id" name="plan_id" required>{% for plan in plans %}<option value="{{ plan.id }}">{{ plan.plan_name }} · {{ plan.tenure_months }} months · {{ plan.rate_display() }} p.a. · Min {{ plan.minimum_amount_display() }}</option>{% endfor %}</select></div>
-      <div class="form-field"><label class="form-label" for="amount">Placement Amount</label><input class="form-input" id="amount" name="amount" placeholder="e.g. 5000.00" required /></div>
-      <button class="c-button c-button--primary" type="submit"><i data-lucide="piggy-bank"></i> Create Placement</button>
-    </form>
-    {% else %}
-    <div class="empty-state"><div class="empty-state__icon"><i data-lucide="piggy-bank"></i></div><h3>No active plans available</h3><p>Create fixed deposit plans from the admin side first.</p></div>
-    {% endif %}
-  </div></section></div></main>
+
+  <main class="customer-main">
+    <div class="customer-container customer-narrow">
+      <a class="back-link" href="/customer/fixed-deposits"><i data-lucide="arrow-left"></i> Back to fixed deposits</a>
+
+      <section class="customer-card form-card">
+        <div class="customer-card__header">
+          <div>
+            <p class="customer-kicker">Savings</p>
+            <h1>Create Fixed Deposit</h1>
+            <p>Place funds from account {{ account_number }}. Current balance: ${{ balance }}.</p>
+          </div>
+        </div>
+
+        <div class="customer-card__body">
+          {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+          {% if has_plans %}
+          <form class="form clean-form" action="/customer/fixed-deposits" method="post">
+            <div class="form-field">
+              <label class="form-label" for="plan_id">Fixed Deposit Plan</label>
+              <select class="form-select" id="plan_id" name="plan_id" required>
+                {% for plan in plans %}
+                <option value="{{ plan.id }}" data-min="{{ plan.minimum_amount_plain() }}" data-min-display="{{ plan.minimum_amount_display() }}">
+                  {{ plan.plan_name }} · {{ plan.tenure_months }} months · {{ plan.rate_display() }} p.a. · Min {{ plan.minimum_amount_display() }}
+                </option>
+                {% endfor %}
+              </select>
+              <p class="form-help">Selected plan minimum: <strong id="fd-plan-minimum">-</strong></p>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="amount">Placement Amount</label>
+              <input class="form-input" id="amount" name="amount" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="Select a plan first" required />
+              <p class="form-help">The backend validates the selected plan minimum and your available balance before creating the placement.</p>
+            </div>
+
+            <button class="c-button c-button--primary" type="submit"><i data-lucide="piggy-bank"></i> Create Placement</button>
+          </form>
+          {% else %}
+          <div class="empty-state"><div class="empty-state__icon"><i data-lucide="piggy-bank"></i></div><h3>No active plans available</h3><p>Create fixed deposit plans from the admin side first.</p></div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </main>
+
   <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
+  <script>
+    const planSelect = document.getElementById('plan_id');
+    const amountInput = document.getElementById('amount');
+    const minText = document.getElementById('fd-plan-minimum');
+
+    function syncFixedDepositMinimum() {
+      if (!planSelect || !amountInput || !minText) return;
+      const selected = planSelect.options[planSelect.selectedIndex];
+      const min = selected?.dataset?.min || '0.01';
+      const minDisplay = selected?.dataset?.minDisplay || '-';
+      amountInput.min = min;
+      amountInput.placeholder = `Minimum ${minDisplay}`;
+      minText.textContent = minDisplay;
+    }
+
+    syncFixedDepositMinimum();
+    planSelect?.addEventListener('change', syncFixedDepositMinimum);
+  </script>
 </body>
 </html>

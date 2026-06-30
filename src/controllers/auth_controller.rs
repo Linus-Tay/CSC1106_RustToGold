@@ -14,11 +14,6 @@ use crate::views::{
 use crate::AppState;
 use actix_session::Session;
 use actix_web::{web, HttpResponse, Result};
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
-    Argon2,
-};
-
 const SIGNUP_DRAFT_KEY: &str = "signup_draft";
 
 pub async fn login_page(session: Session) -> Result<HttpResponse> {
@@ -271,16 +266,14 @@ pub async fn post_signup_security(
 ) -> Result<HttpResponse> {
     let form = form.into_inner();
 
-    if form.password.len() < 8 {
-        return render_security_page(Some("Password must be at least 8 characters."));
-    }
-
-    if form.password != form.confirm_password {
-        return render_security_page(Some("Passwords do not match."));
+    if form.setup_after_approval_acknowledged.is_none() {
+        return render_security_page(Some(
+            "Please acknowledge that online banking access is created only after admin approval.",
+        ));
     }
 
     let mut draft = read_signup_draft(&session)?;
-    draft.password_hash = Some(hash_password(&form.password)?);
+    draft.security_acknowledged = true;
     save_signup_draft(&session, &draft)?;
 
     Ok(redirect("/signup/review"))
@@ -320,11 +313,13 @@ pub async fn post_signup_submit(
         }
     };
 
-    match services::register_customer(&data.db, signup_form).await {
-        Ok(user) => {
+    match services::submit_customer_application(&data.db, signup_form).await {
+        Ok((customer, product)) => {
             session.remove(SIGNUP_DRAFT_KEY);
-            store_customer_session(&session, &user)?;
-            Ok(redirect("/customer/dashboard"))
+            render(crate::views::OnboardingResultTemplate {
+                reference_no: product.id.to_string(),
+                created_at: customer.created_at.format("%d %b %Y, %I:%M %p").to_string(),
+            })
         }
         Err(error) => {
             let draft = read_signup_draft(&session)?;
@@ -433,7 +428,6 @@ fn render_review_page(draft: &SignupDraft, error: Option<&str>) -> Result<HttpRe
         employer_name: draft.employer_name.clone().unwrap_or_default(),
         monthly_income_range: draft.monthly_income_range.clone().unwrap_or_default(),
         source_initial_deposit: draft.source_initial_deposit.clone().unwrap_or_default(),
-        password_created: draft.password_hash.is_some(),
     })
 }
 
@@ -441,6 +435,10 @@ fn build_signup_form(
     draft: SignupDraft,
     declarations: SignupDeclarationForm,
 ) -> std::result::Result<SignupForm, String> {
+    if !draft.security_acknowledged {
+        return Err("Please complete the security notice before submitting.".to_string());
+    }
+
     Ok(SignupForm {
         selected_account_type: require_field(draft.selected_account_type, "account type")?,
         full_name: require_field(draft.full_name, "full name")?,
@@ -456,7 +454,6 @@ fn build_signup_form(
         occupation: draft.occupation,
         employer_name: draft.employer_name,
         monthly_income_range: draft.monthly_income_range,
-        password_hash: require_field(draft.password_hash, "password")?,
         opening_for_self: declarations.opening_for_self,
         not_acting_for_others: declarations.not_acting_for_others,
         funds_legitimate: declarations.funds_legitimate,
@@ -480,14 +477,6 @@ fn clean_optional_text(value: Option<String>) -> Option<String> {
     value
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
-}
-
-fn hash_password(password: &str) -> Result<String> {
-    let salt = SaltString::generate(&mut OsRng);
-    let hash = Argon2::default()
-        .hash_password(password.as_bytes(), &salt)
-        .map_err(actix_web::error::ErrorInternalServerError)?;
-    Ok(hash.to_string())
 }
 
 fn account_type_label(value: &str) -> &'static str {

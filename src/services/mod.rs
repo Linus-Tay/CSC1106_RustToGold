@@ -19,8 +19,8 @@ pub use self::admin_service::{
     list_admin_personal_loans, load_admin_dashboard, reject_customer_application,
     reject_personal_loan,
 };
-pub use self::auth_service::{authenticate_user, register_customer};
-pub use self::customer_service::create_customer;
+pub use self::auth_service::{authenticate_user, register_customer, register_user, submit_customer_application};
+pub use self::customer_service::{create_customer, create_customer_with_product, approve_customer_with_product, validate_account_creation_link, get_customer_by_account_creation_link, invalidate_account_creation_link};
 pub use self::email_service::send_template_email;
 pub use self::fixed_deposit_service::{
     create_fixed_deposit, create_plan, list_admin_fixed_deposits, list_admin_plans,
@@ -33,5 +33,5 @@ pub use self::home_loan_service::{
 };
 pub use self::loan_service::{apply_personal_loan, load_loan_dashboard, pay_personal_loan, LoanDashboard};
 pub use self::onboard_service::{get_path_template, get_product_details};
-pub use self::product_service::{approve_product, create_product, deposit, transfer};
+pub use self::product_service::{approve_product, create_product, deposit, generate_account_number, transfer};
 pub use self::profile_service::update_customer_profile;

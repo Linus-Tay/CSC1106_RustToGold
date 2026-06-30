@@ -1,5 +1,5 @@
 -- RustToGold 001_init.sql
--- Fresh reset script for account creation, customer modules, and admin review workflows.
+-- Fresh reset script for account applications, admin approval, online banking setup, and product modules.
 -- WARNING: This drops and recreates local development tables.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -11,7 +11,6 @@ DROP TABLE IF EXISTS personal_loans CASCADE;
 DROP TABLE IF EXISTS transactions CASCADE;
 DROP TABLE IF EXISTS registered_paynow CASCADE;
 DROP TABLE IF EXISTS account_creation_links CASCADE;
-DROP TABLE IF EXISTS bank_accounts CASCADE;
 DROP TABLE IF EXISTS customer_products CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS customers CASCADE;
@@ -21,7 +20,7 @@ CREATE TABLE customers (
     full_name            TEXT NOT NULL,
     nric                 TEXT UNIQUE NOT NULL,
     date_of_birth        DATE NOT NULL,
-    gender               TEXT NOT NULL DEFAULT 'Not collected',
+    gender               TEXT NOT NULL,
     nationality          TEXT NOT NULL,
     residency            TEXT NOT NULL,
     race                 TEXT NULL,
@@ -43,9 +42,12 @@ CREATE TABLE customers (
         CHECK (kyc_status IN ('pending', 'approved', 'rejected'))
 );
 
+-- Online banking users are created only after admin approval through an account-creation link.
+-- customer_id is kept on staff/admin rows too for code simplicity, but only customer users map to real customers.
 CREATE TABLE users (
     id             BIGSERIAL PRIMARY KEY,
     customer_id    UUID NOT NULL DEFAULT gen_random_uuid(),
+    username       TEXT NOT NULL UNIQUE,
     full_name      TEXT NOT NULL,
     email          TEXT NOT NULL UNIQUE,
     phone_number   TEXT NOT NULL,
@@ -64,31 +66,15 @@ CREATE TABLE users (
         CHECK (status IN ('active', 'suspended', 'closed'))
 );
 
-CREATE TABLE bank_accounts (
-    id             BIGSERIAL PRIMARY KEY,
-    user_id        BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    account_number TEXT NOT NULL UNIQUE,
-    account_type   TEXT NOT NULL DEFAULT 'everyday_savings',
-    balance_cents  BIGINT NOT NULL DEFAULT 0,
-    status         TEXT NOT NULL DEFAULT 'active',
-    created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
-
-    CONSTRAINT bank_accounts_type_check
-        CHECK (account_type IN ('everyday_savings', 'high_yield_savings', 'savings', 'current')),
-    CONSTRAINT bank_accounts_status_check
-        CHECK (status IN ('active', 'frozen', 'closed')),
-    CONSTRAINT bank_accounts_balance_non_negative
-        CHECK (balance_cents >= 0)
-);
-
+-- customer_products is the actual account record used by the app.
+-- There is no separate bank_accounts table in this flow.
 CREATE TABLE customer_products (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id    UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
     product_id     TEXT NOT NULL,
     product_type   TEXT NOT NULL,
     account_number TEXT NOT NULL UNIQUE,
-    status         TEXT NOT NULL DEFAULT 'active',
+    status         TEXT NOT NULL DEFAULT 'inactive',
     balance_cents  BIGINT NOT NULL DEFAULT 0,
     created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -105,7 +91,6 @@ CREATE TABLE customer_products (
 
 CREATE TABLE transactions (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    account_id          BIGINT NULL REFERENCES bank_accounts(id) ON DELETE SET NULL,
     user_id             BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
     product_id          UUID NULL REFERENCES customer_products(id) ON DELETE SET NULL,
     customer_id         UUID NULL REFERENCES customers(id) ON DELETE SET NULL,
@@ -226,14 +211,15 @@ CREATE TABLE registered_paynow (
         CHECK (status IN ('active', 'inactive'))
 );
 
+CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_customer_id ON users(customer_id);
-CREATE INDEX idx_bank_accounts_user_id ON bank_accounts(user_id);
 CREATE INDEX idx_customer_products_customer_id ON customer_products(customer_id);
 CREATE INDEX idx_customer_products_account_number ON customer_products(account_number);
 CREATE INDEX idx_transactions_user_id_created_at ON transactions(user_id, created_at DESC);
 CREATE INDEX idx_transactions_customer_id_created_at ON transactions(customer_id, created_at DESC);
 CREATE INDEX idx_transactions_product_id_created_at ON transactions(product_id, created_at DESC);
+CREATE INDEX idx_account_creation_links_customer_status ON account_creation_links(customer_id, status);
 CREATE INDEX idx_personal_loans_customer_id ON personal_loans(customer_id);
 CREATE INDEX idx_personal_loans_status ON personal_loans(status);
 CREATE INDEX idx_home_loan_applications_customer_id ON home_loan_applications(customer_id);
@@ -248,10 +234,12 @@ VALUES
     ('Premier 24 Month Deposit', 24, 380, 1000000, TRUE);
 
 -- Seeded admin user for demo/testing.
+-- Username: admin
 -- Email: admin@rusttogold.test
 -- Password: Admin@12345
-INSERT INTO users (full_name, email, phone_number, date_of_birth, password_hash, role, status)
+INSERT INTO users (username, full_name, email, phone_number, date_of_birth, password_hash, role, status)
 VALUES (
+    'admin',
     'RustToGold Admin',
     'admin@rusttogold.test',
     '90000000',

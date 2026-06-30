@@ -58,10 +58,8 @@ impl Money {
             return Err("Amount must be more than $0.00.".to_string());
         }
 
-        if total_cents > 1_000_000_00 {
-            return Err(
-                "For this academic simulation, deposits are capped at $1,000,000.00.".to_string(),
-            );
+        if total_cents > 100_000_000_00 {
+            return Err("Amount is too large for this academic simulation.".to_string());
         }
 
         Ok(Self::from_cents(total_cents))

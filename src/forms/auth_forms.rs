@@ -2,8 +2,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
 pub struct LoginForm {
-    pub email: String,
+    pub username: String,
     pub password: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AccountCreationForm {
+    pub username: String,
+    pub password: String,
+    pub confirm_password: String,
+    pub notify_transactions: Option<String>,
+    pub notify_login: Option<String>,
+    pub notify_promotions: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -29,7 +39,7 @@ pub struct SignupDraft {
     pub monthly_income_range: Option<String>,
     pub source_initial_deposit: Option<String>,
 
-    pub password_hash: Option<String>,
+    pub security_acknowledged: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -68,8 +78,7 @@ pub struct SignupEmploymentForm {
 
 #[derive(Debug, Deserialize)]
 pub struct SignupSecurityForm {
-    pub password: String,
-    pub confirm_password: String,
+    pub setup_after_approval_acknowledged: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -97,7 +106,6 @@ pub struct SignupForm {
     pub occupation: Option<String>,
     pub employer_name: Option<String>,
     pub monthly_income_range: Option<String>,
-    pub password_hash: String,
     pub opening_for_self: Option<String>,
     pub not_acting_for_others: Option<String>,
     pub funds_legitimate: Option<String>,

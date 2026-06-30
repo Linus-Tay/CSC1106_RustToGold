@@ -1,16 +1,19 @@
-use crate::forms::{LoginForm, SignupForm};
-use crate::models::User;
-use crate::repositories::{
-    account_repository, customer_repository, product_repository, user_repository,
-};
+use crate::forms::{AccountCreationForm, LoginForm, SignupForm};
+use crate::models::{Customer, Product, User};
+use crate::repositories::{customer_repository, product_repository, user_repository};
+use actix_web::Error;
 use argon2::{
-    password_hash::{PasswordHash, PasswordVerifier},
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
 use chrono::NaiveDate;
 use sqlx::PgPool;
+use uuid::Uuid;
 
-pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, String> {
+pub async fn submit_customer_application(
+    db: &PgPool,
+    form: SignupForm,
+) -> Result<(Customer, Product), String> {
     let full_name = form.full_name.trim();
     let email = form.email.trim().to_lowercase();
     let phone_number = form.phone_number.trim();
@@ -48,10 +51,6 @@ pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, St
         return Err("Please select your employment status.".to_string());
     }
 
-    if form.password_hash.trim().is_empty() {
-        return Err("Please create a password for online banking access.".to_string());
-    }
-
     if form.opening_for_self.is_none()
         || form.not_acting_for_others.is_none()
         || form.funds_legitimate.is_none()
@@ -61,26 +60,26 @@ pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, St
         return Err("Please confirm the account opening declarations.".to_string());
     }
 
-    let existing_user = user_repository::find_user_by_email(db, &email)
-        .await
-        .map_err(|error| {
-            eprintln!("SIGNUP email lookup failed for {email}: {error:?}");
-            "Could not check whether this email already exists.".to_string()
-        })?;
-
-    if existing_user.is_some() {
-        return Err("An online banking profile with this email already exists.".to_string());
-    }
-
-    let existing_customer = customer_repository::get_customer_by_nric(db, &nric_fin.clone())
+    if customer_repository::get_customer_by_nric(db, &nric_fin)
         .await
         .map_err(|error| {
             eprintln!("SIGNUP NRIC lookup failed for {nric_fin}: {error:?}");
             "Could not check whether this identity document already exists.".to_string()
-        })?;
-
-    if existing_customer.is_some() {
+        })?
+        .is_some()
+    {
         return Err("An account application already exists for this NRIC or FIN.".to_string());
+    }
+
+    if user_repository::find_user_by_login(db, &email)
+        .await
+        .map_err(|error| {
+            eprintln!("SIGNUP email lookup failed for {email}: {error:?}");
+            "Could not check whether this email already exists.".to_string()
+        })?
+        .is_some()
+    {
+        return Err("An online banking profile with this email already exists.".to_string());
     }
 
     let new_customer = customer_repository::NewCustomer {
@@ -104,75 +103,96 @@ pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, St
         kyc_status: Some("pending"),
     };
 
-    let customer = customer_repository::create_customer(db, &new_customer)
-        .await
-        .map_err(|error| {
-            eprintln!("SIGNUP customer insert failed for {email}: {error:?}");
-            "Could not create your customer profile.".to_string()
-        })?;
-
-    let user = user_repository::create_customer(
+    let account_number = crate::services::generate_account_number(db).await;
+    customer_repository::create_customer_and_product(
         db,
-        customer.id,
-        full_name,
-        &email,
-        phone_number,
-        date_of_birth,
-        form.password_hash.trim(),
-    )
-    .await
-    .map_err(|error| {
-        eprintln!("SIGNUP user insert failed for {email}: {error:?}");
-        "Could not create your online banking profile.".to_string()
-    })?;
-
-    let bank_account = account_repository::create_primary_account(db, user.id, account_type)
-        .await
-        .map_err(|error| {
-            eprintln!(
-                "SIGNUP primary account insert failed for user_id {}: {:?}",
-                user.id, error
-            );
-            "Your profile was created, but the bank account could not be opened.".to_string()
-        })?;
-
-    product_repository::insert_product(
-        db,
-        &customer.id,
+        &new_customer,
         account_type,
         "savings",
-        &bank_account.account_number,
+        &account_number,
     )
     .await
     .map_err(|error| {
-        eprintln!(
-            "SIGNUP customer product insert failed for customer_id {}: {:?}",
-            customer.id, error
-        );
-        "Your profile was created, but the customer product account could not be opened."
-            .to_string()
-    })?;
+        eprintln!("SIGNUP pending application insert failed for {email}: {error:?}");
+        "Could not submit your account application.".to_string()
+    })
+}
 
-    Ok(user)
+// Kept so older controller imports do not break. This now submits an application and returns an error
+// asking the user to wait for admin approval instead of creating an online banking user immediately.
+pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, String> {
+    let _ = submit_customer_application(db, form).await?;
+    Err("Application submitted. Please wait for admin approval and use the account creation email to set up online banking.".to_string())
+}
+
+pub async fn register_user(
+    db: &PgPool,
+    customer_id: &Uuid,
+    customer_email: &str,
+    form: AccountCreationForm,
+) -> Result<User, String> {
+    let username = form.username.trim().to_lowercase();
+
+    if username.len() < 4 {
+        return Err("Username must be at least 4 characters.".to_string());
+    }
+
+    if form.password.len() < 8 {
+        return Err("Password must be at least 8 characters.".to_string());
+    }
+
+    if form.password != form.confirm_password {
+        return Err("Passwords do not match.".to_string());
+    }
+
+    if user_repository::find_user_by_login(db, &username)
+        .await
+        .map_err(|_| "Could not check username availability.".to_string())?
+        .is_some()
+    {
+        return Err("This username is already taken.".to_string());
+    }
+
+    let customer = customer_repository::get_customer_by_id(db, customer_id)
+        .await
+        .map_err(|_| "Could not load the approved customer profile.".to_string())?;
+
+    let password_hash = hash_password(&form.password).map_err(|_| "Cannot create user".to_string())?;
+
+    user_repository::create_customer_user(
+        db,
+        customer.id,
+        &username,
+        &customer.full_name,
+        customer_email,
+        &customer.phone_number,
+        customer.date_of_birth,
+        &password_hash,
+    )
+    .await
+    .map_err(|error| {
+        eprintln!("Error creating online banking user: {error:?}");
+        "Could not create online banking user.".to_string()
+    })
 }
 
 pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, String> {
-    let email = form.email.trim().to_lowercase();
+    let login = form.username.trim().to_lowercase();
 
-    let user = user_repository::find_user_by_email(db, &email)
+    let user = user_repository::find_user_by_login(db, &login)
         .await
         .map_err(|error| {
-            eprintln!("LOGIN email lookup failed for {email}: {error:?}");
+            eprintln!("LOGIN lookup failed for {login}: {error:?}");
             "Could not load your account.".to_string()
         })?
-        .ok_or_else(|| "Invalid email or password.".to_string())?;
+        .ok_or_else(|| "Invalid username/email or password.".to_string())?;
 
     if !user.is_active() {
         return Err("This account is not active.".to_string());
     }
 
     if !verify_password(&form.password, &user.password_hash) {
-        return Err("Invalid email or password.".to_string());
+        return Err("Invalid username/email or password.".to_string());
     }
 
     user_repository::update_last_login(db, user.id)
@@ -186,6 +206,14 @@ pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, Str
         })?;
 
     Ok(user)
+}
+
+fn hash_password(password: &str) -> Result<String, Error> {
+    let salt = SaltString::generate(&mut OsRng);
+    let hash = Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+    Ok(hash.to_string())
 }
 
 fn verify_password(password: &str, password_hash: &str) -> bool {

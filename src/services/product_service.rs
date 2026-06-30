@@ -40,6 +40,10 @@ pub async fn deposit(
     form: DepositForm,
 ) -> Result<Product, String> {
     let amount = Money::parse_dollars(&form.amount)?;
+    if amount.cents() > 1_000_000_00 {
+        return Err("Single customer deposits are capped at $1000000.00 for this academic simulation.".to_string());
+    }
+
     let description = clean_optional_text(&form.description);
     let account_number = &form.account_number;
 
@@ -171,7 +175,7 @@ fn luhn_check_digit(number: &str) -> u32 {
     (10 - (sum % 10)) % 10
 }
 
-async fn generate_account_number(db: &PgPool) -> String {
+pub async fn generate_account_number(db: &PgPool) -> String {
     let mut rng = rng();
     let prefix = "7282";
 

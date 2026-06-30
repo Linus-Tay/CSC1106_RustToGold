@@ -2,84 +2,126 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RustToGold – Basic Details</title>
-  <link rel="stylesheet" href="/static/css/style.css" />
-  <link rel="stylesheet" href="/static/css/onboarding.css"/>
-  <style>
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Application Submitted</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Manrope', 'Inter', 'sans-serif'] } } } };</script>
 </head>
-<body>
+<body class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_32rem),radial-gradient(circle_at_top_right,rgba(214,165,74,0.18),transparent_30rem),linear-gradient(180deg,#F8FBFF_0%,#F7FAFC_55%,#FFFFFF_100%)] font-sans text-slate-900">
+  <main class="min-h-screen p-4 lg:p-6">
+    <header class="mx-auto mb-4 flex max-w-7xl items-center justify-between rounded-3xl border border-white/70 bg-white/80 px-5 py-4 shadow-sm backdrop-blur">
+      <a href="/" class="flex items-center gap-3 font-heading text-lg font-black tracking-tight text-[#071B33]">
+        <span class="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <img class="h-10 w-10 object-contain" src="/static/images/rusttogold-logo.png" alt="RustToGold" />
+        </span>
+        <span>RustToGold</span>
+      </a>
+      <a href="/" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md">Exit</a>
+    </header>
 
-  <nav class="c-navbar" aria-label="Primary navigation">
-  <div class="u-container c-navbar__inner">
-    <a class="c-navbar__brand" href="" data-route="/">
-      <span class="c-navbar__logo-wrap" aria-hidden="true">
-        <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
-      </span>
-      <span>RustToGold</span>
-    </a>
-  </div>
-</nav>
+    <div class="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <!-- Sidebar -->
+      <aside class="rounded-[2rem] bg-[#071B33] p-5 text-white shadow-2xl shadow-[#071B33]/20 lg:sticky lg:top-6 lg:h-[calc(100vh-8rem)]">
+        <p class="text-xs font-black uppercase tracking-[0.24em] text-[#F0CC76]">Account opening</p>
+        <h1 class="mt-3 font-heading text-3xl font-black leading-tight tracking-tight">Application submitted.</h1>
+        <p class="mt-3 text-sm leading-6 text-white/70">Your application has been received. We'll be in touch shortly.</p>
+        <nav class="mt-8 space-y-2" aria-label="Account opening steps">
+          <span class="flex items-center gap-3 rounded-2xl px-4 py-3 text-white/40 cursor-not-allowed select-none">
+            <span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-400 text-sm font-black text-[#071B33]">✓</span>
+            <strong class="text-sm">Choose Account</strong>
+          </span>
+          <span class="flex items-center gap-3 rounded-2xl px-4 py-3 text-white/40 cursor-not-allowed select-none">
+            <span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-400 text-sm font-black text-[#071B33]">✓</span>
+            <strong class="text-sm">Basic Details</strong>
+          </span>
+          <span class="flex items-center gap-3 rounded-2xl px-4 py-3 text-white/40 cursor-not-allowed select-none">
+            <span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-400 text-sm font-black text-[#071B33]">✓</span>
+            <strong class="text-sm">Contact Details</strong>
+          </span>
+          <span class="flex items-center gap-3 rounded-2xl px-4 py-3 text-white/40 cursor-not-allowed select-none">
+            <span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-400 text-sm font-black text-[#071B33]">✓</span>
+            <strong class="text-sm">Employment</strong>
+          </span>
+          <span class="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 text-[#071B33] shadow-lg cursor-not-allowed select-none">
+            <span class="grid h-8 w-8 place-items-center rounded-full bg-[#D6A54A] text-sm font-black">✓</span>
+            <strong class="text-sm">Review & Submit</strong>
+          </span>
+        </nav>
+      </aside>
 
-<div class="app-body">
-  <aside>
-    <div class="step-item">
-      <div class="step-circle">1</div>
-      <div>
-        <div class="step-label">Step 1</div>
-        <div class="step-name">Basic Details</div>
-      </div>
-    </div>
-    <div class="step-item active">
-      <div class="step-circle">2</div>
-      <div>
-        <div class="step-label">Step 2</div>
-        <div class="step-name">Additional Details</div>
-      </div>
-    </div>
-    <div class="step-item">
-      <div class="step-circle">3</div>
-      <div>
-        <div class="step-label">Step 3</div>
-        <div class="step-name">Account Details</div>
-      </div>
-    </div>
-    <div class="step-item">
-      <div class="step-circle">4</div>
-      <div>
-        <div class="step-label">Step 4</div>
-        <div class="step-name">Declarations</div>
-      </div>
-    </div>
-    <div class="step-item">
-      <div class="step-circle">5</div>
-      <div>
-        <div class="step-label">Step 5</div>
-        <div class="step-name">Review</div>
-      </div>
-    </div>
-    <div class="step-item">
-      <div class="step-circle">6</div>
-      <div>
-        <div class="step-label">Step 6</div>
-        <div class="step-name">Customer Verification</div>
-      </div>
-    </div>
-    <div class="step-item">
-      <div class="step-circle">7</div>
-      <div>
-        <div class="step-label">Step 7</div>
-        <div class="step-name">Before Submission</div>
-      </div>
-    </div>
-  </aside>
+      <!-- Main content -->
+      <section class="rounded-[2rem] border border-slate-200 bg-white/90 p-5 shadow-xl shadow-slate-200/70 backdrop-blur lg:p-8">
+        <div class="flex flex-col items-center justify-center min-h-[480px] text-center py-12 px-4">
 
-  <main>
-    <h1>Application Submission Result</h1>
-    <p class="result-message">{{ result_message }}</p>
+          <!-- Success icon -->
+          <div class="relative mb-8">
+            <div class="h-28 w-28 rounded-full bg-emerald-50 border-4 border-emerald-100 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            </div>
+            <!-- Pulse rings -->
+            <div class="absolute inset-0 rounded-full border-2 border-emerald-300/40 animate-ping" style="animation-duration:2s;"></div>
+          </div>
+
+          <p class="text-xs font-black uppercase tracking-[0.24em] text-emerald-600 mb-3">All done</p>
+          <h2 class="font-heading text-4xl font-black tracking-tight text-[#071B33] leading-tight">Application received!</h2>
+          <p class="mt-4 max-w-md text-base leading-7 text-slate-500">
+            Thanks for applying. We're reviewing your details and will send a confirmation to your registered email address shortly.
+          </p>
+
+          <!-- Reference card -->
+          <div class="mt-8 w-full max-w-sm rounded-3xl border border-slate-200 bg-slate-50 p-5 text-left">
+            <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-4">Application summary</p>
+            <dl class="space-y-3 text-sm">
+              <div class="flex justify-between items-center">
+                <dt class="font-bold text-slate-500">Reference no.</dt>
+                <dd class="font-black text-[#071B33] font-mono tracking-wide">RTG-{{ reference_no }}</dd>
+              </div>
+              <div class="flex justify-between items-center">
+                <dt class="font-bold text-slate-500">Submitted</dt>
+                <dd class="font-semibold text-slate-700">{{ created_at }}</dd>
+              </div>
+              <div class="flex justify-between items-center">
+                <dt class="font-bold text-slate-500">Status</dt>
+                <dd>
+                  <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">
+                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                    Under review
+                  </span>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- What happens next -->
+          <div class="mt-6 w-full max-w-sm rounded-3xl border border-blue-100 bg-blue-50/60 p-5 text-left">
+            <p class="text-xs font-black uppercase tracking-[0.2em] text-blue-500 mb-4">What happens next</p>
+            <ol class="space-y-3">
+              <li class="flex gap-3 text-sm">
+                <span class="mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded-full bg-blue-200 text-xs font-black text-blue-800">1</span>
+                <span class="text-slate-700 font-semibold leading-5">We'll verify your details within <strong class="text-[#071B33]">1–2 business days.</strong></span>
+              </li>
+              <li class="flex gap-3 text-sm">
+                <span class="mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded-full bg-blue-200 text-xs font-black text-blue-800">2</span>
+                <span class="text-slate-700 font-semibold leading-5">A confirmation email will be sent once your account is approved.</span>
+              </li>
+            </ol>
+          </div>
+
+          <!-- CTA -->
+          <div class="mt-8 flex flex-col sm:flex-row gap-3">
+            <a href="/" class="inline-flex items-center justify-center gap-2 rounded-full bg-[#071B33] px-7 py-3 text-sm font-black text-white shadow-lg shadow-[#071B33]/20 transition hover:-translate-y-0.5 hover:shadow-xl">
+              Back to home
+            </a>
+          </div>
+
+        </div>
+      </section>
+    </div>
   </main>
-</div>
-
 </body>
 </html>

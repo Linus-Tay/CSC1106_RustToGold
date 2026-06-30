@@ -223,6 +223,25 @@ pub async fn approve_product(db: &PgPool, account_id: &Uuid) -> Result<Product, 
     .await
 }
 
+
+pub async fn get_first_product_by_customer_id(
+    db: &PgPool,
+    customer_id: &Uuid,
+) -> Result<Product, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
+        r#"
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE customer_id = $1 AND status = 'inactive'
+        ORDER BY created_at ASC
+        LIMIT 1
+        "#,
+    )
+    .bind(customer_id)
+    .fetch_one(db)
+    .await
+}
+
 async fn lock_product(
     tx: &mut DbTransaction<'_, Postgres>,
     customer_id: &Uuid,

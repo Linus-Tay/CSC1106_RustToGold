@@ -34,5 +34,5 @@ pub use self::home_loan_controller::{
     home_loans_page, pay_home_loan, reject_home_loan,
 };
 pub use self::loan_controller::{create_personal_loan, loan_apply_page, loans_page, pay_loan};
-pub use self::onboard_controller::{onboarding, step1_post, submit};
+pub use self::onboard_controller::{account_creation, account_creation_init, account_creation_submit, onboarding, step1_post, step2_post, step3_post, step4_post, submit};
 pub use self::public_controller::{about_page, banking_page, contact_page, faq_page, home, security_page};

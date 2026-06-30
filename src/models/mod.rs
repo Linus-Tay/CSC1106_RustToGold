@@ -1,4 +1,5 @@
 pub mod account;
+pub mod account_creation_link;
 pub mod admin;
 pub mod customer;
 pub mod fixed_deposit;
@@ -11,6 +12,7 @@ pub mod transaction;
 pub mod user;
 
 pub use self::account::{AccountWorkflow, BankAccount};
+pub use self::account_creation_link::AccountCreationLink;
 pub use self::admin::{AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord};
 pub use self::customer::Customer;
 pub use self::fixed_deposit::{FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary};

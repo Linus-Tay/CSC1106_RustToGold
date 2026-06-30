@@ -3,7 +3,7 @@ pub mod templates;
 
 pub use self::renderer::render;
 pub use self::templates::{
-    AboutTemplate, AdminCustomerApplicationsTemplate, AdminDashboardTemplate, AdminFixedDepositPlansTemplate, AdminFixedDepositsTemplate, AdminHomeLoansTemplate, AdminLoginTemplate, AdminPersonalLoansTemplate,
+    AboutTemplate, AccountCreationEmailTemplate, AccountCreationSetupTemplate, AccountCreationSuccessTemplate, ApplicationReceivedEmailTemplate, OnboardingAccountTemplate, OnboardingContactTemplate, OnboardingEmploymentTemplate, OnboardingPersonalTemplate, OnboardingReviewTemplate, AdminCustomerApplicationsTemplate, AdminDashboardTemplate, AdminFixedDepositPlansTemplate, AdminFixedDepositsTemplate, AdminHomeLoansTemplate, AdminLoginTemplate, AdminPersonalLoansTemplate,
     BankingTemplate, ContactTemplate, CustomerActivityLogTemplate, CustomerPageTemplate, DashboardTemplate, DepositTemplate,
     ErrorTemplate, FaqTemplate, FixedDepositCreateTemplate, FixedDepositDashboardTemplate,
     ForbiddenTemplate, HomeLoanApplyTemplate, HomeLoanDashboardTemplate, HomeTemplate, LoginTemplate,

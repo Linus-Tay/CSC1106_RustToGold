@@ -77,19 +77,19 @@
 
         <form class="space-y-5" action="/login" method="post">
           <div>
-            <label class="mb-2 block text-sm font-bold text-slate-700" for="email">
-              Email Address
+            <label class="mb-2 block text-sm font-bold text-slate-700" for="username">
+              Username or Email
             </label>
 
             <div class="relative">
               <i data-lucide="mail" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></i>
               <input
                 class="min-h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 pl-12 text-sm font-medium outline-none transition placeholder:text-slate-400 focus:border-[#1D4ED8] focus:ring-4 focus:ring-[#1D4ED8]/15"
-                id="email"
-                name="email"
-                type="email"
-                placeholder="customer@example.com"
-                autocomplete="email"
+                id="username"
+                name="username"
+                type="text"
+                placeholder="your username or email"
+                autocomplete="username"
                 required
               />
             </div>
@@ -124,7 +124,7 @@
         </form>
 
         <div class="mt-6 flex items-center justify-between text-sm font-semibold">
-          <a class="flex items-center gap-2 text-slate-500 transition hover:text-[#1D4ED8]" href="/signup/account">
+          <a class="flex items-center gap-2 text-slate-500 transition hover:text-[#1D4ED8]" href="/signup">
             <i data-lucide="user-plus" class="h-4 w-4"></i>
             Open an account
           </a>

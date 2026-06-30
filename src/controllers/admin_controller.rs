@@ -58,7 +58,7 @@ pub async fn approve_customer_application(
         Err(response) => return Ok(response),
     };
 
-    match services::approve_customer_application(&data.db, customer_id).await {
+    match services::approve_customer_application(&data, customer_id).await {
         Ok(_) => Ok(redirect("/admin/signups")),
         Err(error) => render_error("Customer approval failed", error),
     }

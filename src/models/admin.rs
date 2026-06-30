@@ -15,7 +15,7 @@ pub struct AdminDashboardSummary {
 #[derive(Debug, Clone, FromRow)]
 pub struct AdminCustomerApplication {
     pub customer_id: Uuid,
-    pub user_id: i64,
+    pub user_id: Option<i64>,
     pub full_name: String,
     pub email: String,
     pub phone_number: String,
@@ -34,7 +34,7 @@ pub struct AdminCustomerApplication {
     pub industry: Option<String>,
     pub monthly_income_range: Option<String>,
     pub kyc_status: String,
-    pub user_status: String,
+    pub user_status: Option<String>,
     pub account_number: Option<String>,
     pub selected_account_type: Option<String>,
     pub product_type: Option<String>,
@@ -67,7 +67,16 @@ impl AdminCustomerApplication {
     }
 
     pub fn user_status_display(&self) -> String {
-        title_case(&self.user_status)
+        self.user_status
+            .as_deref()
+            .map(title_case)
+            .unwrap_or_else(|| "Not created yet".to_string())
+    }
+
+    pub fn user_id_display(&self) -> String {
+        self.user_id
+            .map(|id| format!("User #{id}"))
+            .unwrap_or_else(|| "Online banking not created yet".to_string())
     }
 
     pub fn account_number_display(&self) -> String {

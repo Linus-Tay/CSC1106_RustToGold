@@ -55,7 +55,7 @@ pub async fn list_customer_applications(
             cp.created_at AS account_created_at,
             c.created_at
         FROM customers c
-        JOIN users u ON u.customer_id = c.id
+        LEFT JOIN users u ON u.customer_id = c.id AND u.role = 'customer'
         LEFT JOIN LATERAL (
             SELECT account_number, product_id, product_type, status, balance_cents, created_at
             FROM customer_products
