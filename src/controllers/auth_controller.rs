@@ -1,12 +1,15 @@
-use crate::controllers::session_guard::{redirect, session_user_id};
+use crate::controllers::session_guard::{
+    admin_session_user_id, clear_admin_session, clear_customer_session, customer_session_user_id,
+    redirect, store_admin_session, store_customer_session,
+};
 use crate::forms::{
     LoginForm, SignupAccountForm, SignupContactForm, SignupDeclarationForm, SignupDraft,
     SignupEmploymentForm, SignupForm, SignupPersonalForm, SignupSecurityForm,
 };
 use crate::services;
 use crate::views::{
-    render, LoginTemplate, SignupAccountTemplate, SignupContactTemplate, SignupEmploymentTemplate,
-    SignupPersonalTemplate, SignupReviewTemplate, SignupSecurityTemplate,
+    render, AdminLoginTemplate, LoginTemplate, SignupAccountTemplate, SignupContactTemplate,
+    SignupEmploymentTemplate, SignupPersonalTemplate, SignupReviewTemplate, SignupSecurityTemplate,
 };
 use crate::AppState;
 use actix_session::Session;
@@ -19,11 +22,22 @@ use argon2::{
 const SIGNUP_DRAFT_KEY: &str = "signup_draft";
 
 pub async fn login_page(session: Session) -> Result<HttpResponse> {
-    if session_user_id(&session).is_some() {
+    if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
     }
 
     render(LoginTemplate {
+        error: String::new(),
+        has_error: false,
+    })
+}
+
+pub async fn admin_login_page(session: Session) -> Result<HttpResponse> {
+    if admin_session_user_id(&session).is_some() {
+        return Ok(redirect("/admin/dashboard"));
+    }
+
+    render(AdminLoginTemplate {
         error: String::new(),
         has_error: false,
     })
@@ -35,11 +49,14 @@ pub async fn login(
     form: web::Form<LoginForm>,
 ) -> Result<HttpResponse> {
     match services::authenticate_user(&data.db, form.into_inner()).await {
-        Ok(user) => {
-            session.insert("user_id", user.id)?;
-            session.insert("role", user.role)?;
+        Ok(user) if user.is_customer() => {
+            store_customer_session(&session, &user)?;
             Ok(redirect("/customer/dashboard"))
         }
+        Ok(_) => render(LoginTemplate {
+            error: "Use the admin login page for staff access.".to_string(),
+            has_error: true,
+        }),
         Err(error) => render(LoginTemplate {
             error,
             has_error: true,
@@ -47,8 +64,29 @@ pub async fn login(
     }
 }
 
+pub async fn admin_login(
+    data: web::Data<AppState>,
+    session: Session,
+    form: web::Form<LoginForm>,
+) -> Result<HttpResponse> {
+    match services::authenticate_user(&data.db, form.into_inner()).await {
+        Ok(user) if user.is_staff_or_admin() => {
+            store_admin_session(&session, &user)?;
+            Ok(redirect("/admin/dashboard"))
+        }
+        Ok(_) => render(AdminLoginTemplate {
+            error: "This login is only for staff and admin users.".to_string(),
+            has_error: true,
+        }),
+        Err(error) => render(AdminLoginTemplate {
+            error,
+            has_error: true,
+        }),
+    }
+}
+
 pub async fn signup_page(session: Session) -> Result<HttpResponse> {
-    if session_user_id(&session).is_some() {
+    if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
     }
 
@@ -60,7 +98,7 @@ pub async fn signup(session: Session) -> Result<HttpResponse> {
 }
 
 pub async fn show_signup_account(session: Session) -> Result<HttpResponse> {
-    if session_user_id(&session).is_some() {
+    if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
     }
 
@@ -99,7 +137,7 @@ pub async fn post_signup_account(
 }
 
 pub async fn show_signup_personal(session: Session) -> Result<HttpResponse> {
-    if session_user_id(&session).is_some() {
+    if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
     }
 
@@ -153,7 +191,7 @@ pub async fn post_signup_personal(
 }
 
 pub async fn show_signup_contact(session: Session) -> Result<HttpResponse> {
-    if session_user_id(&session).is_some() {
+    if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
     }
 
@@ -188,7 +226,7 @@ pub async fn post_signup_contact(
 }
 
 pub async fn show_signup_employment(session: Session) -> Result<HttpResponse> {
-    if session_user_id(&session).is_some() {
+    if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
     }
 
@@ -220,7 +258,7 @@ pub async fn post_signup_employment(
 }
 
 pub async fn show_signup_security(session: Session) -> Result<HttpResponse> {
-    if session_user_id(&session).is_some() {
+    if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
     }
 
@@ -249,7 +287,7 @@ pub async fn post_signup_security(
 }
 
 pub async fn show_signup_review(session: Session) -> Result<HttpResponse> {
-    if session_user_id(&session).is_some() {
+    if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
     }
 
@@ -285,8 +323,7 @@ pub async fn post_signup_submit(
     match services::register_customer(&data.db, signup_form).await {
         Ok(user) => {
             session.remove(SIGNUP_DRAFT_KEY);
-            session.insert("user_id", user.id)?;
-            session.insert("role", user.role)?;
+            store_customer_session(&session, &user)?;
             Ok(redirect("/customer/dashboard"))
         }
         Err(error) => {
@@ -297,8 +334,13 @@ pub async fn post_signup_submit(
 }
 
 pub async fn logout(session: Session) -> Result<HttpResponse> {
-    session.purge();
+    clear_customer_session(&session);
     Ok(redirect("/"))
+}
+
+pub async fn admin_logout(session: Session) -> Result<HttpResponse> {
+    clear_admin_session(&session);
+    Ok(redirect("/admin/login"))
 }
 
 fn read_signup_draft(session: &Session) -> Result<SignupDraft> {

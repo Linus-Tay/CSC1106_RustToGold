@@ -6,13 +6,14 @@ pub struct Config {
     pub session_secret: String,
     pub host: String,
     pub port: u16,
-    pub smtp_port: u16
+    pub smtp_port: u16,
 }
 
 impl Config {
     pub fn from_env() -> Self {
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env");
-        let session_secret = env::var("SESSION_SECRET").expect("SESSION_SECRET must be set in .env");
+        let session_secret =
+            env::var("SESSION_SECRET").expect("SESSION_SECRET must be set in .env");
         let host = env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
         let port = env::var("SERVER_PORT")
             .ok()
@@ -32,7 +33,7 @@ impl Config {
             session_secret,
             host,
             port,
-            smtp_port
+            smtp_port,
         }
     }
 

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Fixed Deposits</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="customer-body">
+  <header class="customer-topbar"><div class="customer-container customer-topbar__inner"><a class="customer-brand" href="/customer/dashboard"><span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="" /></span><span>RustToGold</span></a><div class="customer-topbar__actions"><a class="customer-pill" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</a><a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a></div></div></header>
+  <main class="customer-main">
+    <div class="customer-container">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+      <section class="module-hero">
+        <div><p class="customer-kicker">Savings</p><h1>Fixed Deposits</h1><p>Create placements, track maturity dates and pay out principal with expected interest.</p><div class="hero-actions"><a class="c-button c-button--primary" href="/customer/fixed-deposits/new"><i data-lucide="piggy-bank"></i> New Placement</a><a class="c-button c-button--secondary" href="/customer/fixed-deposit-activity"><i data-lucide="calendar-clock"></i> FD Log</a></div></div>
+        <div class="module-stat"><span>Active Principal</span><strong>{{ summary.active_principal_display() }}</strong><small>{{ summary.active_count }} active · {{ summary.matured_count }} matured · {{ summary.projected_interest_display() }} projected interest</small></div>
+      </section>
+      {% if has_success %}<div class="alert alert--success"><i data-lucide="check-circle"></i> {{ success }}</div>{% endif %}
+      {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+      <section class="customer-card customer-section">
+        <div class="customer-card__header"><div><h2>Your Fixed Deposits</h2><p>Placements are linked to account {{ account_number }}. Current balance: ${{ balance }}.</p></div><a class="text-link" href="/customer/fixed-deposits/new">New placement</a></div>
+        <div class="customer-card__body">
+          {% if has_fixed_deposits %}
+          <div class="record-list">
+            {% for fd in fixed_deposits %}
+            <article class="record-card">
+              <div class="record-card__main">
+                <div><span class="badge badge--info">{{ fd.status_display() }}</span><h3>{{ fd.plan_name }}</h3><p>{{ fd.tenure_months }} months · {{ fd.rate_display() }} p.a. · Matures {{ fd.maturity_date_display() }}</p></div>
+                <div class="record-card__amount"><span>Principal</span><strong>{{ fd.principal_display() }}</strong><small>Interest {{ fd.interest_display() }} · Payout {{ fd.payout_display() }}</small></div>
+              </div>
+              {% if fd.can_withdraw() %}
+              <form class="record-card__footer" action="/customer/fixed-deposits/{{ fd.id }}/withdraw" method="post"><button class="c-button c-button--gold" type="submit"><i data-lucide="banknote"></i> Withdraw / Payout</button></form>
+              {% endif %}
+            </article>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state"><div class="empty-state__icon"><i data-lucide="piggy-bank"></i></div><h3>No fixed deposits yet</h3><p>Create a placement to demonstrate fixed deposit creation, maturity and transaction logging.</p></div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
+</body>
+</html>

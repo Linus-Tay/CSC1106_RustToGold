@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: PgPool
+    pub db: PgPool,
 }
 
 #[actix_web::main]
@@ -30,9 +30,7 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Could not connect to PostgreSQL. Check DATABASE_URL in .env.");
 
-    let state = AppState {
-        db: pool
-    };
+    let state = AppState { db: pool };
     let session_key = Key::from(config.session_secret.as_bytes());
     let bind_address = config.bind_address();
 

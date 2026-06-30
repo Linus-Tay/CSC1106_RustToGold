@@ -2,14 +2,14 @@ use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::require_customer;
 use crate::forms::account_forms::TransferForm;
 use crate::forms::{DepositForm, ProfileForm};
-use crate::repositories::{account_repository, product_repository};
+use crate::repositories::{loan_repository, product_repository};
 use crate::services::{self, product_service};
 use crate::views::{
-    CustomerPageTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate, ProfileTemplate, TransactionsTemplate, render,
+    render, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate,
+    ProfileTemplate, TransactionsTemplate, TransferTemplate,
 };
 use crate::AppState;
 use actix_session::Session;
-use actix_web::dev::Path;
 use actix_web::{web, HttpResponse, Result};
 use uuid::Uuid;
 
@@ -24,19 +24,10 @@ pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<Ht
     };
 
     match services::load_customer_dashboard(&data.db, user.id).await {
-        Ok((account, transactions)) => {
-            let has_transactions = !transactions.is_empty();
-            let balance = display_money_without_symbol(account.balance_display());
-            let account_number = account.account_number;
-
-            render(DashboardTemplate {
-                full_name: user.full_name,
-                account_number,
-                balance,
-                recent_transactions: transactions,
-                has_transactions,
-            })
-        }
+        Ok(account) => render(DashboardTemplate {
+            full_name: user.full_name,
+            balance: display_money_without_symbol(account.balance_display()),
+        }),
         Err(message) => render_error("Dashboard unavailable", message),
     }
 }
@@ -47,17 +38,14 @@ pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result
         Err(response) => return Ok(response),
     };
 
-    let account = match account_repository::find_primary_account_by_user_id(&data.db, user.id).await {
-        Ok(Some(account)) => account,
-        _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
+    let account = match loan_repository::find_primary_active_product(&data.db, user.customer_id).await {
+        Ok(account) => account,
+        _ => return render_error("Account unavailable", "No active customer product account was found.".to_string()),
     };
 
-    let balance = display_money_without_symbol(account.balance_display());
-    let account_number = account.account_number;
-
     render(DepositTemplate {
-        account_number,
-        balance,
+        account_number: account.account_number.clone(),
+        balance: display_money_without_symbol(account.balance_display()),
         error: String::new(),
         has_error: false,
         success: String::new(),
@@ -65,46 +53,36 @@ pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result
     })
 }
 
-pub async fn deposit(app_state: web::Data<AppState>, session: Session, form: web::Form<DepositForm>) -> Result<HttpResponse> {
-    // let user = match require_customer(&data, &session).await {
-    //     Ok(user) => user,
-    //     Err(response) => return Ok(response),
-    // };
+pub async fn deposit(
+    app_state: web::Data<AppState>,
+    session: Session,
+    form: web::Form<DepositForm>,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&app_state, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
 
+    let account_number = form.account_number.clone();
 
-   let uuid: Option<Uuid> = Uuid::parse_str("53514d80-ac70-416a-b553-d958a2bdf1be").ok();
-   let account_number = form.account_number.clone();
-
-    match services::deposit(&app_state, uuid.unwrap(), form.into_inner()).await {
-        Ok(account) => {
-            let balance = display_money_without_symbol(account.balance_display());
-            let account_number = account.account_number;
-
-            render(DepositTemplate {
-                account_number,
-                balance,
-                error: String::new(),
-                has_error: false,
-                success: "Deposit completed successfully.".to_string(),
-                has_success: true,
-            })
-        }
+    match services::deposit(&app_state, user.customer_id, form.into_inner()).await {
+        Ok(account) => render(DepositTemplate {
+            account_number: account.account_number.clone(),
+            balance: display_money_without_symbol(account.balance_display()),
+            error: String::new(),
+            has_error: false,
+            success: "Deposit completed successfully.".to_string(),
+            has_success: true,
+        }),
         Err(error) => {
-            println!("error: {}", error);
-            let account = match  product_repository::get_product_by_account_number(&app_state.db, &account_number).await {
+            let account = match product_repository::get_product_by_account_number(&app_state.db, &account_number).await {
                 Ok(Some(account)) => account,
-                _ => {
-                    println!("not found here?: {}", &account_number);
-                    return render_error("Account unavailable", "No bank account was found.".to_string())
-                },
+                _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
             };
 
-            let balance = display_money_without_symbol(account.balance_display());
-            let account_number = account.account_number;
-
             render(DepositTemplate {
-                account_number,
-                balance,
+                account_number: account.account_number.clone(),
+                balance: display_money_without_symbol(account.balance_display()),
                 error,
                 has_error: true,
                 success: String::new(),
@@ -114,33 +92,60 @@ pub async fn deposit(app_state: web::Data<AppState>, session: Session, form: web
     }
 }
 
-pub async fn transfer(app_state: web::Data<AppState>, session: Session, form: web::Form<TransferForm>) -> Result<HttpResponse> {
-    // let user = match require_customer(&data, &session).await {
-    //     Ok(user) => user,
-    //     Err(response) => return Ok(response),
-    // };
+pub async fn transfer_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
 
-
-   let uuid: Option<Uuid> = Uuid::parse_str("53514d80-ac70-416a-b553-d958a2bdf1be").ok();
-   let account_number = form.account_number.clone();
-
-
-    match services::transfer(&app_state, uuid.unwrap(), form.into_inner()).await {
-        Ok(true) => {
-            println!("works");
-            render(ErrorTemplate)
-        },
-        Ok(false) => {
-            println!("um wtf?");
-            render(ErrorTemplate)
+    let account = match loan_repository::find_primary_active_product(&data.db, user.customer_id).await {
+        Ok(account) => account,
+        _ => {
+            return render_error(
+                "Account unavailable",
+                "No active customer product account was found.".to_string(),
+            )
         }
-        Err(e) => {
-            println!("error: {}", e);
-            render(ErrorTemplate)
+    };
+
+    render(TransferTemplate {
+        account_number: account.account_number.clone(),
+        balance: display_money_without_symbol(account.balance_display()),
+        error: String::new(),
+        has_error: false,
+    })
+}
+
+pub async fn transfer(
+    app_state: web::Data<AppState>,
+    session: Session,
+    form: web::Form<TransferForm>,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&app_state, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    let form_data = form.into_inner();
+    let account_number = form_data.account_number.clone();
+
+    match services::transfer(&app_state, user.customer_id, form_data).await {
+        Ok(true) => Ok(crate::controllers::session_guard::redirect("/customer/transactions")),
+        Ok(false) => render(ErrorTemplate),
+        Err(error) => {
+            let account = match product_repository::get_product_by_account_number(&app_state.db, &account_number).await {
+                Ok(Some(account)) => account,
+                _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
+            };
+
+            render(TransferTemplate {
+                account_number: account.account_number.clone(),
+                balance: display_money_without_symbol(account.balance_display()),
+                error,
+                has_error: true,
+            })
         }
     }
-
-
 }
 
 pub async fn transactions(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
@@ -150,14 +155,62 @@ pub async fn transactions(data: web::Data<AppState>, session: Session) -> Result
     };
 
     match services::list_transactions(&data.db, user.id).await {
+        Ok(transactions) => render(TransactionsTemplate {
+            has_transactions: !transactions.is_empty(),
+            transactions,
+        }),
+        Err(message) => render_error("Transactions unavailable", message),
+    }
+}
+
+pub async fn loan_activity(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    match services::list_loan_activity(&data.db, user.id).await {
         Ok(transactions) => {
             let has_transactions = !transactions.is_empty();
-            render(TransactionsTemplate {
+            render(CustomerActivityLogTemplate {
+                eyebrow: "Loan Records",
+                title: "Loan Activity Log",
+                description: "Shows loan disbursements and repayments only. Everyday deposits and transfers stay under Transactions.",
+                icon: "file-signature",
+                empty_title: "No loan activity yet",
+                empty_message: "Apply for a loan or make a repayment after approval to generate loan records.",
                 transactions,
                 has_transactions,
             })
         }
-        Err(message) => render_error("Transactions unavailable", message),
+        Err(message) => render_error("Loan activity unavailable", message),
+    }
+}
+
+pub async fn fixed_deposit_activity(
+    data: web::Data<AppState>,
+    session: Session,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    match services::list_fixed_deposit_activity(&data.db, user.id).await {
+        Ok(transactions) => {
+            let has_transactions = !transactions.is_empty();
+            render(CustomerActivityLogTemplate {
+                eyebrow: "Fixed Deposit Records",
+                title: "Fixed Deposit Log",
+                description: "Shows fixed deposit openings, withdrawals and payouts only. Normal deposits and transfers stay under Transactions.",
+                icon: "piggy-bank",
+                empty_title: "No fixed deposit activity yet",
+                empty_message: "Create or withdraw a fixed deposit placement to generate fixed deposit records.",
+                transactions,
+                has_transactions,
+            })
+        }
+        Err(message) => render_error("Fixed deposit activity unavailable", message),
     }
 }
 
@@ -167,13 +220,16 @@ pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result
         Err(response) => return Ok(response),
     };
 
-    let account = match account_repository::find_primary_account_by_user_id(&data.db, user.id).await {
-        Ok(Some(account)) => account,
-        _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
+    let account = match loan_repository::find_primary_active_product(&data.db, user.customer_id).await {
+        Ok(account) => account,
+        _ => return render_error("Account unavailable", "No active customer product account was found.".to_string()),
     };
 
     let date_of_birth = user.date_of_birth_display();
     let last_login = user.last_login_display();
+    let balance = display_money_without_symbol(account.balance_display());
+    let account_type = account.product_id_display();
+    let status = account.status_display();
     let created_at = account.created_at.format("%d %b %Y").to_string();
 
     render(ProfileTemplate {
@@ -182,6 +238,9 @@ pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result
         phone: user.phone_number,
         date_of_birth,
         account_number: account.account_number,
+        balance,
+        account_type,
+        status,
         created_at,
         last_login,
     })
@@ -197,9 +256,9 @@ pub async fn update_profile(
         Err(response) => return Ok(response),
     };
 
-    let account = match account_repository::find_primary_account_by_user_id(&data.db, user.id).await {
-        Ok(Some(account)) => account,
-        _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
+    let account = match loan_repository::find_primary_active_product(&data.db, user.customer_id).await {
+        Ok(account) => account,
+        _ => return render_error("Account unavailable", "No active customer product account was found.".to_string()),
     };
 
     let updated_user = match services::update_customer_profile(&data.db, user.id, form.into_inner()).await {
@@ -209,6 +268,9 @@ pub async fn update_profile(
 
     let date_of_birth = updated_user.date_of_birth_display();
     let last_login = updated_user.last_login_display();
+    let balance = display_money_without_symbol(account.balance_display());
+    let account_type = account.product_id_display();
+    let status = account.status_display();
     let created_at = account.created_at.format("%d %b %Y").to_string();
 
     render(ProfileTemplate {
@@ -217,114 +279,30 @@ pub async fn update_profile(
         phone: updated_user.phone_number,
         date_of_birth,
         account_number: account.account_number,
+        balance,
+        account_type,
+        status,
         created_at,
         last_login,
     })
 }
 
-pub async fn transfer_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
-    if let Err(response) = require_customer(&data, &session).await {
-        return Ok(response);
-    }
-
-    render(CustomerPageTemplate {
-        title: "RustToGold | Transfer Money",
-        active_nav: "transfer",
-        heading: "Transfer Money",
-        description: "Send money through a guided customer banking workflow.",
-        message: "Transfer routing is connected for Phase 1. In Phase 2, this will validate recipient accounts, check balance, simulate OTP, and create debit/credit transaction records.",
-        primary_label: "View Transactions",
-        primary_href: "/customer/transactions",
-    })
-}
-
-pub async fn loans_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
-    if let Err(response) = require_customer(&data, &session).await {
-        return Ok(response);
-    }
-
-    render(CustomerPageTemplate {
-        title: "RustToGold | Loans",
-        active_nav: "loans",
-        heading: "Loan Applications",
-        description: "Apply for loans and track application status from the customer portal.",
-        message: "The loan module route is connected for Phase 1. The next phase can add loan application forms, approval statuses, staff review, and admin reporting.",
-        primary_label: "Apply for Loan",
-        primary_href: "/customer/loans/apply",
-    })
-}
-
-pub async fn loan_apply_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
-    if let Err(response) = require_customer(&data, &session).await {
-        return Ok(response);
-    }
-
-    render(CustomerPageTemplate {
-        title: "RustToGold | Apply for Loan",
-        active_nav: "loans",
-        heading: "Apply for Loan",
-        description: "A placeholder for the loan application workflow.",
-        message: "This page is intentionally prepared as a Phase 1 placeholder so the dashboard link works. Add the application form and loan repository in the next module.",
-        primary_label: "Back to Loans",
-        primary_href: "/customer/loans",
-    })
-}
-
-pub async fn fixed_deposits_page(
+pub async fn approve_product(
     data: web::Data<AppState>,
+    path: web::Path<String>,
     session: Session,
 ) -> Result<HttpResponse> {
     if let Err(response) = require_customer(&data, &session).await {
         return Ok(response);
     }
 
-    render(CustomerPageTemplate {
-        title: "RustToGold | Fixed Deposits",
-        active_nav: "fixed_deposits",
-        heading: "Fixed Deposits",
-        description: "Create and track fixed deposit placements.",
-        message: "The fixed deposit route is connected for Phase 1. The next phase can add amount, tenure, interest rate, maturity date, and estimated returns.",
-        primary_label: "Create Fixed Deposit",
-        primary_href: "/customer/fixed-deposits/new",
-    })
-}
-
-pub async fn fixed_deposit_new_page(
-    data: web::Data<AppState>,
-    session: Session,
-) -> Result<HttpResponse> {
-    if let Err(response) = require_customer(&data, &session).await {
-        return Ok(response);
-    }
-
-    render(CustomerPageTemplate {
-        title: "RustToGold | New Fixed Deposit",
-        active_nav: "fixed_deposits",
-        heading: "Create Fixed Deposit",
-        description: "A placeholder for the fixed deposit creation workflow.",
-        message: "This page is intentionally prepared as a Phase 1 placeholder so every navbar and dashboard link resolves properly.",
-        primary_label: "Back to Fixed Deposits",
-        primary_href: "/customer/fixed-deposits",
-    })
-}
-
-pub async fn approve_product(data: web::Data<AppState>, path: web::Path<String>, session: Session) -> Result<HttpResponse> {
     let account_id = match Uuid::parse_str(&path.into_inner()) {
         Ok(account_id) => account_id,
-        Err(e) => {
-            println!("ok");
-            return render(ErrorTemplate)
-        }
+        Err(_) => return render(ErrorTemplate),
     };
 
     match product_service::approve_product(&data, account_id).await {
-        Ok(updated_product) => {
-            println!("works!");
-            render(ErrorTemplate)
-        },
-        Err(e) => {
-            println!("error for approve product: {}", e.to_string());
-            render(ErrorTemplate)
-        }
+        Ok(_) => Ok(crate::controllers::session_guard::redirect("/customer/dashboard")),
+        Err(error) => render_error("Product approval failed", error),
     }
 }

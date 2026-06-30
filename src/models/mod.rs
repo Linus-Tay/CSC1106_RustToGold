@@ -1,14 +1,22 @@
 pub mod account;
+pub mod admin;
+pub mod customer;
+pub mod fixed_deposit;
 pub mod formatting;
+pub mod home_loan;
+pub mod loan;
 pub mod money;
+pub mod product;
 pub mod transaction;
 pub mod user;
-pub mod customer;
-pub mod product;
 
 pub use self::account::{AccountWorkflow, BankAccount};
+pub use self::admin::{AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord};
 pub use self::customer::Customer;
-pub use self::product::Product;
+pub use self::fixed_deposit::{FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary};
+pub use self::home_loan::{HomeLoanApplication, HomeLoanSummary};
+pub use self::loan::PersonalLoan;
 pub use self::money::Money;
+pub use self::product::Product;
 pub use self::transaction::Transaction;
 pub use self::user::User;

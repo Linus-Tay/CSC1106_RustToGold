@@ -13,12 +13,8 @@ pub struct ProductDetails {
 
 pub fn get_path_template(id: &str) -> (Option<Box<dyn DynTemplate>>, i32) {
     match id.to_lowercase().as_str() {
-        "primary-contact-details" => (Some(Box::new(OnboardingFormTemplate {
-            test: true
-        })), 1),
-        "additional-details" => (Some(Box::new(OnboardingFormTemplate1 {
-            test: true
-        })), 2),
+        "primary-contact-details" => (Some(Box::new(OnboardingFormTemplate { test: true })), 1),
+        "additional-details" => (Some(Box::new(OnboardingFormTemplate1 { test: true })), 2),
         _ => (None, 0),
     }
 }
@@ -28,7 +24,8 @@ pub fn get_product_details(id: &str) -> Option<ProductDetails> {
         "XS" => Some(ProductDetails {
             name: "Everyday Savings".to_string(),
             product_type: "savings".to_string(),
-            summary: "A flexible savings account for everyday spending and simple digital banking.".to_string(),
+            summary: "A flexible savings account for everyday spending and simple digital banking."
+                .to_string(),
             rate: "0.75%".to_string(),
             minimum: "1".to_string(),
             features: vec![
@@ -41,7 +38,8 @@ pub fn get_product_details(id: &str) -> Option<ProductDetails> {
         "SM" => Some(ProductDetails {
             name: "Smart Saver".to_string(),
             product_type: "savings".to_string(),
-            summary: "Higher interest for regular savers with easy access and low account costs.".to_string(),
+            summary: "Higher interest for regular savers with easy access and low account costs."
+                .to_string(),
             rate: "1.20%".to_string(),
             minimum: "1".to_string(),
             features: vec![
@@ -54,7 +52,9 @@ pub fn get_product_details(id: &str) -> Option<ProductDetails> {
         "PL" => Some(ProductDetails {
             name: "Personal Loan".to_string(),
             product_type: "loan".to_string(),
-            summary: "A straight-through loan product for personal expenses with clear repayment terms.".to_string(),
+            summary:
+                "A straight-through loan product for personal expenses with clear repayment terms."
+                    .to_string(),
             rate: "5.88%".to_string(),
             minimum: "0".to_string(),
             features: vec![

@@ -1,4 +1,4 @@
-use crate::models::customer::{Customer};
+use crate::models::customer::Customer;
 use chrono::NaiveDate;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -24,7 +24,10 @@ pub struct NewCustomer<'a> {
     pub kyc_status: Option<&'a str>,
 }
 
-pub async fn get_customer_by_nric(db: &PgPool, nric: &str) -> Result<Option<Customer>, sqlx::Error> {
+pub async fn get_customer_by_nric(
+    db: &PgPool,
+    nric: &str,
+) -> Result<Option<Customer>, sqlx::Error> {
     println!("{}", nric);
     sqlx::query_as::<_, Customer>(
         r#"SELECT id, full_name, nric, date_of_birth, gender, nationality, residency, race,
@@ -32,7 +35,7 @@ pub async fn get_customer_by_nric(db: &PgPool, nric: &str) -> Result<Option<Cust
                   employment_status, occupation, employer_name, industry, monthly_income_range,
                   kyc_status, created_at, updated_at 
                   FROM customers 
-                  WHERE nric = $1"#
+                  WHERE nric = $1"#,
     )
     .bind(nric)
     .fetch_optional(db)
@@ -46,16 +49,18 @@ pub async fn get_customer_by_id(db: &PgPool, id: &Uuid) -> Result<Customer, sqlx
                   employment_status, occupation, employer_name, industry, monthly_income_range,
                   kyc_status, created_at, updated_at 
                   FROM customers 
-                  WHERE id = $1"#
+                  WHERE id = $1"#,
     )
     .bind(id)
     .fetch_one(db)
     .await
 }
 
-
-pub async fn create_customer(db: &PgPool, new_customer: &NewCustomer<'_>) -> Result<Customer, sqlx::Error> {
-    sqlx::query_as::<_, Customer> (
+pub async fn create_customer(
+    db: &PgPool,
+    new_customer: &NewCustomer<'_>,
+) -> Result<Customer, sqlx::Error> {
+    sqlx::query_as::<_, Customer>(
         r#"
         INSERT INTO customers (
             full_name,
@@ -104,9 +109,13 @@ pub async fn create_customer(db: &PgPool, new_customer: &NewCustomer<'_>) -> Res
     .await
 }
 
-pub async fn update_customer(db: &PgPool, uuid: Uuid, new_info: &NewCustomer<'_>) -> Result<Customer, sqlx::Error> {
+pub async fn update_customer(
+    db: &PgPool,
+    uuid: Uuid,
+    new_info: &NewCustomer<'_>,
+) -> Result<Customer, sqlx::Error> {
     println!("{}", uuid);
-    sqlx::query_as::<_, Customer> (
+    sqlx::query_as::<_, Customer>(
         r#"
         UPDATE CUSTOMERS SET
             full_name = $1,

@@ -1,6 +1,8 @@
 use crate::forms::{LoginForm, SignupForm};
 use crate::models::User;
-use crate::repositories::{account_repository, customer_repository, user_repository};
+use crate::repositories::{
+    account_repository, customer_repository, product_repository, user_repository,
+};
 use argon2::{
     password_hash::{PasswordHash, PasswordVerifier},
     Argon2,
@@ -124,7 +126,7 @@ pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, St
         "Could not create your online banking profile.".to_string()
     })?;
 
-    account_repository::create_primary_account(db, user.id, account_type)
+    let bank_account = account_repository::create_primary_account(db, user.id, account_type)
         .await
         .map_err(|error| {
             eprintln!(
@@ -133,6 +135,23 @@ pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, St
             );
             "Your profile was created, but the bank account could not be opened.".to_string()
         })?;
+
+    product_repository::insert_product(
+        db,
+        &customer.id,
+        account_type,
+        "savings",
+        &bank_account.account_number,
+    )
+    .await
+    .map_err(|error| {
+        eprintln!(
+            "SIGNUP customer product insert failed for customer_id {}: {:?}",
+            customer.id, error
+        );
+        "Your profile was created, but the customer product account could not be opened."
+            .to_string()
+    })?;
 
     Ok(user)
 }

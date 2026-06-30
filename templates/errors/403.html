@@ -7,68 +7,29 @@
   <title>RustToGold | Access Denied</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
-<body>
-
-  <nav class="c-navbar" aria-label="Primary navigation">
-    <div class="u-container c-navbar__inner">
-      <a class="c-navbar__brand" href="/" data-route="/">
-        <span class="c-navbar__logo-wrap" aria-hidden="true">
-          <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
-        </span>
-        <span>RustToGold</span>
+<body class="error-body">
+  <main class="clean-error-shell">
+    <section class="clean-error-card">
+      <a class="clean-error-brand" href="/">
+        <span><img src="/static/images/rusttogold-logo.png" alt="RustToGold logo" /></span>
+        RustToGold
       </a>
-      <ul class="c-navbar__links">
-        <li><a class="c-navbar__link" href="/#accounts" data-route="/#accounts">Accounts</a></li>
-        <li><a class="c-navbar__link" href="/#transfers" data-route="/#transfers">Transfers</a></li>
-        <li><a class="c-navbar__link" href="/#savings" data-route="/#savings">Savings</a></li>
-        <li><a class="c-navbar__link" href="/#loans" data-route="/#loans">Loans</a></li>
-        <li><a class="c-navbar__link" href="/#security" data-route="/#security">Security</a></li>
-        <li><a class="c-navbar__link" href="/#help" data-route="/#help">Help</a></li>
-      </ul>
-      <div class="c-navbar__actions">
-        <a class="c-navbar__login " href="/login" data-route="/login">Login</a>
-        <a class="c-button c-button--gold" href="/signup" data-route="/signup"><i data-lucide="user-plus"></i> Open Account</a>
+
+      <div class="clean-error-icon clean-error-icon--warning"><i data-lucide="lock"></i></div>
+      <p class="customer-kicker">Access Denied</p>
+      <h1>You cannot access this page.</h1>
+      <p>This usually happens when the page belongs to a different portal or your session has expired.</p>
+
+      <div class="clean-error-actions">
+        <a class="c-button c-button--primary" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i> Customer Dashboard</a>
+        <a class="c-button c-button--secondary" href="/"><i data-lucide="home"></i> Back Home</a>
       </div>
-    </div>
-  </nav>
-
-
-
-  <!--
-    Route: GET /403
-    Askama context: optional return_url
-    Integration note: Replace preview links with Actix route paths if needed. Form actions already use server routes.
-  -->
-
-  <main class="app-main">
-    <div class="u-container">
-      <section class="error-panel">
-        <div class="error-panel__icon"><i data-lucide="lock"></i></div>
-        <h1 class="error-panel__title">Access Denied</h1>
-        <p class="app-page-description" style="margin-inline:auto;">You do not have permission to access this page.</p>
-        <br>
-        <a class="c-button c-button--primary" href="/customer/dashboard">Return to Dashboard</a>
-      </section>
-    </div>
+    </section>
   </main>
 
-
-  <footer class="c-footer">
-    <div class="u-container c-footer__inner">
-      <div>
-        <div class="c-footer__brand"><span class="c-footer__dot"></span> RustToGold</div>
-        <p class="c-footer__note">Secure digital banking for accounts, transfers, savings, loans, and customer support.</p>
-      </div>
-      <div class="c-footer__links">
-        <a href="/#security">Security</a>
-        <a href="/#help">Help</a>
-        <a href="/login">Login</a>
-      </div>
-    </div>
-  </footer>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/static/js/app.js"></script>
 </body>

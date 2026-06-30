@@ -7,163 +7,134 @@
   <title>RustToGold | Customer Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
-<body>
-
-  <nav class="c-navbar" aria-label="Customer navigation">
-    <div class="u-container c-navbar__inner">
-      <a class="c-navbar__brand" href="/customer/dashboard" data-route="/customer/dashboard">
-        <span class="c-navbar__logo-wrap" aria-hidden="true">
-          <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
-        </span>
+<body class="customer-body">
+  <header class="customer-topbar">
+    <div class="customer-container customer-topbar__inner">
+      <a class="customer-brand" href="/customer/dashboard">
+        <span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="RustToGold logo" /></span>
         <span>RustToGold</span>
       </a>
-      <ul class="c-navbar__links">
-        <li><a class="c-navbar__link is-active" href="/customer/dashboard" data-route="/customer/dashboard"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
-        <li><a class="c-navbar__link " href="/customer/deposit" data-route="/customer/deposit"><i data-lucide="circle-dollar-sign"></i>Deposit</a></li>
-        <li><a class="c-navbar__link " href="/customer/transfer" data-route="/customer/transfer"><i data-lucide="send"></i>Transfer</a></li>
-        <li><a class="c-navbar__link " href="/customer/transactions" data-route="/customer/transactions"><i data-lucide="receipt-text"></i>Transactions</a></li>
-        <li><a class="c-navbar__link " href="/customer/loans" data-route="/customer/loans"><i data-lucide="file-signature"></i>Loans</a></li>
-        <li><a class="c-navbar__link " href="/customer/fixed-deposits" data-route="/customer/fixed-deposits"><i data-lucide="piggy-bank"></i>Fixed Deposits</a></li>
-        <li><a class="c-navbar__link " href="/customer/profile" data-route="/customer/profile"><i data-lucide="user-round"></i>Profile</a></li>
-      </ul>
-      <div class="c-navbar__actions">
-        <a class="c-navbar__login" href="/logout" data-route="/logout"><i data-lucide="log-out"></i> Logout</a>
+      <div class="customer-topbar__actions">
+        <a class="customer-pill" href="/customer/profile"><i data-lucide="user-round"></i> Profile</a>
+        <a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a>
       </div>
     </div>
-  </nav>
+  </header>
 
-
-
-  <!--
-    Route: GET /customer/dashboard
-    Askama context: full_name, account_number, balance, recent_transactions, loan_count, fixed_deposit_count
-    Integration note: Replace preview links with Actix route paths if needed. Form actions already use server routes.
-  -->
-
-  <main class="app-main">
-    <div class="u-container">
-      
-      <header class="app-page-header">
+  <main class="customer-main">
+    <div class="customer-container">
+      <section class="customer-hero customer-hero--dashboard customer-hero--single">
         <div>
-          <h1 class="app-page-title">Welcome back, {{ full_name }}</h1>
-          <p class="app-page-description">Your banking dashboard gives you a clear overview of your account, recent activity, and available services.</p>
+          <p class="customer-kicker">Customer Portal</p>
+          <h1>Welcome back, {{ full_name }}</h1>
+          <p>Choose a banking function below. Transactions now only covers deposits and transfers, while loan and fixed deposit activity have their own logs.</p>
         </div>
-        
-      </header>
-
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-card__label"><i data-lucide="landmark"></i> Account Number</div><div class="stat-card__value">{{ account_number }}</div><div class="stat-card__meta">Savings Account</div></div>
-        <div class="stat-card"><div class="stat-card__label"><i data-lucide="wallet"></i> Available Balance</div><div class="stat-card__value">${{ balance }}</div><div class="stat-card__meta">Status: Active</div></div>
-        <div class="stat-card"><div class="stat-card__label"><i data-lucide="file-signature"></i> Loan Applications</div><div class="stat-card__value">1</div><div class="stat-card__meta">Pending review</div></div>
-        <div class="stat-card"><div class="stat-card__label"><i data-lucide="piggy-bank"></i> Fixed Deposits</div><div class="stat-card__value">2</div><div class="stat-card__meta">Active placements</div></div>
-      </div>
-
-      <section class="c-section c-section--compact">
-        <div class="action-grid">
-          <a class="action-card" href="/customer/deposit" data-route="/customer/deposit"><span class="action-card__icon"><i data-lucide="circle-dollar-sign"></i></span>Deposit Money</a>
-          <a class="action-card" href="/customer/transfer" data-route="/customer/transfer"><span class="action-card__icon"><i data-lucide="send"></i></span>Transfer Money</a>
-          <a class="action-card" href="/customer/loans/apply" data-route="/customer/loans/apply"><span class="action-card__icon"><i data-lucide="file-plus"></i></span>Apply for Loan</a>
-          <a class="action-card" href="/customer/fixed-deposits/new" data-route="/customer/fixed-deposits/new"><span class="action-card__icon"><i data-lucide="piggy-bank"></i></span>Create Fixed Deposit</a>
-          <a class="action-card" href="/customer/transactions" data-route="/customer/transactions"><span class="action-card__icon"><i data-lucide="receipt-text"></i></span>View Transactions</a>
+        <div class="balance-card">
+          <span>Available Balance</span>
+          <strong>${{ balance }}</strong>
+          <small>Use Profile for account number, account type and status.</small>
         </div>
       </section>
 
-      <div class="app-grid app-grid--2">
-        
-      <section class="c-card">
-        <div class="c-card__header">
+      <section class="customer-section customer-section--first">
+        <div class="section-heading section-heading--split">
           <div>
-            <h2 class="c-card__title">Recent Activity</h2>
-            
+            <p class="customer-kicker">Everyday Banking</p>
+            <h2>Cash movement</h2>
           </div>
+          <a class="text-link" href="/customer/transactions"><i data-lucide="receipt-text"></i> Deposit & transfer log</a>
         </div>
-        <div class="c-card__body">
-          
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
-              <tbody>
-                {% if has_transactions %}
-                {% for transaction in recent_transactions %}
-                <tr>
-                  <td>{{ transaction.created_at_display() }}</td>
-                  <td>{{ transaction.description_display() }}</td>
-                  <td><span class="u-amount-positive">{{ transaction.amount_display() }}</span></td>
-                  <td><span class="badge badge--success">Completed</span></td>
-                </tr>
-                {% endfor %}
-                {% else %}
-                <tr><td colspan="4">No transactions yet. Make your first deposit to see activity here.</td></tr>
-                {% endif %}
-              </tbody>
-            </table>
-          </div>
-<div class="c-card__body" style="padding-left:0;padding-right:0;padding-bottom:0;"><a class="c-button c-button--secondary" href="/customer/transactions" data-route="/customer/transactions">View All Transactions</a></div>
+
+        <div class="portal-action-grid portal-action-grid--three">
+          <a class="portal-action-card" href="/customer/deposit">
+            <span><i data-lucide="circle-dollar-sign"></i></span>
+            <strong>Deposit Money</strong>
+            <small>Top up your active RustToGold customer account.</small>
+          </a>
+          <a class="portal-action-card" href="/customer/transfer">
+            <span><i data-lucide="send"></i></span>
+            <strong>Transfer Money</strong>
+            <small>Send funds to another RustToGold account number.</small>
+          </a>
+          <a class="portal-action-card" href="/customer/transactions">
+            <span><i data-lucide="receipt-text"></i></span>
+            <strong>Transactions</strong>
+            <small>View deposit and transfer records only.</small>
+          </a>
         </div>
       </section>
 
-        <div class="u-stack">
-          
-      <section class="c-card">
-        <div class="c-card__header">
+      <section class="customer-section">
+        <div class="section-heading">
           <div>
-            <h2 class="c-card__title">Loan Applications</h2>
-            
+            <p class="customer-kicker">Products</p>
+            <h2>Borrowing and savings</h2>
           </div>
         </div>
-        <div class="c-card__body">
-          <p class="u-muted">You currently have 1 loan application under review.</p><br><a class="c-button c-button--secondary" href="/customer/loans" data-route="/customer/loans">View Loans</a>
+
+        <div class="product-grid product-grid--banking">
+          <article class="product-card product-card--navy">
+            <a class="product-card__main-link" href="/customer/loans" aria-label="View personal loans"></a>
+            <div class="product-card__icon"><i data-lucide="file-signature"></i></div>
+            <h3>Personal Loans</h3>
+            <p>Apply for a personal loan and track approval before disbursement.</p>
+            <div class="product-card__actions">
+              <a href="/customer/loans"><i data-lucide="list-checks"></i> View Loans</a>
+              <a href="/customer/loans/apply"><i data-lucide="file-plus"></i> Apply</a>
+            </div>
+          </article>
+
+          <article class="product-card">
+            <a class="product-card__main-link" href="/customer/home-loans" aria-label="View home loans"></a>
+            <div class="product-card__icon"><i data-lucide="home"></i></div>
+            <h3>Home Loans</h3>
+            <p>Submit property financing applications and follow review outcomes.</p>
+            <div class="product-card__actions">
+              <a href="/customer/home-loans"><i data-lucide="list-checks"></i> View Home Loans</a>
+              <a href="/customer/home-loans/apply"><i data-lucide="file-plus"></i> Apply</a>
+            </div>
+          </article>
+
+          <article class="product-card">
+            <a class="product-card__main-link" href="/customer/fixed-deposits" aria-label="View fixed deposits"></a>
+            <div class="product-card__icon"><i data-lucide="piggy-bank"></i></div>
+            <h3>Fixed Deposits</h3>
+            <p>Create fixed deposit placements from your available balance.</p>
+            <div class="product-card__actions">
+              <a href="/customer/fixed-deposits"><i data-lucide="list-checks"></i> View FDs</a>
+              <a href="/customer/fixed-deposits/new"><i data-lucide="plus-circle"></i> New Placement</a>
+            </div>
+          </article>
         </div>
       </section>
 
-          
-      <section class="c-card">
-        <div class="c-card__header">
+      <section class="customer-section">
+        <div class="section-heading">
           <div>
-            <h2 class="c-card__title">Fixed Deposits</h2>
-            
+            <p class="customer-kicker">Records</p>
+            <h2>Product activity logs</h2>
           </div>
         </div>
-        <div class="c-card__body">
-          <p class="u-muted">You have 2 active fixed deposits.</p><br><a class="c-button c-button--secondary" href="/customer/fixed-deposits" data-route="/customer/fixed-deposits">View Fixed Deposits</a>
+
+        <div class="portal-action-grid portal-action-grid--two">
+          <a class="portal-action-card portal-action-card--log" href="/customer/loan-activity">
+            <span><i data-lucide="file-clock"></i></span>
+            <strong>Loan Activity Log</strong>
+            <small>View loan disbursements, personal loan payments and home loan payments.</small>
+          </a>
+          <a class="portal-action-card portal-action-card--log" href="/customer/fixed-deposit-activity">
+            <span><i data-lucide="calendar-clock"></i></span>
+            <strong>Fixed Deposit Log</strong>
+            <small>View fixed deposit openings, withdrawals and maturity payouts.</small>
+          </a>
         </div>
       </section>
-
-          
-      <section class="c-card">
-        <div class="c-card__header">
-          <div>
-            <h2 class="c-card__title">Security Reminder</h2>
-            
-          </div>
-        </div>
-        <div class="c-card__body">
-          <div class="alert alert--warning"><i data-lucide="shield-alert"></i> Never share your password or OTP with anyone. RustToGold will never ask for your password after login.</div>
-        </div>
-      </section>
-
-        </div>
-      </div>
     </div>
   </main>
 
-
-  <footer class="c-footer">
-    <div class="u-container c-footer__inner">
-      <div>
-        <div class="c-footer__brand"><span class="c-footer__dot"></span> RustToGold</div>
-        <p class="c-footer__note">Secure digital banking for accounts, transfers, savings, loans, and customer support.</p>
-      </div>
-      <div class="c-footer__links">
-        <a href="/customer/dashboard">Dashboard</a>
-        <a href="/customer/transactions">Transactions</a>
-        <a href="/logout">Logout</a>
-      </div>
-    </div>
-  </footer>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/static/js/app.js"></script>
 </body>

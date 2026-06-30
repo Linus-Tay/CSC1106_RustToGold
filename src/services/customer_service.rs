@@ -47,7 +47,7 @@ pub async fn create_customer(db: &PgPool, form: OnboardingForm) -> Result<Custom
             customer_repository::update_customer(db, existing_customer.id, &new_customer_data)
                 .await
                 .map_err(|e| e.to_string())?
-        },
+        }
         None => {
             println!("None ran");
             customer_repository::create_customer(db, &new_customer_data)

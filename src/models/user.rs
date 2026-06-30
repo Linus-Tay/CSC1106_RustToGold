@@ -27,6 +27,14 @@ impl User {
         self.role == "customer"
     }
 
+    pub fn is_staff_or_admin(&self) -> bool {
+        matches!(self.role.as_str(), "staff" | "admin")
+    }
+
+    pub fn is_admin(&self) -> bool {
+        self.role == "admin"
+    }
+
     pub fn date_of_birth_display(&self) -> String {
         self.date_of_birth.format("%d %b %Y").to_string()
     }

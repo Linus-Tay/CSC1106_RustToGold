@@ -1,12 +1,18 @@
-use crate::models::{BankAccount, Product, Transaction, product};
+use crate::models::{Product, Transaction};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
-pub async fn get_product_by_user_id_and_product_id(db: &PgPool, customer_id: &Uuid, product_id: &str) -> Result<Option<Product>, sqlx::Error> {
-    sqlx::query_as::<_, Product> (
+pub async fn get_product_by_user_id_and_product_id(
+    db: &PgPool,
+    customer_id: &Uuid,
+    product_id: &str,
+) -> Result<Option<Product>, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
         r#"
-        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at FROM customer_products WHERE product_id = $1 AND customer_id = $2
-        "#
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE product_id = $1 AND customer_id = $2
+        "#,
     )
     .bind(product_id)
     .bind(customer_id)
@@ -14,30 +20,45 @@ pub async fn get_product_by_user_id_and_product_id(db: &PgPool, customer_id: &Uu
     .await
 }
 
-pub async fn get_product_by_account_id(db: &PgPool, account_id: &Uuid) -> Result<Product, sqlx::Error> {
-    sqlx::query_as::<_, Product> (
+pub async fn get_product_by_account_id(
+    db: &PgPool,
+    account_id: &Uuid,
+) -> Result<Product, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
         r#"
-        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at FROM customer_products WHERE id = $1
-        "#
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE id = $1
+        "#,
     )
     .bind(account_id)
     .fetch_one(db)
     .await
 }
 
-
-pub async fn get_product_by_account_number(db: &PgPool, account_number: &str) -> Result<Option<Product>, sqlx::Error> {
-    sqlx::query_as::<_, Product> (
+pub async fn get_product_by_account_number(
+    db: &PgPool,
+    account_number: &str,
+) -> Result<Option<Product>, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
         r#"
-        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at FROM customer_products WHERE account_number = $1
-        "#
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE account_number = $1
+        "#,
     )
     .bind(account_number)
     .fetch_optional(db)
     .await
 }
 
-pub async fn insert_product(db: &PgPool, customer_id: &Uuid, product_id: &str, product_type: &str, account_number: &str) -> Result<Product, sqlx::Error> {
+pub async fn insert_product(
+    db: &PgPool,
+    customer_id: &Uuid,
+    product_id: &str,
+    product_type: &str,
+    account_number: &str,
+) -> Result<Product, sqlx::Error> {
     sqlx::query_as::<_, Product>(
         r#"
         INSERT INTO customer_products (customer_id, product_id, product_type, account_number, balance_cents)
@@ -53,36 +74,16 @@ pub async fn insert_product(db: &PgPool, customer_id: &Uuid, product_id: &str, p
     .await
 }
 
-// pub async fn find_primary_account_by_user_id(
-//     db: &PgPool,
-//     user_id: i64,
-// ) -> Result<Option<BankAccount>, sqlx::Error> {
-//     sqlx::query_as::<_, BankAccount>(
-//         r#"
-//         SELECT id, user_id, account_number, account_type, balance_cents, status, created_at, updated_at
-//         FROM bank_accounts
-//         WHERE user_id = $1
-//         ORDER BY id ASC
-//         LIMIT 1
-//         "#,
-//     )
-//     .bind(user_id)
-//     .fetch_optional(db)
-//     .await
-// }
-
-pub async fn deposit_into_product(db: &PgPool, customer_id: &Uuid, account_number: &str, amount_cents: i64, description: Option<&str>,) -> Result<(Product, Transaction), sqlx::Error> {
-    println!("this ran??");
+pub async fn deposit_into_product(
+    db: &PgPool,
+    customer_id: &Uuid,
+    account_number: &str,
+    amount_cents: i64,
+    description: Option<&str>,
+) -> Result<(Product, Transaction), sqlx::Error> {
     let mut tx = db.begin().await?;
     let product = lock_product(&mut tx, customer_id, account_number).await?;
-    
-    println!("old balance: {}", product.balance_cents);
-    println!("amount to add: {}", amount_cents);
-
     let new_balance = product.balance_cents + amount_cents;
-
-    println!("{}", "here");
-    println!("{}", product.account_number);
 
     let updated_product = sqlx::query_as::<_, Product>(
         r#"
@@ -96,8 +97,6 @@ pub async fn deposit_into_product(db: &PgPool, customer_id: &Uuid, account_numbe
     .bind(product.id)
     .fetch_one(&mut *tx)
     .await?;
-
-    println!("okkk??");
 
     let transaction = sqlx::query_as::<_, Transaction>(
         r#"
@@ -115,45 +114,36 @@ pub async fn deposit_into_product(db: &PgPool, customer_id: &Uuid, account_numbe
     .await?;
 
     tx.commit().await?;
-
-    println!("{}", "this is a test");
-    println!("{}", updated_product.balance_cents);
-
     Ok((updated_product, transaction))
 }
 
-pub async fn transfer(db: &PgPool, sender_account_number: &str, sender_customer_id: &Uuid, recipient_customer_id: &Uuid, recipient_account_number: &str, amount_cents: i64, note: Option<&str>) -> Result<(bool, Option<String>), sqlx::Error> {
+pub async fn transfer(
+    db: &PgPool,
+    sender_account_number: &str,
+    sender_customer_id: &Uuid,
+    recipient_customer_id: &Uuid,
+    recipient_account_number: &str,
+    amount_cents: i64,
+    note: Option<&str>,
+) -> Result<(bool, Option<String>), sqlx::Error> {
     if sender_account_number == recipient_account_number {
-        return Ok((false, Some(String::from("You cannot transfer to the same bank account"))));
+        return Ok((false, Some("You cannot transfer to the same bank account".to_string())));
     }
-
-    println!("sender: {}, {}", sender_customer_id, sender_account_number);
-    println!("recipient: {} {}", recipient_customer_id, recipient_account_number);
-
 
     let mut tx = db.begin().await?;
 
     let (sender_product, recipient_product) = if sender_account_number < recipient_account_number {
-        println!("we try to lock sender first");        
-        let first = lock_product(&mut tx, sender_customer_id, sender_account_number).await?;
-        println!("sender can be locked?");
-        let second = lock_product(&mut tx, recipient_customer_id, recipient_account_number).await?;
-        println!("recipeient can be locked?");
-        
-        (first, second)
-        
-    } else { 
-        println!("we try to lock recipient first");
-        let first = lock_product(&mut tx, recipient_customer_id, recipient_account_number).await?;
-        let second = lock_product(&mut tx, sender_customer_id, sender_account_number).await?;
-        
-        (second, first)
+        let sender = lock_product(&mut tx, sender_customer_id, sender_account_number).await?;
+        let recipient = lock_product(&mut tx, recipient_customer_id, recipient_account_number).await?;
+        (sender, recipient)
+    } else {
+        let recipient = lock_product(&mut tx, recipient_customer_id, recipient_account_number).await?;
+        let sender = lock_product(&mut tx, sender_customer_id, sender_account_number).await?;
+        (sender, recipient)
     };
 
-    println!("can i fking lock?");
-
     if sender_product.balance_cents < amount_cents {
-        return Ok((false, Some(String::from("Insufficient funds"))))
+        return Ok((false, Some("Insufficient funds".to_string())));
     }
 
     let sender_new_balance = sender_product.balance_cents - amount_cents;
@@ -220,7 +210,7 @@ pub async fn transfer(db: &PgPool, sender_account_number: &str, sender_customer_
 }
 
 pub async fn approve_product(db: &PgPool, account_id: &Uuid) -> Result<Product, sqlx::Error> {
-    let updated_product = sqlx::query_as::<_, Product>(
+    sqlx::query_as::<_, Product>(
         r#"
         UPDATE customer_products
         SET status = 'active', updated_at = NOW()
@@ -230,14 +220,14 @@ pub async fn approve_product(db: &PgPool, account_id: &Uuid) -> Result<Product, 
     )
     .bind(account_id)
     .fetch_one(db)
-    .await?;
-
-    Ok(updated_product)
+    .await
 }
 
-async fn lock_product(tx: &mut DbTransaction<'_, Postgres>, customer_id: &Uuid, account_number: &str) -> Result<Product, sqlx::Error> {
-    println!("shit here");
-    println!("{} {}", customer_id, account_number);
+async fn lock_product(
+    tx: &mut DbTransaction<'_, Postgres>,
+    customer_id: &Uuid,
+    account_number: &str,
+) -> Result<Product, sqlx::Error> {
     sqlx::query_as::<_, Product>(
         r#"
         SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at

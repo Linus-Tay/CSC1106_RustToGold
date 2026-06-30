@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | {{ title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="customer-body">
+  <header class="customer-topbar">
+    <div class="customer-container customer-topbar__inner">
+      <a class="customer-brand" href="/customer/dashboard"><span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="RustToGold logo" /></span><span>RustToGold</span></a>
+      <div class="customer-topbar__actions"><a class="customer-pill" href="/customer/transactions"><i data-lucide="receipt-text"></i> Transactions</a><a class="customer-pill" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</a><a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a></div>
+    </div>
+  </header>
+
+  <main class="customer-main">
+    <div class="customer-container">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+      <section class="customer-card">
+        <div class="customer-card__header">
+          <div>
+            <p class="customer-kicker">{{ eyebrow }}</p>
+            <h1>{{ title }}</h1>
+            <p>{{ description }}</p>
+          </div>
+          <div class="activity-log-icon"><i data-lucide="{{ icon }}"></i></div>
+        </div>
+        <div class="customer-card__body">
+          {% if has_transactions %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th>Balance After</th><th>Status</th></tr></thead>
+              <tbody>
+                {% for transaction in transactions %}
+                <tr>
+                  <td>{{ transaction.created_at_display() }}</td>
+                  <td>{{ transaction.transaction_type_display() }}</td>
+                  <td>{{ transaction.description_display() }}</td>
+                  <td><span class="u-amount-positive">{{ transaction.amount_display() }}</span></td>
+                  <td>{{ transaction.balance_after_display() }}</td>
+                  <td><span class="badge badge--success">Completed</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <div class="empty-state__icon"><i data-lucide="{{ icon }}"></i></div>
+            <h3>{{ empty_title }}</h3>
+            <p>{{ empty_message }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -23,6 +23,12 @@ impl Transaction {
             "WITHDRAWAL" | "withdrawal" => "Withdrawal".to_string(),
             "TRANSFER_IN" | "transfer_in" => "Transfer In".to_string(),
             "TRANSFER_OUT" | "transfer_out" => "Transfer Out".to_string(),
+            "loan_disbursement" => "Loan Disbursement".to_string(),
+            "loan_payment" => "Loan Payment".to_string(),
+            "home_loan_payment" => "Home Loan Payment".to_string(),
+            "fixed_deposit_open" => "Fixed Deposit Opened".to_string(),
+            "fixed_deposit_withdrawal" => "Fixed Deposit Withdrawal".to_string(),
+            "fixed_deposit_payout" => "Fixed Deposit Payout".to_string(),
             value => title_case_code(value),
         }
     }

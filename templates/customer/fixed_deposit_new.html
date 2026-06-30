@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | New Fixed Deposit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="customer-body">
+  <header class="customer-topbar"><div class="customer-container customer-topbar__inner"><a class="customer-brand" href="/customer/dashboard"><span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="" /></span><span>RustToGold</span></a><div class="customer-topbar__actions"><a class="customer-pill" href="/customer/fixed-deposits"><i data-lucide="piggy-bank"></i> Fixed Deposits</a><a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a></div></div></header>
+  <main class="customer-main"><div class="customer-container customer-narrow"><a class="back-link" href="/customer/fixed-deposits"><i data-lucide="arrow-left"></i> Back to fixed deposits</a><section class="customer-card form-card"><div class="customer-card__header"><div><p class="customer-kicker">Savings</p><h1>Create Fixed Deposit</h1><p>Place funds from account {{ account_number }}. Current balance: ${{ balance }}.</p></div></div><div class="customer-card__body">
+    {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+    {% if has_plans %}
+    <form class="form clean-form" action="/customer/fixed-deposits" method="post">
+      <div class="form-field"><label class="form-label" for="plan_id">Fixed Deposit Plan</label><select class="form-select" id="plan_id" name="plan_id" required>{% for plan in plans %}<option value="{{ plan.id }}">{{ plan.plan_name }} · {{ plan.tenure_months }} months · {{ plan.rate_display() }} p.a. · Min {{ plan.minimum_amount_display() }}</option>{% endfor %}</select></div>
+      <div class="form-field"><label class="form-label" for="amount">Placement Amount</label><input class="form-input" id="amount" name="amount" placeholder="e.g. 5000.00" required /></div>
+      <button class="c-button c-button--primary" type="submit"><i data-lucide="piggy-bank"></i> Create Placement</button>
+    </form>
+    {% else %}
+    <div class="empty-state"><div class="empty-state__icon"><i data-lucide="piggy-bank"></i></div><h3>No active plans available</h3><p>Create fixed deposit plans from the admin side first.</p></div>
+    {% endif %}
+  </div></section></div></main>
+  <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
+</body>
+</html>

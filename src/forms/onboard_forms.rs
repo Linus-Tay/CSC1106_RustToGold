@@ -1,9 +1,9 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct OnboardingForm {
     pub step1: Option<Step1Form>,
-    pub step2: Option<Step2Form>
+    pub step2: Option<Step2Form>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -14,11 +14,11 @@ pub struct Step1Form {
     pub dob: String,
     pub nationality: String,
     pub residential_status: String,
-    pub race: String
+    pub race: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Step2Form {
     pub full_name: String,
-    pub nric: String
+    pub nric: String,
 }

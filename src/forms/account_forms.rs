@@ -4,7 +4,7 @@ use serde::Deserialize;
 pub struct DepositForm {
     pub amount: String,
     pub description: String,
-    pub account_number: String
+    pub account_number: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -13,5 +13,5 @@ pub struct TransferForm {
     pub method: String,
     pub note: String,
     pub account_number: String,
-    pub recipient_info: String   
+    pub recipient_info: String,
 }

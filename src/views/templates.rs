@@ -1,4 +1,8 @@
-use crate::models::Transaction;
+use crate::models::{
+    AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord,
+    FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, HomeLoanApplication,
+    HomeLoanSummary, PersonalLoan, Product, Transaction,
+};
 use askama::Template;
 
 #[derive(Template)]
@@ -54,6 +58,14 @@ pub struct OnboardingFormTemplate1 {
 #[template(path= "onboarding/onboarding_result.html")]
 pub struct OnboardingResultTemplate {
     pub result_message: String,
+}
+
+
+#[derive(Template)]
+#[template(path = "admin/login.html")]
+pub struct AdminLoginTemplate {
+    pub error: String,
+    pub has_error: bool,
 }
 
 #[derive(Template)]
@@ -151,10 +163,7 @@ pub struct SignupReviewTemplate {
 #[template(path = "customer/dashboard.html")]
 pub struct DashboardTemplate {
     pub full_name: String,
-    pub account_number: String,
     pub balance: String,
-    pub recent_transactions: Vec<Transaction>,
-    pub has_transactions: bool,
 }
 
 #[derive(Template)]
@@ -169,8 +178,30 @@ pub struct DepositTemplate {
 }
 
 #[derive(Template)]
+#[template(path = "customer/transfer.html")]
+pub struct TransferTemplate {
+    pub account_number: String,
+    pub balance: String,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
 #[template(path = "customer/transactions.html")]
 pub struct TransactionsTemplate {
+    pub transactions: Vec<Transaction>,
+    pub has_transactions: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/activity_log.html")]
+pub struct CustomerActivityLogTemplate {
+    pub eyebrow: &'static str,
+    pub title: &'static str,
+    pub description: &'static str,
+    pub icon: &'static str,
+    pub empty_title: &'static str,
+    pub empty_message: &'static str,
     pub transactions: Vec<Transaction>,
     pub has_transactions: bool,
 }
@@ -183,6 +214,9 @@ pub struct ProfileTemplate {
     pub phone: String,
     pub date_of_birth: String,
     pub account_number: String,
+    pub balance: String,
+    pub account_type: String,
+    pub status: String,
     pub created_at: String,
     pub last_login: String,
 }
@@ -215,4 +249,115 @@ pub struct ErrorTemplate;
 #[template(path = "email/account_creation.html")]
 pub struct AccountCreationTemplate {
     pub account_creation_link: String,
+}
+
+
+#[derive(Template)]
+#[template(path = "customer/loans.html")]
+pub struct LoanDashboardTemplate {
+    pub account: Product,
+    pub loans: Vec<PersonalLoan>,
+    pub has_loans: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/loan_apply.html")]
+pub struct LoanApplyTemplate {
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/home_loans.html")]
+pub struct HomeLoanDashboardTemplate {
+    pub account: Product,
+    pub summary: HomeLoanSummary,
+    pub applications: Vec<HomeLoanApplication>,
+    pub has_applications: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/home_loan_apply.html")]
+pub struct HomeLoanApplyTemplate {
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/dashboard.html")]
+pub struct AdminDashboardTemplate {
+    pub summary: AdminDashboardSummary,
+}
+
+#[derive(Template)]
+#[template(path = "admin/signups.html")]
+pub struct AdminCustomerApplicationsTemplate {
+    pub applications: Vec<AdminCustomerApplication>,
+    pub has_applications: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/personal_loans.html")]
+pub struct AdminPersonalLoansTemplate {
+    pub loans: Vec<AdminPersonalLoanRecord>,
+    pub has_loans: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/home_loans.html")]
+pub struct AdminHomeLoansTemplate {
+    pub records: Vec<AdminHomeLoanRecord>,
+    pub has_records: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/fixed_deposits.html")]
+pub struct FixedDepositDashboardTemplate {
+    pub account_number: String,
+    pub balance: String,
+    pub summary: FixedDepositSummary,
+    pub fixed_deposits: Vec<FixedDeposit>,
+    pub has_fixed_deposits: bool,
+    pub success: String,
+    pub has_success: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/fixed_deposit_new.html")]
+pub struct FixedDepositCreateTemplate {
+    pub account_number: String,
+    pub balance: String,
+    pub plans: Vec<FixedDepositPlan>,
+    pub has_plans: bool,
+    pub error: String,
+    pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/fixed_deposits.html")]
+pub struct AdminFixedDepositsTemplate {
+    pub records: Vec<FixedDepositAdminRecord>,
+    pub has_records: bool,
+}
+
+#[derive(Template)]
+#[template(path = "admin/fixed_deposit_plans.html")]
+pub struct AdminFixedDepositPlansTemplate {
+    pub plans: Vec<FixedDepositPlan>,
+    pub error: String,
+    pub has_error: bool,
+    pub success: String,
+    pub has_success: bool,
 }

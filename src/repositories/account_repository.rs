@@ -1,13 +1,13 @@
 use crate::models::{BankAccount, Transaction};
+use rand::{rng, RngExt};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
-use uuid::Uuid;
 
 pub async fn create_primary_account(
     db: &PgPool,
     user_id: i64,
     account_type: &str,
 ) -> Result<BankAccount, sqlx::Error> {
-    let account_number = format!("RTG-{}", Uuid::new_v4().simple());
+    let account_number = generate_account_number(db).await?;
 
     sqlx::query_as::<_, BankAccount>(
         r#"
@@ -100,4 +100,58 @@ async fn lock_primary_account(
     .bind(user_id)
     .fetch_one(&mut **tx)
     .await
+}
+
+async fn generate_account_number(db: &PgPool) -> Result<String, sqlx::Error> {
+    let mut rng = rng();
+    let prefix = "7282";
+
+    loop {
+        let random_part: String = (0..7)
+            .map(|_| rng.random_range(0..10).to_string())
+            .collect();
+
+        let base = format!("{}{}", prefix, random_part);
+        let check_digit = luhn_check_digit(&base);
+        let full = format!("{}{}", base, check_digit);
+        let account_number = format!("{}-{}-{}", &full[0..4], &full[4..11], &full[11..12]);
+
+        let exists: Option<(i64,)> = sqlx::query_as(
+            r#"
+            SELECT id
+            FROM bank_accounts
+            WHERE account_number = $1
+            LIMIT 1
+            "#,
+        )
+        .bind(&account_number)
+        .fetch_optional(db)
+        .await?;
+
+        if exists.is_none() {
+            return Ok(account_number);
+        }
+    }
+}
+
+fn luhn_check_digit(number: &str) -> u32 {
+    let sum: u32 = number
+        .chars()
+        .rev()
+        .enumerate()
+        .map(|(index, character)| {
+            let mut digit = character.to_digit(10).unwrap_or(0);
+
+            if index % 2 == 0 {
+                digit *= 2;
+                if digit > 9 {
+                    digit -= 9;
+                }
+            }
+
+            digit
+        })
+        .sum();
+
+    (10 - (sum % 10)) % 10
 }

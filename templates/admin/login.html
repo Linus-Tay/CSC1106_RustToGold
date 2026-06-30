@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Admin Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#071B33] text-slate-900">
+  <main class="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
+    <section class="hidden bg-[#071B33] p-10 text-white lg:flex lg:flex-col lg:justify-between">
+       <a href="/" class="flex items-center gap-3 text-xl font-black">
+        <span class="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/15">
+            <img
+              src="/static/images/rusttogold-logo.png"
+              alt="RustToGold logo"
+              class="h-7 w-7 object-contain"
+            />
+          </span>
+          <span>RustToGold</span>
+        </a>
+
+      <div class="max-w-2xl">
+        <p class="mb-4 text-sm font-bold uppercase tracking-[0.28em] text-[#D6A54A]">Admin Access</p>
+        <h1 class="text-5xl font-black leading-tight tracking-tight">Review applications before they become real banking records.</h1>
+        <p class="mt-5 text-lg text-white/70">Use the admin portal to approve customer signups, personal loans, home loans, and fixed deposit plan settings.</p>
+      </div>
+      <p class="text-sm text-white/50">Seeded demo admin: admin@rusttogold.test</p>
+    </section>
+
+    <section class="flex items-center justify-center bg-[linear-gradient(135deg,#f8fafc_0%,#eef2ff_100%)] p-6">
+      <div class="w-full max-w-md rounded-[2rem] bg-white p-8 shadow-2xl shadow-black/10">
+        <div class="mb-8">
+          <p class="mb-3 text-xs font-black uppercase tracking-[0.24em] text-[#D6A54A]">Staff Portal</p>
+          <h1 class="text-3xl font-black text-[#071B33]">Admin Login</h1>
+          <p class="mt-2 text-sm text-slate-500">Separate from the customer login so your demo flow is clearer.</p>
+        </div>
+
+        {% if has_error %}
+        <div class="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{{ error }}</div>
+        {% endif %}
+
+        <form class="space-y-5" action="/admin/login" method="post">
+          <div>
+            <label class="mb-2 block text-sm font-bold text-slate-700" for="email">Admin Email</label>
+            <input class="min-h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 outline-none transition focus:border-[#D6A54A] focus:ring-4 focus:ring-[#D6A54A]/20" id="email" name="email" type="email" value="admin@rusttogold.test" required />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-bold text-slate-700" for="password">Password</label>
+            <input class="min-h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 outline-none transition focus:border-[#D6A54A] focus:ring-4 focus:ring-[#D6A54A]/20" id="password" name="password" type="password" placeholder="Admin@12345" required />
+          </div>
+          <button class="min-h-12 w-full rounded-2xl bg-[#071B33] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#071B33]/20" type="submit">Enter Admin Portal</button>
+        </form>
+
+        <div class="mt-6 flex items-center justify-between text-sm font-semibold">
+          <a class="text-slate-500" href="/login">Customer login</a>
+          <a class="text-[#071B33]" href="/">Public site</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

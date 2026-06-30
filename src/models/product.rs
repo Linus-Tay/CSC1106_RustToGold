@@ -1,6 +1,6 @@
 use super::formatting::title_case_code;
 use super::Money;
-use chrono::{NaiveDateTime, DateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use sqlx::{FromRow, Type};
 use uuid::Uuid;
 
