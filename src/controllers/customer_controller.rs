@@ -20,29 +20,29 @@ fn display_money_without_symbol(value: String) -> String {
 }
 
 // [NEED TO FIX, GRAB STUFF FROM CUSTOMERS]
-// pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
-//     let user = match require_customer(&data, &session).await {
-//         Ok(user) => user,
-//         Err(response) => return Ok(response),
-//     };
+pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
 
-//     match services::load_customer_dashboard(&data.db, user.id).await {
-//         Ok((account, transactions)) => {
-//             let has_transactions = !transactions.is_empty();
-//             let balance = display_money_without_symbol(account.balance_display());
-//             let account_number = account.account_number;
+    match services::load_customer_dashboard(&data.db, user.id).await {
+        Ok((account, transactions)) => {
+            let has_transactions = !transactions.is_empty();
+            let balance = display_money_without_symbol(account.balance_display());
+            let account_number = account.account_number;
 
-//             render(DashboardTemplate {
-//                 full_name: user.full_name,
-//                 account_number,
-//                 balance,
-//                 recent_transactions: transactions,
-//                 has_transactions,
-//             })
-//         }
-//         Err(message) => render_error("Dashboard unavailable", message),
-//     }
-// }
+            render(DashboardTemplate {
+                full_name: user.full_name.expect("Expected full_name"),
+                account_number,
+                balance,
+                recent_transactions: transactions,
+                has_transactions,
+            })
+        }
+        Err(message) => render_error("Dashboard unavailable", message),
+    }
+}
 
 pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {

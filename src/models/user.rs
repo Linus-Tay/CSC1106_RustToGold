@@ -6,6 +6,12 @@ use uuid::Uuid;
 pub struct User {
     pub id: Uuid,
     pub customer_id: Uuid,
+    #[sqlx(default)]
+    pub full_name: Option<String>,
+    #[sqlx(default)]
+    pub date_of_birth: Option<NaiveDate>,
+    #[sqlx(default)]
+    pub phone_number: Option<String>,
     pub username: String,
     pub email: String,
     pub password_hash: String,

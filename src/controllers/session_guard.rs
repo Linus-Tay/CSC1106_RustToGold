@@ -3,6 +3,7 @@ use crate::repositories::user_repository;
 use crate::AppState;
 use actix_session::Session;
 use actix_web::{http::header, web, HttpResponse, Result};
+use uuid::Uuid;
 
 pub async fn require_customer(
     data: &web::Data<AppState>,
@@ -12,8 +13,24 @@ pub async fn require_customer(
         return Err(redirect("/login"));
     };
 
-    let user = match user_repository::find_user_by_id(&data.db, user_id).await {
-        Ok(Some(user)) => user,
+    let user_uuid = match Uuid::parse_str(&user_id) {
+        Ok(uuid) => uuid,
+        Err(e) => {
+            println!("error here?");
+            session.purge();
+            return Err(redirect("/login"));
+        }
+    };
+
+    println!("user_uuid: {}", user_uuid);
+
+    let user = match user_repository::find_user_by_id(&data.db, user_uuid).await {
+        Ok(user) => user,
+        Err(e) => {
+            println!("error from db: {}", e.to_string());
+            session.purge();
+            return Err(redirect("/login"))
+        }
         _ => {
             session.purge();
             return Err(redirect("/login"));
@@ -32,8 +49,8 @@ pub async fn require_customer(
     Ok(user)
 }
 
-pub fn session_user_id(session: &Session) -> Option<i64> {
-    session.get::<i64>("user_id").ok().flatten()
+pub fn session_user_id(session: &Session) -> Option<String> {
+    session.get::<String>("user_id").ok().flatten()
 }
 
 pub fn redirect(path: &str) -> HttpResponse {

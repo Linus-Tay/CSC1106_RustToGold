@@ -44,7 +44,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .route("/403", web::get().to(controllers::forbidden))
             .service(
                 web::scope("/customer")
-                    //.route("/dashboard", web::get().to(controllers::dashboard))
+                    .route("/dashboard", web::get().to(controllers::dashboard))
                     .route("/deposit", web::get().to(controllers::deposit_page))
                     .route("/deposit", web::post().to(controllers::deposit))
                     .route("/transfer", web::get().to(controllers::transfer_page))

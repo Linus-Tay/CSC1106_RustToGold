@@ -13,7 +13,7 @@ pub use self::auth_controller::{
     show_signup_security, signup, signup_page,
 };
 pub use self::customer_controller::{
-    deposit, deposit_page, fixed_deposit_new_page, fixed_deposits_page,
+    dashboard, deposit, deposit_page, fixed_deposit_new_page, fixed_deposits_page,
     loan_apply_page, loans_page, transactions, transfer, transfer_page, approve_customer_with_product
 };
 pub use self::error_controller::{forbidden, not_found};
