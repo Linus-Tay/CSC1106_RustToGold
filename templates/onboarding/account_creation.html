@@ -22,7 +22,6 @@
     </header>
 
     <div class="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
-      <!-- Sidebar -->
       <aside class="rounded-[2rem] bg-[#071B33] p-5 text-white shadow-2xl shadow-[#071B33]/20 lg:sticky lg:top-6 lg:h-[calc(100vh-8rem)]">
         <p class="text-xs font-black uppercase tracking-[0.24em] text-[#F0CC76]">Online banking</p>
         <h1 class="mt-3 font-heading text-3xl font-black leading-tight tracking-tight">Set up your account access.</h1>
@@ -46,10 +45,7 @@
         </div>
       </aside>
 
-      <!-- Main form -->
       <section class="rounded-[2rem] border border-slate-200 bg-white/90 p-5 shadow-xl shadow-slate-200/70 backdrop-blur lg:p-8">
-        <div id="error-banner" class="hidden mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"></div>
-
         <div class="space-y-8">
           <div>
             <p class="text-xs font-black uppercase tracking-[0.22em] text-blue-600">Account setup</p>
@@ -57,9 +53,8 @@
             <p class="mt-3 max-w-2xl text-base leading-7 text-slate-600">Your login is linked to the email address you registered with. Set a strong password to secure your account.</p>
           </div>
 
-          <form id="setup-form" novalidate class="space-y-6">
+          <form id="setup-form" action="/api/account-creation/submit" method="POST" class="space-y-6">
 
-            <!-- Email (read-only) -->
             <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
               <h3 class="font-heading text-lg font-black text-[#071B33]">Login credentials</h3>
 
@@ -68,6 +63,7 @@
                 <div class="relative">
                   <input
                     type="email"
+                    name="email"
                     value="{{ email }}"
                     readonly
                     class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500 cursor-not-allowed pr-10"
@@ -77,23 +73,23 @@
                 <p class="mt-1.5 text-xs text-slate-400 font-medium">To change your email, contact support after your account is set up.</p>
               </div>
 
-              <!-- Username -->
               <div>
                 <label for="username" class="block text-sm font-bold text-slate-700 mb-1.5">Username</label>
                 <input
                   type="text"
                   id="username"
                   name="username"
-                  placeholder="e.g. jtan_88"
+                  placeholder="e.g. john_doe"
                   autocomplete="username"
+                  required
+                  pattern="[a-zA-Z0-9_]{6,20}"
+                  title="Username must be 6–20 characters using only letters, numbers, and underscores."
                   class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
                 <p class="mt-1.5 text-xs text-slate-400 font-medium">6–20 characters. Letters, numbers, and underscores only. This is what you'll type at login.</p>
-                <p id="username-error" class="mt-1 text-xs font-bold text-red-600 hidden"></p>
               </div>
             </div>
 
-            <!-- Password -->
             <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
               <h3 class="font-heading text-lg font-black text-[#071B33]">Set a password</h3>
 
@@ -106,6 +102,9 @@
                     name="password"
                     autocomplete="new-password"
                     placeholder="Create a strong password"
+                    required
+                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':&quot;\\|,.<>\/?]).{12,}"
+                    title="Must be at least 12 characters and include one uppercase letter, one lowercase letter, one number, and one special character."
                     class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm font-semibold text-slate-900 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                   />
                   <button type="button" id="toggle-pw" class="absolute right-3 top-3 p-0.5 text-slate-400 hover:text-slate-600" aria-label="Toggle password visibility">
@@ -114,7 +113,6 @@
                   </button>
                 </div>
 
-                <!-- Strength meter -->
                 <div class="mt-3 space-y-2" id="strength-section">
                   <div class="flex gap-1.5">
                     <div class="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden"><div id="bar-1" class="h-full rounded-full transition-all duration-300 w-0"></div></div>
@@ -125,7 +123,6 @@
                   <p id="strength-label" class="text-xs font-bold text-slate-400"></p>
                 </div>
 
-                <!-- Requirements checklist -->
                 <ul class="mt-3 space-y-1.5" id="requirements">
                   <li class="req flex items-center gap-2 text-xs font-semibold text-slate-400" data-rule="length">
                     <span class="req-icon h-4 w-4 rounded-full border border-slate-300 flex-shrink-0 flex items-center justify-center"></span>
@@ -148,7 +145,6 @@
                     At least one special character (!@#$%^&*)
                   </li>
                 </ul>
-                <p id="password-error" class="mt-1 text-xs font-bold text-red-600 hidden"></p>
               </div>
 
               <div>
@@ -160,15 +156,15 @@
                     name="confirm_password"
                     autocomplete="new-password"
                     placeholder="Re-enter your password"
+                    required
+                    title="Please re-enter your password to confirm."
                     class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm font-semibold text-slate-900 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                   />
                   <svg id="confirm-match-icon" class="absolute right-3 top-3.5 h-4 w-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
                 </div>
-                <p id="confirm-error" class="mt-1 text-xs font-bold text-red-600 hidden"></p>
               </div>
             </div>
 
-            <!-- Notification preferences -->
             <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
               <div>
                 <h3 class="font-heading text-lg font-black text-[#071B33]">Notification preferences</h3>
@@ -190,17 +186,15 @@
               </div>
             </div>
 
-            <!-- Terms -->
             <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-4">
               <h3 class="font-heading text-lg font-black text-[#071B33]">Before you proceed</h3>
               <label class="flex gap-3 text-sm font-semibold leading-6 text-slate-700 cursor-pointer">
-                <input type="checkbox" name="terms_online_banking" id="terms-check" class="mt-1 h-4 w-4 rounded border-slate-300 accent-blue-600" required />
+                <input type="checkbox" name="terms_online_banking" id="terms-check" class="mt-1 h-4 w-4 rounded border-slate-300 accent-blue-600" required title="You must agree to the terms to continue." />
                 <span>I agree to RustToGold's <a href="#" class="text-blue-600 hover:underline">online banking terms and conditions</a> and <a href="#" class="text-blue-600 hover:underline">privacy policy</a>.</span>
               </label>
-              <p id="terms-error" class="text-xs font-bold text-red-600 hidden"></p>
 
               <div class="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-end">
-                <button id="submit-btn" type="submit" class="inline-flex justify-center items-center gap-2 rounded-full bg-[#D6A54A] px-7 py-3 text-sm font-black text-[#071B33] shadow-lg shadow-[#D6A54A]/25 transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+                <button id="submit-btn" type="submit" class="inline-flex justify-center items-center gap-2 rounded-full bg-[#D6A54A] px-7 py-3 text-sm font-black text-[#071B33] shadow-lg shadow-[#D6A54A]/25 transition hover:-translate-y-0.5">
                   Activate online banking
                 </button>
               </div>
@@ -214,7 +208,6 @@
 <script>
 const pwInput = document.getElementById('password');
 const confirmInput = document.getElementById('confirm-password');
-const usernameInput = document.getElementById('username');
 const toggleBtn = document.getElementById('toggle-pw');
 const eyeIcon = document.getElementById('eye-icon');
 const eyeOffIcon = document.getElementById('eye-off-icon');
@@ -231,20 +224,20 @@ const rules = {
   special:   pw => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pw),
 };
 
-// FIXED: Expanded the array to accommodate a score of 5 (all 5 rules passed)
 const strengthConfig = [
-  { label: '', color: '' },                  // Score 0
-  { label: 'Weak', color: 'bg-red-400' },    // Score 1
-  { label: 'Fair', color: 'bg-amber-400' },  // Score 2
-  { label: 'Good', color: 'bg-yellow-400' }, // Score 3
-  { label: 'Strong', color: 'bg-emerald-400'},// Score 4
-  { label: 'Excellent', color: 'bg-emerald-500' } // Score 5
+  { label: '', color: '' },
+  { label: 'Weak', color: 'bg-red-400' },
+  { label: 'Fair', color: 'bg-amber-400' },
+  { label: 'Good', color: 'bg-yellow-400' },
+  { label: 'Strong', color: 'bg-emerald-400'},
+  { label: 'Excellent', color: 'bg-emerald-500' }
 ];
 
 function getScore(pw) {
   return Object.values(rules).filter(fn => fn(pw)).length;
 }
 
+// Visual Strength Meter Logic
 function updateStrength(pw) {
   if (!pw) {
     bars.forEach(b => { b.style.width = '0'; b.className = 'h-full rounded-full transition-all duration-300 w-0'; });
@@ -252,9 +245,7 @@ function updateStrength(pw) {
     return;
   }
   const score = getScore(pw);
-  const cfg = strengthConfig[score]; // FIXED: Safe to access directly now
-  
-  // Calculate how many bars to fill based on score (scale 1-5 down to 1-4 bars visually)
+  const cfg = strengthConfig[score];
   const barsToFill = Math.min(Math.ceil((score / 5) * 4), 4);
 
   bars.forEach((b, i) => {
@@ -266,6 +257,7 @@ function updateStrength(pw) {
   strengthLabel.className = `text-xs font-bold ${score <= 2 ? 'text-red-500' : score === 3 ? 'text-amber-500' : score === 4 ? 'text-yellow-600' : 'text-emerald-600'}`;
 }
 
+// Visual Checklist Logic
 function updateRequirements(pw) {
   reqItems.forEach(item => {
     const rule = item.dataset.rule;
@@ -285,27 +277,37 @@ function updateRequirements(pw) {
   });
 }
 
-function updateConfirmMatch() {
+// Checking Confirm Password Matches
+function checkPasswordsMatch() {
   const pw = pwInput.value;
   const cpw = confirmInput.value;
-  if (!cpw) { confirmMatchIcon.classList.add('hidden'); return; }
+  
+  if (!cpw) { 
+    confirmMatchIcon.classList.add('hidden'); 
+    confirmInput.setCustomValidity(""); // Clear custom validity when empty
+    return; 
+  }
+
   if (pw === cpw) {
     confirmMatchIcon.classList.remove('hidden');
     confirmMatchIcon.setAttribute('stroke', '#10b981');
-    setError('confirm-error', '');
+    confirmInput.setCustomValidity(""); // Passwords match, clear custom error
   } else {
     confirmMatchIcon.classList.add('hidden');
+    confirmInput.setCustomValidity("Passwords do not match."); // Force HTML5 validation error
   }
 }
 
+// Event Listeners for real-time visual updates
 pwInput.addEventListener('input', () => {
   updateStrength(pwInput.value);
   updateRequirements(pwInput.value);
-  updateConfirmMatch();
+  checkPasswordsMatch();
 });
 
-confirmInput.addEventListener('input', updateConfirmMatch);
+confirmInput.addEventListener('input', checkPasswordsMatch);
 
+// Password Visibility Toggle
 toggleBtn.addEventListener('click', () => {
   const isText = pwInput.type === 'text';
   pwInput.type = isText ? 'password' : 'text';
@@ -313,7 +315,7 @@ toggleBtn.addEventListener('click', () => {
   eyeOffIcon.classList.toggle('hidden', isText);
 });
 
-// Radio 2FA styling
+// Radio 2FA styling logic
 document.querySelectorAll('input[name="two_fa_method"]').forEach(radio => {
   radio.addEventListener('change', () => {
     document.querySelectorAll('.2fa-option').forEach(label => {
@@ -326,152 +328,11 @@ document.querySelectorAll('input[name="two_fa_method"]').forEach(radio => {
   });
 });
 
-function setError(id, msg) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = msg;
-  
-  if(id === 'error-banner') {
-    el.classList.toggle('hidden', !msg);
-  } else {
-    el.classList.toggle('hidden', !msg);
-  }
-}
-
-function showFieldError(input, msg) {
-  input.classList.toggle('border-red-400', !!msg);
-  input.classList.toggle('ring-2', !!msg);
-  input.classList.toggle('ring-red-100', !!msg);
-  input.classList.toggle('focus:border-red-400', !!msg);
-}
-
-document.getElementById('setup-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  let valid = true;
-
-  // Clear top error banner
-  setError('error-banner', '');
-
-  // Username
-  const username = usernameInput.value.trim();
-  if (!username) {
-    setError('username-error', 'Enter a username.');
-    showFieldError(usernameInput, true);
-    valid = false;
-  } else if (!/^[a-zA-Z0-9_]{6,20}$/.test(username)) {
-    setError('username-error', 'Username must be 6–20 characters using only letters, numbers, and underscores.');
-    showFieldError(usernameInput, true);
-    valid = false;
-  } else {
-    setError('username-error', '');
-    showFieldError(usernameInput, false);
-  }
-
-  // Password strength
-  const pw = pwInput.value;
-  const score = getScore(pw);
-  if (!pw) {
-    setError('password-error', 'Enter a password.');
-    showFieldError(pwInput, true);
-    valid = false;
-  } else if (score < 5) {
-    setError('password-error', 'Password does not meet all requirements.');
-    showFieldError(pwInput, true);
-    valid = false;
-  } else {
-    setError('password-error', '');
-    showFieldError(pwInput, false);
-  }
-
-  // Confirm password
-  const cpw = confirmInput.value;
-  if (!cpw) {
-    setError('confirm-error', 'Re-enter your password.');
-    showFieldError(confirmInput, true);
-    valid = false;
-  } else if (pw !== cpw) {
-    setError('confirm-error', 'Passwords don\'t match.');
-    showFieldError(confirmInput, true);
-    valid = false;
-  } else {
-    setError('confirm-error', '');
-    showFieldError(confirmInput, false);
-  }
-
-  // Security question
-  const sq = document.getElementById('security-question').value;
-  if (!sq) {
-    setError('sq-error', 'Select a security question.');
-    valid = false;
-  } else {
-    setError('sq-error', '');
-  }
-
-  // Security answer
-  const sa = document.getElementById('security-answer').value.trim();
-  if (!sa) {
-    setError('sa-error', 'Enter an answer to your security question.');
-    valid = false;
-  } else if (sa.length < 3) {
-    setError('sa-error', 'Answer must be at least 3 characters.');
-    valid = false;
-  } else {
-    setError('sa-error', '');
-  }
-
-  // Terms
-  if (!document.getElementById('terms-check').checked) {
-    setError('terms-error', 'You must agree to the terms to continue.');
-    valid = false;
-  } else {
-    setError('terms-error', '');
-  }
-
-  if (valid) {
-    const btn = document.getElementById('submit-btn');
-    btn.disabled = true;
-    btn.textContent = 'Setting up your account…';
-
-    // FIXED: Added POST Request Logic
-    try {
-      // Gather form data
-      const formData = new FormData(e.target);
-      const payload = Object.fromEntries(formData.entries());
-      
-      // Checkboxes handling (FormData only includes them if checked)
-      payload.notify_transactions = formData.has('notify_transactions');
-      payload.notify_login = formData.has('notify_login');
-      payload.notify_statements = formData.has('notify_statements');
-      payload.notify_promotions = formData.has('notify_promotions');
-      payload.terms_online_banking = formData.has('terms_online_banking');
-
-      const response = await fetch('/api/account_creation/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        // Success: Redirect user or show success state
-        btn.textContent = 'Success! Redirecting...';
-        btn.classList.add('bg-emerald-500', 'text-white');
-        btn.classList.remove('bg-[#D6A54A]', 'text-[#071B33]');
-        
-        // window.location.href = '/dashboard'; // Optional redirect
-      } else {
-        // API returned an error status
-        throw new Error('Failed to create account.');
-      }
-    } catch (error) {
-      // Network failure or thrown error
-      btn.disabled = false;
-      btn.textContent = 'Activate online banking';
-      setError('error-banner', 'An error occurred while setting up your account. Please try again later.');
-    }
-  }
-});
+// Since we are using HTML5 validation natively, we DO NOT use e.preventDefault() 
+// unless we specifically need to catch something HTML5 misses. 
+// HTML5 misses the password match, but we solved that using setCustomValidity above!
+// So, the browser will seamlessly intercept the click, pop up the native error 
+// bubbles, or send the POST request to your API if all rules are met.
 </script>
 </body>
 </html>

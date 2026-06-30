@@ -36,7 +36,7 @@ pub async fn login(
 ) -> Result<HttpResponse> {
     match services::authenticate_user(&data.db, form.into_inner()).await {
         Ok(user) => {
-            session.insert("user_id", user.id)?;
+            session.insert("user_id", user.id.to_string())?;
             session.insert("role", user.role)?;
             Ok(redirect("/customer/dashboard"))
         }

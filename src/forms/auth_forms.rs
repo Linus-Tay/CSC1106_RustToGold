@@ -9,10 +9,10 @@ pub struct LoginForm {
 #[derive(Debug, Deserialize)]
 pub struct AccountCreationForm {
     pub username: String,
-    pub password_hash: String,
-    pub transaction_alerts: bool,
-    pub login_notifications: bool,
-    pub promotions_and_offers: bool
+    pub password: String,
+    pub notify_transactions: Option<String>,
+    pub notify_login: Option<String>,
+    pub notify_promotions: Option<String>
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

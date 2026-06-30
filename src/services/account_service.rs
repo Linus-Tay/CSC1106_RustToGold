@@ -8,19 +8,9 @@ use chrono::NaiveDate;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-pub async fn register_user(db: &PgPool, customer_id: &Uuid, customer_email: &str, form: AccountCreationForm) -> Result<User, String> {
-    let username = form.username;
-    let password_hash = form.password_hash;
-    let user = user_repository::create_user(db, customer_id, &username, customer_email, &password_hash)
-    .await
-    .map_err(|_| "Could not create user".to_string())?;
-
-    Ok(user)
-}
-
 pub async fn load_customer_dashboard(
     db: &PgPool,
-    user_id: i64,
+    user_id: Uuid,
 ) -> Result<(BankAccount, Vec<Transaction>), String> {
     let account = account_repository::find_primary_account_by_user_id(db, user_id)
         .await
@@ -34,7 +24,7 @@ pub async fn load_customer_dashboard(
     Ok((account, transactions))
 }
 
-pub async fn list_transactions(db: &PgPool, user_id: i64) -> Result<Vec<Transaction>, String> {
+pub async fn list_transactions(db: &PgPool, user_id: Uuid) -> Result<Vec<Transaction>, String> {
     transaction_repository::find_recent_transactions_by_user_id(db, user_id, 50)
         .await
         .map_err(|_| "Could not load transaction history.".to_string())

@@ -1,12 +1,15 @@
+use crate::forms::auth_forms::AccountCreationForm;
 use crate::forms::{LoginForm, SignupForm};
 use crate::models::User;
 use crate::repositories::{account_repository, customer_repository, user_repository};
+use actix_web::Error;
 use argon2::{
-    password_hash::{PasswordHash, PasswordVerifier},
+    password_hash::{rand_core::OsRng, SaltString, PasswordHasher, PasswordHash, PasswordVerifier},
     Argon2,
 };
-use chrono::NaiveDate;
+use uuid::Uuid;
 use sqlx::PgPool;
+
 
 // pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, String> {
 //     let full_name = form.full_name.trim();
@@ -137,6 +140,19 @@ use sqlx::PgPool;
 //     Ok(user)
 // }
 
+pub async fn register_user(db: &PgPool, customer_id: &Uuid, customer_email: &str, form: AccountCreationForm) -> Result<User, String> {
+    let username = form.username;
+    let password_hash = hash_password(&form.password).map_err(|e| "Cannot create user".to_string())?;
+    let user = user_repository::create_user(db, customer_id, &username, customer_email, &password_hash)
+    .await
+    .map_err(|e| {
+        println!("Error creating user: {}", e.to_string());
+        "Could not create user".to_string()
+    })?;
+
+    Ok(user)
+}
+
 pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, String> {
     let email = form.email.trim().to_lowercase();
 
@@ -169,6 +185,13 @@ pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, Str
     Ok(user)
 }
 
+fn hash_password(password: &str) -> Result<String, Error> {
+    let salt = SaltString::generate(&mut OsRng);
+    let hash = Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+    Ok(hash.to_string())
+}
 fn verify_password(password: &str, password_hash: &str) -> bool {
     PasswordHash::new(password_hash)
         .ok()

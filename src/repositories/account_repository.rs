@@ -25,7 +25,7 @@ pub async fn create_primary_account(
 
 pub async fn find_primary_account_by_user_id(
     db: &PgPool,
-    user_id: i64,
+    user_id: Uuid,
 ) -> Result<Option<BankAccount>, sqlx::Error> {
     sqlx::query_as::<_, BankAccount>(
         r#"

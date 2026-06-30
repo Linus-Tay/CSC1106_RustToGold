@@ -13,6 +13,11 @@ use chrono::NaiveDate;
 use crate::AppState;
 use actix_web::{web, HttpResponse, Result};
 use serde::{Deserialize, Serialize};
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
+    Argon2,
+};
+
 
 #[derive(Deserialize)]
 pub struct AccountCreationQueryParams {

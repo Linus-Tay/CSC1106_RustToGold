@@ -42,7 +42,7 @@ pub async fn create_user(
         r#"
         INSERT INTO users (customer_id, username, email, password_hash, role, status)
         VALUES ($1, $2, $3, $4, 'customer', 'active')
-        RETURNING id, customer_id, full_name, email, phone_number, date_of_birth, password_hash, role, status,
+        RETURNING id, customer_id, username, email, password_hash, role, status,
                   last_login_at, created_at, updated_at
         "#,
     )
@@ -54,7 +54,7 @@ pub async fn create_user(
     .await
 }
 
-pub async fn update_last_login(db: &PgPool, user_id: i64) -> Result<(), sqlx::Error> {
+pub async fn update_last_login(db: &PgPool, user_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1")
         .bind(user_id)
         .execute(db)

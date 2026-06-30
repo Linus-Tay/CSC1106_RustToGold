@@ -6,8 +6,8 @@ pub mod product_service;
 pub mod email_service;
 pub mod customer_service;
 
-pub use self::account_service::{list_transactions, load_customer_dashboard, register_user};
-pub use self::auth_service::{authenticate_user};
+pub use self::account_service::{list_transactions, load_customer_dashboard};
+pub use self::auth_service::{authenticate_user, register_user};
 pub use self::profile_service::update_customer_profile;
 pub use self::product_service::{create_product, deposit, transfer, generate_account_number};
 pub use self::email_service::{send_template_email};

@@ -1,4 +1,4 @@
-use crate::controllers::{self, account_creation_init};
+use crate::controllers::{self, account_creation_init, account_creation_submit};
 use actix_web::{guard, web};
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
@@ -8,7 +8,6 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .route("/onboarding/{path}", web::get().to(controllers::onboarding))
             .route("/account-creation/init", web::get().to(controllers::account_creation_init))
             .route("/account-creation", web::get().to(controllers::account_creation))
-
             .service(
                 web::scope("/api")
                     .route("/onboarding/account", web::post().to(controllers::step1_post))

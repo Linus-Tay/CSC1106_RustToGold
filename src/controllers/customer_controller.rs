@@ -50,13 +50,13 @@ pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result
         Err(response) => return Ok(response),
     };
 
-    let account = match account_repository::find_primary_account_by_user_id(&data.db, user.id).await {
-        Ok(Some(account)) => account,
-        _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
-    };
+    // let account = match account_repository::find_primary_account_by_user_id(&data.db, user.id).await {
+    //     Ok(Some(account)) => account,
+    //     _ => return render_error("Account unavailable", "No bank account was found.".to_string()),
+    // };
 
-    let balance = display_money_without_symbol(account.balance_display());
-    let account_number = account.account_number;
+    let balance = String::new();// display_money_without_symbol(account.balance_display());
+    let account_number = String::new(); //account.account_number;
 
     render(DepositTemplate {
         account_number,

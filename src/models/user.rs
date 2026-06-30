@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
 pub struct User {
-    pub id: i64,
+    pub id: Uuid,
     pub customer_id: Uuid,
     pub username: String,
     pub email: String,

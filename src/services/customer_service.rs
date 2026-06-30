@@ -111,7 +111,7 @@ pub async fn approve_customer_with_product(app_state: &AppState, customer_id: Uu
     let email_to_send = customer.email.clone();
     let subject_to_send = format!("Welcome to Rust To Gold, your application has been activated {}", product.id);
     let template = AccountCreationEmailTemplate {
-        account_creation_link: format!("http://apply.localhost:3000/account-creation?link={}", account_creation_link.get_link())
+        account_creation_link: format!("http://apply.localhost:3000/account-creation/init?link={}", account_creation_link.get_link())
     };
 
     tokio::spawn(async move {

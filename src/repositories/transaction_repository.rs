@@ -1,9 +1,10 @@
 use crate::models::Transaction;
 use sqlx::PgPool;
+use uuid::Uuid;
 
 pub async fn find_recent_transactions_by_user_id(
     db: &PgPool,
-    user_id: i64,
+    user_id: Uuid,
     limit: i64,
 ) -> Result<Vec<Transaction>, sqlx::Error> {
     sqlx::query_as::<_, Transaction>(
