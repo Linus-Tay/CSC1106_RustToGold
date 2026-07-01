@@ -1,12 +1,13 @@
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_customer};
 use crate::forms::account_forms::{CreateBankAccountForm, TransferForm};
-use crate::forms::{CardApplicationForm, DepositForm, PayNowRegisterForm, PayNowTransferForm, ProfileForm, StatementRequest};
+use crate::forms::{CardApplicationForm, DepositForm, GiroArrangementForm, MoneyLockForm, PayNowRegisterForm, PayNowTransferForm, ProfileForm, StatementRequest, TransactionLimitForm};
 use crate::repositories::customer_repository;
 use crate::services;
 use crate::views::{
     render, CardDashboardTemplate, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate,
-    PayNowTemplate, ProfileTemplate, StatementTemplate, TransactionsTemplate, TransferTemplate,
+    GiroTemplate, PayNowTemplate, ProfileTemplate, StatementTemplate, TransactionControlsTemplate,
+    TransactionsTemplate, TransferTemplate,
 };
 use crate::AppState;
 use crate::models::Product;
@@ -17,15 +18,75 @@ fn display_money_without_symbol(value: String) -> String {
     value.trim_start_matches('$').to_string()
 }
 
-fn can_apply_account_products(accounts: &[Product]) -> (bool, bool) {
-    let has_everyday_savings = accounts
-        .iter()
-        .any(|account| account.product_id == "everyday_savings" && account.status != "closed");
-    let has_high_yield_savings = accounts
-        .iter()
-        .any(|account| account.product_id == "high_yield_savings" && account.status != "closed");
+struct DashboardLimitSummary {
+    daily_limit_display: String,
+    outgoing_today_display: String,
+    remaining_today_display: String,
+}
 
-    (!has_everyday_savings, !has_high_yield_savings)
+async fn load_dashboard_limit_summary(
+    data: &web::Data<AppState>,
+    customer_id: uuid::Uuid,
+) -> DashboardLimitSummary {
+    match services::load_transaction_controls_page(&data.db, customer_id).await {
+        Ok(page) => DashboardLimitSummary {
+            daily_limit_display: page.controls.daily_limit_display(),
+            outgoing_today_display: page.outgoing_today_display,
+            remaining_today_display: page.remaining_today_display,
+        },
+        Err(_) => DashboardLimitSummary {
+            daily_limit_display: "Unavailable".to_string(),
+            outgoing_today_display: "Unavailable".to_string(),
+            remaining_today_display: "Unavailable".to_string(),
+        },
+    }
+}
+
+struct SavingsApplicationState {
+    can_apply_everyday_savings: bool,
+    can_apply_high_yield_savings: bool,
+    notice: String,
+    has_notice: bool,
+}
+
+fn savings_application_state(accounts: &[Product]) -> SavingsApplicationState {
+    let mut has_everyday_savings = false;
+    let mut has_high_yield_savings = false;
+    let mut pending_labels: Vec<&str> = Vec::new();
+
+    for account in accounts.iter().filter(|account| account.status != "closed") {
+        match account.product_id.as_str() {
+            "everyday_savings" => {
+                has_everyday_savings = true;
+                if account.status == "inactive" {
+                    pending_labels.push("Everyday Savings");
+                }
+            }
+            "high_yield_savings" => {
+                has_high_yield_savings = true;
+                if account.status == "inactive" {
+                    pending_labels.push("High-Yield Savings");
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let notice = if !pending_labels.is_empty() {
+        format!(
+            "{} application received. Please wait up to 2 business days for admin approval. We will email you when it is ready.",
+            pending_labels.join(" and ")
+        )
+    } else {
+        String::new()
+    };
+
+    SavingsApplicationState {
+        can_apply_everyday_savings: !has_everyday_savings,
+        can_apply_high_yield_savings: !has_high_yield_savings,
+        has_notice: !notice.is_empty(),
+        notice,
+    }
 }
 
 pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
@@ -42,15 +103,20 @@ pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<Ht
 
     match services::load_customer_dashboard(&data.db, customer_id).await {
         Ok(dashboard) => {
-            let (can_apply_everyday_savings, can_apply_high_yield_savings) =
-                can_apply_account_products(&dashboard.accounts);
+            let account_state = savings_application_state(&dashboard.accounts);
+            let limit_summary = load_dashboard_limit_summary(&data, customer_id).await;
 
             render(DashboardTemplate {
                 full_name: customer.full_name,
                 accounts: dashboard.accounts.clone(),
                 has_accounts: !dashboard.accounts.is_empty(),
-                can_apply_everyday_savings,
-                can_apply_high_yield_savings,
+                can_apply_everyday_savings: account_state.can_apply_everyday_savings,
+                can_apply_high_yield_savings: account_state.can_apply_high_yield_savings,
+                account_application_notice: account_state.notice,
+                has_account_application_notice: account_state.has_notice,
+                daily_limit_display: limit_summary.daily_limit_display,
+                outgoing_today_display: limit_summary.outgoing_today_display,
+                remaining_today_display: limit_summary.remaining_today_display,
                 create_account_error: String::new(),
                 has_create_account_error: false,
             })
@@ -78,15 +144,20 @@ pub async fn create_bank_account(
                     .await
                     .map(|customer| customer.full_name)
                     .unwrap_or_else(|_| user.username.clone());
-                let (can_apply_everyday_savings, can_apply_high_yield_savings) =
-                    can_apply_account_products(&dashboard.accounts);
+                let account_state = savings_application_state(&dashboard.accounts);
+                let limit_summary = load_dashboard_limit_summary(&data, customer_id).await;
 
                 render(DashboardTemplate {
                     full_name,
                     accounts: dashboard.accounts.clone(),
                     has_accounts: !dashboard.accounts.is_empty(),
-                    can_apply_everyday_savings,
-                    can_apply_high_yield_savings,
+                    can_apply_everyday_savings: account_state.can_apply_everyday_savings,
+                    can_apply_high_yield_savings: account_state.can_apply_high_yield_savings,
+                    account_application_notice: account_state.notice,
+                    has_account_application_notice: account_state.has_notice,
+                    daily_limit_display: limit_summary.daily_limit_display,
+                    outgoing_today_display: limit_summary.outgoing_today_display,
+                    remaining_today_display: limit_summary.remaining_today_display,
                     create_account_error: error,
                     has_create_account_error: true,
                 })
@@ -581,3 +652,150 @@ pub async fn update_profile(
         Err(error) => render_error("Profile update failed", error),
     }
 }
+
+async fn render_transaction_controls_dashboard(
+    data: &web::Data<AppState>,
+    customer_id: uuid::Uuid,
+    error: String,
+    success: String,
+) -> Result<HttpResponse> {
+    match services::load_transaction_controls_page(&data.db, customer_id).await {
+        Ok(page) => render(TransactionControlsTemplate {
+            controls: page.controls,
+            alerts: page.alerts.clone(),
+            has_alerts: !page.alerts.is_empty(),
+            error: error.clone(),
+            has_error: !error.is_empty(),
+            success: success.clone(),
+            has_success: !success.is_empty(),
+        }),
+        Err(message) => render_error("Transaction controls unavailable", message),
+    }
+}
+
+pub async fn transaction_controls_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    render_transaction_controls_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
+}
+
+pub async fn update_transaction_limit(
+    data: web::Data<AppState>,
+    session: Session,
+    form: web::Form<TransactionLimitForm>,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+    let customer_id = user.customer_id_or_nil();
+
+    match services::update_daily_transaction_limit(&data.db, customer_id, form.into_inner()).await {
+        Ok(controls) => {
+            let message = format!(
+                "Daily transaction limit updated to {}. You can change it again after the 24-hour cooldown.",
+                controls.daily_limit_display()
+            );
+            render_transaction_controls_dashboard(&data, customer_id, String::new(), message).await
+        }
+        Err(error) => render_transaction_controls_dashboard(&data, customer_id, error, String::new()).await,
+    }
+}
+
+pub async fn update_money_lock(
+    data: web::Data<AppState>,
+    session: Session,
+    form: web::Form<MoneyLockForm>,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+    let customer_id = user.customer_id_or_nil();
+
+    let form_data = form.into_inner();
+    let action = form_data.action.clone();
+    match services::update_money_lock(&data.db, customer_id, form_data).await {
+        Ok(_) => {
+            let message = if action == "enable" {
+                "Money Lock enabled. Outgoing transfers are now blocked.".to_string()
+            } else {
+                "Money Lock unlocked. Outgoing transfers are available again.".to_string()
+            };
+            render_transaction_controls_dashboard(&data, customer_id, String::new(), message).await
+        }
+        Err(error) => render_transaction_controls_dashboard(&data, customer_id, error, String::new()).await,
+    }
+}
+
+async fn render_giro_dashboard(
+    data: &web::Data<AppState>,
+    customer_id: uuid::Uuid,
+    error: String,
+    success: String,
+) -> Result<HttpResponse> {
+    match services::load_giro_dashboard(&data.db, customer_id).await {
+        Ok(page) => render(GiroTemplate {
+            accounts: page.accounts.clone(),
+            has_accounts: !page.accounts.is_empty(),
+            arrangements: page.arrangements.clone(),
+            has_arrangements: !page.arrangements.is_empty(),
+            error: error.clone(),
+            has_error: !error.is_empty(),
+            success: success.clone(),
+            has_success: !success.is_empty(),
+        }),
+        Err(message) => render_error("GIRO unavailable", message),
+    }
+}
+
+pub async fn giro_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    render_giro_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
+}
+
+pub async fn create_giro_arrangement(
+    data: web::Data<AppState>,
+    session: Session,
+    form: web::Form<GiroArrangementForm>,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+    let customer_id = user.customer_id_or_nil();
+
+    match services::create_giro_arrangement(&data.db, customer_id, form.into_inner()).await {
+        Ok(()) => render_giro_dashboard(&data, customer_id, String::new(), "GIRO arrangement created successfully.".to_string()).await,
+        Err(error) => render_giro_dashboard(&data, customer_id, error, String::new()).await,
+    }
+}
+
+pub async fn cancel_giro_arrangement(
+    data: web::Data<AppState>,
+    session: Session,
+    path: web::Path<String>,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+    let customer_id = user.customer_id_or_nil();
+    let arrangement_id = match uuid::Uuid::parse_str(&path.into_inner()) {
+        Ok(value) => value,
+        Err(_) => return render_giro_dashboard(&data, customer_id, "Invalid GIRO arrangement selected.".to_string(), String::new()).await,
+    };
+
+    match services::cancel_giro_arrangement(&data.db, customer_id, arrangement_id).await {
+        Ok(()) => render_giro_dashboard(&data, customer_id, String::new(), "GIRO arrangement cancelled.".to_string()).await,
+        Err(error) => render_giro_dashboard(&data, customer_id, error, String::new()).await,
+    }
+}
+

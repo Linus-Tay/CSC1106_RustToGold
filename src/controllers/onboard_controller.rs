@@ -1,4 +1,4 @@
-use crate::controllers::session_guard::{admin_session_user_id, customer_session_user_id, redirect};
+use crate::controllers::session_guard::redirect;
 use crate::forms::auth_forms::AccountCreationForm;
 use crate::forms::onboard_forms::{Step3Form, Step4Form};
 use crate::forms::{OnboardingForm, Step1Form, Step2Form};
@@ -81,13 +81,8 @@ pub async fn account_creation_init(
     data: web::Data<AppState>,
     session: Session,
 ) -> Result<HttpResponse> {
-    if customer_session_user_id(&session).is_some() {
-        return Ok(redirect("/customer/dashboard"));
-    }
-    if admin_session_user_id(&session).is_some() {
-        return Ok(redirect("/admin/dashboard"));
-    }
-
+    // Account-creation links are demo-safe public links.
+    // Do not redirect an existing admin/customer session away from this flow.
     match services::validate_account_creation_link(&data, &query.link).await {
         Ok(true) => {
             session.insert("account_creation_link", query.link.clone())?;
@@ -101,13 +96,7 @@ pub async fn account_creation(
     data: web::Data<AppState>,
     session: Session,
 ) -> Result<HttpResponse> {
-    if customer_session_user_id(&session).is_some() {
-        return Ok(redirect("/customer/dashboard"));
-    }
-    if admin_session_user_id(&session).is_some() {
-        return Ok(redirect("/admin/dashboard"));
-    }
-
+    // Keep this accessible even when an admin is signed in, so activation links can be tested directly.
     let account_creation_link = match session.get::<String>("account_creation_link")? {
         Some(link) => link,
         None => return render(NotFoundTemplate),

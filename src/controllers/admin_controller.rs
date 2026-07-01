@@ -1,10 +1,11 @@
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_admin};
+use crate::forms::MonitoringStatusForm;
 use crate::services;
 use crate::views::{
     render, AdminAuditLogTemplate, AdminCustomerAccountsTemplate,
-    AdminCustomerApplicationsTemplate, AdminDashboardTemplate, AdminPersonalLoansTemplate,
-    AdminStaffTemplate,
+    AdminCustomerApplicationsTemplate, AdminDashboardTemplate, AdminHighValueMonitoringTemplate,
+    AdminPersonalLoansTemplate, AdminStaffTemplate,
 };
 use crate::AppState;
 use actix_session::Session;
@@ -172,6 +173,59 @@ pub async fn reject_personal_loan(
     match services::reject_personal_loan(&data.db, staff.id, loan_id).await {
         Ok(_) => Ok(redirect("/admin/personal-loans")),
         Err(error) => render_error("Personal loan rejection failed", error),
+    }
+}
+
+
+pub async fn admin_high_value_monitoring_page(
+    data: web::Data<AppState>,
+    session: Session,
+) -> Result<HttpResponse> {
+    if let Err(response) = require_admin(&data, &session).await {
+        return Ok(response);
+    }
+
+    match services::load_high_value_monitoring_dashboard(&data.db).await {
+        Ok(page) => render(AdminHighValueMonitoringTemplate {
+            has_alerts: !page.alerts.is_empty(),
+            alerts: page.alerts,
+            blocked_count: page.blocked_count,
+            flagged_count: page.flagged_count,
+            cleared_count: page.cleared_count,
+            error: String::new(),
+            has_error: false,
+        }),
+        Err(error) => render(AdminHighValueMonitoringTemplate {
+            alerts: Vec::new(),
+            has_alerts: false,
+            blocked_count: 0,
+            flagged_count: 0,
+            cleared_count: 0,
+            error,
+            has_error: true,
+        }),
+    }
+}
+
+pub async fn update_high_value_alert_status(
+    data: web::Data<AppState>,
+    session: Session,
+    path: web::Path<String>,
+    form: web::Form<MonitoringStatusForm>,
+) -> Result<HttpResponse> {
+    let staff = match require_admin(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    let alert_id = match parse_uuid(path.into_inner()) {
+        Ok(value) => value,
+        Err(response) => return Ok(response),
+    };
+
+    match services::update_high_value_alert_status(&data.db, staff.id, alert_id, form.into_inner()).await {
+        Ok(_) => Ok(redirect("/admin/high-value-monitoring")),
+        Err(error) => render_error("Monitoring update failed", error),
     }
 }
 

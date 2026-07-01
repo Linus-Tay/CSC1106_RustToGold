@@ -5,6 +5,9 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS fraud_alerts CASCADE;
+DROP TABLE IF EXISTS giro_arrangements CASCADE;
+DROP TABLE IF EXISTS transaction_controls CASCADE;
 DROP TABLE IF EXISTS cards CASCADE;
 DROP TABLE IF EXISTS fixed_deposits CASCADE;
 DROP TABLE IF EXISTS fixed_deposit_plans CASCADE;
@@ -112,7 +115,9 @@ CREATE TABLE transactions (
             'home_loan_payment',
             'fixed_deposit_open',
             'fixed_deposit_withdrawal',
-            'fixed_deposit_payout'
+            'fixed_deposit_payout',
+            'giro_payment_out',
+            'giro_payment_in'
         )),
     CONSTRAINT transactions_amount_positive
         CHECK (amount_cents > 0),
@@ -235,6 +240,51 @@ CREATE TABLE registered_paynow (
         CHECK (status IN ('active', 'inactive'))
 );
 
+CREATE TABLE transaction_controls (
+    customer_id                 UUID PRIMARY KEY REFERENCES customers(id) ON DELETE CASCADE,
+    daily_limit_cents           BIGINT NOT NULL DEFAULT 500000 CHECK (daily_limit_cents BETWEEN 10000 AND 5000000),
+    pending_daily_limit_cents   BIGINT NULL CHECK (pending_daily_limit_cents BETWEEN 10000 AND 5000000),
+    limit_change_effective_at   TIMESTAMPTZ NULL,
+    money_lock_enabled          BOOLEAN NOT NULL DEFAULT FALSE,
+    unlock_requested_at         TIMESTAMPTZ NULL,
+    unlock_effective_at         TIMESTAMPTZ NULL,
+    created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE fraud_alerts (
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id        UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    product_id         UUID NULL REFERENCES customer_products(id) ON DELETE SET NULL,
+    rule_code          TEXT NOT NULL,
+    severity           TEXT NOT NULL DEFAULT 'medium' CHECK (severity IN ('low', 'medium', 'high')),
+    channel            TEXT NOT NULL,
+    amount_cents       BIGINT NOT NULL DEFAULT 0 CHECK (amount_cents >= 0),
+    message            TEXT NOT NULL,
+    status             TEXT NOT NULL DEFAULT 'blocked' CHECK (status IN ('blocked', 'flagged', 'reviewed', 'cleared')),
+    review_notes       TEXT NULL,
+    reviewed_by        UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_at        TIMESTAMPTZ NULL,
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE giro_arrangements (
+    id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id              UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    from_product_id          UUID NOT NULL REFERENCES customer_products(id) ON DELETE RESTRICT,
+    recipient_product_id     UUID NOT NULL REFERENCES customer_products(id) ON DELETE RESTRICT,
+    payee_name               TEXT NOT NULL,
+    amount_cents             BIGINT NOT NULL CHECK (amount_cents > 0),
+    frequency                TEXT NOT NULL CHECK (frequency IN ('weekly', 'monthly')),
+    next_payment_date        DATE NOT NULL,
+    end_date                 DATE NULL,
+    note                     TEXT NULL,
+    status                   TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'cancelled')),
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (end_date IS NULL OR end_date >= next_payment_date)
+);
+
 CREATE UNIQUE INDEX idx_customers_active_nric_unique
     ON customers (lower(nric))
     WHERE kyc_status <> 'rejected';
@@ -263,6 +313,12 @@ CREATE INDEX idx_registered_paynow_linked_account_id ON registered_paynow(linked
 CREATE UNIQUE INDEX idx_registered_paynow_active_identifier
     ON registered_paynow (paynow_type, lower(paynow_id))
     WHERE status = 'active';
+CREATE INDEX idx_transaction_controls_customer_id ON transaction_controls(customer_id);
+CREATE INDEX idx_fraud_alerts_customer_created_at ON fraud_alerts(customer_id, created_at DESC);
+CREATE INDEX idx_fraud_alerts_status_created_at ON fraud_alerts(status, created_at DESC);
+CREATE INDEX idx_fraud_alerts_rule_created_at ON fraud_alerts(rule_code, created_at DESC);
+CREATE INDEX idx_giro_arrangements_customer_status ON giro_arrangements(customer_id, status);
+CREATE INDEX idx_giro_arrangements_next_payment ON giro_arrangements(next_payment_date, status);
 CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
 CREATE INDEX idx_audit_logs_actor_created_at ON audit_logs(actor_user_id, created_at DESC);
 

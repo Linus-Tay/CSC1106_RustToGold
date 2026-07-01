@@ -36,7 +36,7 @@ pub async fn find_customer_cash_transactions(
         FROM transactions t
         JOIN customer_products cp ON cp.id = t.product_id
         WHERE cp.customer_id = $1
-          AND t.transaction_type IN ('deposit', 'transfer_in', 'transfer_out', 'paynow_transfer_in', 'paynow_transfer_out')
+          AND t.transaction_type IN ('deposit', 'transfer_in', 'transfer_out', 'internal_transfer_in', 'internal_transfer_out', 'paynow_transfer_in', 'paynow_transfer_out', 'giro_payment_in', 'giro_payment_out')
         ORDER BY t.created_at DESC, t.id DESC
         LIMIT $2
         "#,

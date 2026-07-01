@@ -6,13 +6,16 @@ pub mod customer_service;
 pub mod email_service;
 pub mod fixed_deposit_service;
 pub mod home_loan_service;
+pub mod giro_service;
 pub mod loan_service;
+pub mod monitoring_service;
 pub mod onboard_service;
 pub mod paynow_service;
 pub mod product_service;
 pub mod profile_service;
 pub mod statement_service;
 pub mod support;
+pub mod transaction_control_service;
 
 pub use self::account_service::{
     list_fixed_deposit_activity, list_loan_activity, list_transactions, load_customer_dashboard,
@@ -33,13 +36,16 @@ pub use self::fixed_deposit_service::{
     load_fixed_deposit_create_page, load_fixed_deposit_dashboard, update_plan,
     withdraw_fixed_deposit, FixedDepositDashboard,
 };
+pub use self::giro_service::{cancel_giro_arrangement, create_giro_arrangement, load_giro_dashboard, GiroDashboard};
 pub use self::home_loan_service::{
     approve_home_loan, list_admin_home_loans, load_home_loan_dashboard, pay_home_loan,
     reject_home_loan, submit_home_loan_application, HomeLoanDashboard,
 };
 pub use self::loan_service::{apply_personal_loan, load_loan_dashboard, pay_personal_loan, LoanDashboard};
+pub use self::monitoring_service::{load_high_value_monitoring_dashboard, update_high_value_alert_status, HighValueMonitoringDashboard};
 pub use self::onboard_service::get_product_details;
 pub use self::paynow_service::{load_paynow_dashboard, register_paynow, transfer_paynow, PayNowDashboard};
 pub use self::product_service::{create_bank_account, create_product, deposit, generate_account_number, list_active_customer_products, list_customer_products, transfer};
 pub use self::profile_service::update_customer_profile;
 pub use self::statement_service::{build_bank_statement, load_statement_page, render_statement_pdf, statement_pdf_filename, StatementPageData};
+pub use self::transaction_control_service::{load_transaction_controls_page, update_daily_transaction_limit, update_money_lock, validate_outgoing_transaction, TransactionControlsPageData};

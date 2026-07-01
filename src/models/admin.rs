@@ -9,6 +9,7 @@ pub struct AdminDashboardSummary {
     pub pending_account_product_count: i64,
     pub pending_personal_loan_count: i64,
     pub pending_home_loan_count: i64,
+    pub high_value_alert_count: i64,
     pub active_fixed_deposit_count: i64,
     pub total_customer_count: i64,
 }

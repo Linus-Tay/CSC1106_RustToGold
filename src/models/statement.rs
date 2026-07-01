@@ -28,6 +28,8 @@ impl StatementTransaction {
             "withdrawal" => "Withdrawal".to_string(),
             "transfer_in" => "Transfer In".to_string(),
             "transfer_out" => "Transfer Out".to_string(),
+            "internal_transfer_in" => "Own Account Transfer In".to_string(),
+            "internal_transfer_out" => "Own Account Transfer Out".to_string(),
             "paynow_transfer_in" => "PayNow In".to_string(),
             "paynow_transfer_out" => "PayNow Out".to_string(),
             "loan_disbursement" => "Loan Disbursement".to_string(),

@@ -27,30 +27,40 @@
             <form action="/customer/accounts/create" method="post" class="inline-account-form">
               <input type="hidden" name="account_type" value="everyday_savings" />
               <input type="hidden" name="nickname" value="Everyday Savings" />
-              <button class="c-button c-button--secondary" type="submit"><i data-lucide="landmark"></i> Apply Everyday Savings</button>
+              <button class="c-button c-button--secondary c-button--savings" type="submit"><i data-lucide="landmark"></i> Apply Everyday Savings</button>
             </form>
             {% endif %}
             {% if can_apply_high_yield_savings %}
             <form action="/customer/accounts/create" method="post" class="inline-account-form">
               <input type="hidden" name="account_type" value="high_yield_savings" />
               <input type="hidden" name="nickname" value="High-Yield Savings" />
-              <button class="c-button c-button--secondary" type="submit"><i data-lucide="trending-up"></i> Apply High-Yield Savings</button>
+              <button class="c-button c-button--secondary c-button--gold" type="submit"><i data-lucide="trending-up"></i> Apply High-Yield Savings</button>
             </form>
             {% endif %}
-            {% if can_apply_everyday_savings %}{% else %}{% if can_apply_high_yield_savings %}{% else %}
-            <span class="account-apply-complete"><i data-lucide="check-circle"></i> All savings account types held</span>
-            {% endif %}{% endif %}
           </div>
         </div>
 
         {% if has_create_account_error %}
         <div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ create_account_error }}</div>
         {% endif %}
+        {% if has_account_application_notice %}
+        <div class="account-application-banner">
+          <span><i data-lucide="mail-check"></i></span>
+          <div>
+            <strong>Account application update</strong>
+            <p>{{ account_application_notice }}</p>
+          </div>
+        </div>
+        {% endif %}
 
         {% if has_accounts %}
+        <div class="account-limit-note">
+          <i data-lucide="shield-check"></i>
+          <span>Daily external transfer limit: <strong>{{ daily_limit_display }}</strong> · Used today: <strong>{{ outgoing_today_display }}</strong> · Remaining: <strong>{{ remaining_today_display }}</strong></span>
+        </div>
         <div class="account-list-view account-list-view--dashboard account-list-view--no-primary">
           {% for account in accounts %}
-          <article class="account-list-row account-list-row--balanced">
+          <article class="account-list-row account-list-row--balanced {% if account.product_id == "high_yield_savings" %}account-list-row--gold{% else %}account-list-row--blue{% endif %}">
             <div class="account-list-row__main">
               <span class="account-list-row__icon"><i data-lucide="landmark"></i></span>
               <div>
@@ -82,21 +92,31 @@
           </div>
         </div>
 
-        <div class="portal-list-view portal-list-view--comfortable">
-          <a class="portal-list-row portal-list-row--featured" href="/customer/paynow">
+        <div class="portal-action-grid portal-action-grid--auto dashboard-card-grid">
+          <a class="portal-action-card portal-action-card--featured" href="/customer/paynow">
             <span><i data-lucide="scan-line"></i></span>
-            <div><strong>PayNow</strong><small>Register one PayNow mobile number first, then send money using another PayNow number.</small></div>
-            <i data-lucide="chevron-right"></i>
+            <strong>PayNow</strong>
+            <small>Register one PayNow mobile number first, then send money using another PayNow number.</small>
           </a>
-          <a class="portal-list-row" href="/customer/deposit">
+          <a class="portal-action-card" href="/customer/deposit">
             <span><i data-lucide="circle-dollar-sign"></i></span>
-            <div><strong>Deposit Money</strong><small>Select which active account receives the deposit.</small></div>
-            <i data-lucide="chevron-right"></i>
+            <strong>Deposit Money</strong>
+            <small>Select which active account receives the deposit.</small>
           </a>
-          <a class="portal-list-row" href="/customer/transfer">
+          <a class="portal-action-card" href="/customer/transfer">
             <span><i data-lucide="send"></i></span>
-            <div><strong>Transfer Money</strong><small>Select the source account and send to a RustToGold bank account number.</small></div>
-            <i data-lucide="chevron-right"></i>
+            <strong>Transfer Money</strong>
+            <small>Select the source account and send to a RustToGold bank account number.</small>
+          </a>
+          <a class="portal-action-card portal-action-card--gold" href="/customer/giro">
+            <span><i data-lucide="repeat-2"></i></span>
+            <strong>GIRO</strong>
+            <small>Create weekly or monthly recurring payment arrangements.</small>
+          </a>
+          <a class="portal-action-card portal-action-card--security" href="/customer/transaction-controls">
+            <span><i data-lucide="shield-check"></i></span>
+            <strong>Transaction Controls</strong>
+            <small>Set daily limits, manage Money Lock and review fraud rule blocks.</small>
           </a>
         </div>
       </section>
@@ -109,27 +129,35 @@
           </div>
         </div>
 
-        <div class="product-list-view product-list-view--comfortable">
-          <a class="product-list-row product-list-row--navy" href="/customer/loans/apply">
-            <span><i data-lucide="file-signature"></i></span>
-            <div><strong>Personal Loans</strong><small>Apply for a personal loan and choose which active account receives the disbursement.</small></div>
-            <em>Apply</em>
-          </a>
-          <a class="product-list-row" href="/customer/home-loans/apply">
-            <span><i data-lucide="home"></i></span>
-            <div><strong>Home Loans</strong><small>Apply for property financing and choose the account used for down-payment checks.</small></div>
-            <em>Apply</em>
-          </a>
-          <a class="product-list-row" href="/customer/fixed-deposits/new">
-            <span><i data-lucide="piggy-bank"></i></span>
-            <div><strong>Fixed Deposits</strong><small>Create fixed deposit placements from a selected active funding account.</small></div>
-            <em>New Placement</em>
-          </a>
-          <a class="product-list-row" href="/customer/cards">
-            <span><i data-lucide="credit-card"></i></span>
-            <div><strong>Card Products</strong><small>Apply for a debit or student card linked to one of your active accounts.</small></div>
-            <em>Apply</em>
-          </a>
+        <div class="product-grid product-grid--banking dashboard-card-grid">
+          <article class="product-card product-card--navy">
+            <a class="product-card__main-link" href="/customer/loans/apply" aria-label="Apply for a personal loan"></a>
+            <div class="product-card__icon"><i data-lucide="file-signature"></i></div>
+            <h3>Personal Loans</h3>
+            <p>Apply for a personal loan and choose which active account receives the disbursement.</p>
+            <div class="product-card__actions"><a href="/customer/loans/apply"><i data-lucide="file-plus"></i> Apply</a></div>
+          </article>
+          <article class="product-card">
+            <a class="product-card__main-link" href="/customer/home-loans/apply" aria-label="Apply for a home loan"></a>
+            <div class="product-card__icon"><i data-lucide="home"></i></div>
+            <h3>Home Loans</h3>
+            <p>Apply for property financing and choose the account used for down-payment checks.</p>
+            <div class="product-card__actions"><a href="/customer/home-loans/apply"><i data-lucide="file-plus"></i> Apply</a></div>
+          </article>
+          <article class="product-card">
+            <a class="product-card__main-link" href="/customer/fixed-deposits/new" aria-label="Create a fixed deposit"></a>
+            <div class="product-card__icon"><i data-lucide="piggy-bank"></i></div>
+            <h3>Fixed Deposits</h3>
+            <p>Create fixed deposit placements from a selected active funding account.</p>
+            <div class="product-card__actions"><a href="/customer/fixed-deposits/new"><i data-lucide="plus-circle"></i> New Placement</a></div>
+          </article>
+          <article class="product-card product-card--gold-accent">
+            <a class="product-card__main-link" href="/customer/cards" aria-label="Apply for a card product"></a>
+            <div class="product-card__icon"><i data-lucide="credit-card"></i></div>
+            <h3>Card Products</h3>
+            <p>Apply for a debit or student card linked to one of your active accounts.</p>
+            <div class="product-card__actions"><a href="/customer/cards"><i data-lucide="credit-card"></i> Apply</a></div>
+          </article>
         </div>
       </section>
 

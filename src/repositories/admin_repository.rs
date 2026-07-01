@@ -16,6 +16,7 @@ pub async fn dashboard_summary(db: &PgPool) -> Result<AdminDashboardSummary, sql
              WHERE cp.status = 'inactive' AND c.kyc_status = 'approved')::BIGINT AS pending_account_product_count,
             (SELECT COUNT(*) FROM personal_loans WHERE status = 'pending')::BIGINT AS pending_personal_loan_count,
             (SELECT COUNT(*) FROM home_loan_applications WHERE status = 'pending')::BIGINT AS pending_home_loan_count,
+            (SELECT COUNT(*) FROM fraud_alerts WHERE rule_code IN ('HIGH_VALUE_MONITORING', 'HIGH_VALUE_REVIEW') AND status IN ('blocked', 'flagged', 'reviewed'))::BIGINT AS high_value_alert_count,
             (SELECT COUNT(*) FROM fixed_deposits WHERE status IN ('active', 'matured'))::BIGINT AS active_fixed_deposit_count,
             (SELECT COUNT(*) FROM customers)::BIGINT AS total_customer_count
         "#,

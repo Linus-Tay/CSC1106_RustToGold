@@ -38,10 +38,12 @@ pub async fn register_paynow(
     let linked_product_id = Uuid::parse_str(form.linked_product_id.trim())
         .map_err(|_| "Choose a valid account to link.".to_string())?;
 
+    // Only active accounts can receive PayNow funds.
     product_repository::get_active_product_for_customer_by_id(db, customer_id, linked_product_id)
         .await
         .map_err(|_| "Choose an active account that belongs to you.".to_string())?;
 
+    // A PayNow number/NRIC can only point to one active customer at a time.
     if let Some(existing) = paynow_repository::find_active_by_identifier(db, &paynow_type, &paynow_id)
         .await
         .map_err(|_| "Could not check existing PayNow registrations.".to_string())?
@@ -88,9 +90,22 @@ pub async fn transfer_paynow(
     let amount = Money::parse_dollars(&form.amount)?;
     let note = clean_optional_text(&form.note);
 
+    // Keep PayNow single-transfer value inside the configured limit.
     if amount.cents() > 50_000_00 {
-        return Err("PayNow transfers are capped at $50,000.00 per transaction in this demo.".to_string());
+        return Err("PayNow transfers are capped at $50,000.00 per transaction.".to_string());
     }
+
+    // Apply daily limit, Money Lock and monitoring before funds move.
+    crate::services::transaction_control_service::validate_outgoing_transaction(
+        db,
+        customer_id,
+        Some(from_product_id),
+        amount.cents(),
+        note.as_deref(),
+        "PayNow",
+        true,
+    )
+    .await?;
 
     match paynow_repository::execute_paynow_transfer(
         db,
@@ -143,6 +158,7 @@ fn normalise_phone_number(input: &str) -> Result<String, String> {
         value = value[2..].to_string();
     }
 
+    // Singapore PayNow mobile numbers are stored as local 8-digit numbers.
     if value.len() != 8 || !value.chars().all(|character| character.is_ascii_digit()) {
         return Err("Enter an 8-digit Singapore mobile number.".to_string());
     }

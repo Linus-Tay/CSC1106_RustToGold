@@ -255,14 +255,19 @@ pub async fn transfer(
     .fetch_one(&mut *tx)
     .await?;
 
+    let is_own_account_transfer = sender_product.customer_id == recipient_product.customer_id;
+    let outgoing_type = if is_own_account_transfer { "internal_transfer_out" } else { "transfer_out" };
+    let incoming_type = if is_own_account_transfer { "internal_transfer_in" } else { "transfer_in" };
+
     sqlx::query_as::<_, Transaction>(
         r#"
         INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
-        VALUES ($1, 'transfer_out', $2, $3, $4)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING id, product_id, transaction_type, amount_cents, balance_after_cents, description, created_at
         "#,
     )
     .bind(sender_product.id)
+    .bind(outgoing_type)
     .bind(amount_cents)
     .bind(sender_new_balance)
     .bind(note)
@@ -272,11 +277,12 @@ pub async fn transfer(
     sqlx::query_as::<_, Transaction>(
         r#"
         INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
-        VALUES ($1, 'transfer_in', $2, $3, $4)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING id, product_id, transaction_type, amount_cents, balance_after_cents, description, created_at
         "#,
     )
     .bind(recipient_product.id)
+    .bind(incoming_type)
     .bind(amount_cents)
     .bind(recipient_new_balance)
     .bind(note)

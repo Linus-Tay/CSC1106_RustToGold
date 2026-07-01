@@ -64,18 +64,20 @@ pub async fn create_bank_account(
         _ => return Err("Choose a valid bank account product.".to_string()),
     };
 
+    // Prevent duplicate or excessive account applications.
     let active_accounts = product_repository::list_active_products_by_customer(db, &customer_id)
         .await
         .map_err(|_| "Could not check your existing bank accounts.".to_string())?;
 
     if active_accounts.len() >= 5 {
-        return Err("A customer can hold up to 5 active accounts in this demo environment.".to_string());
+        return Err("A customer can hold up to 5 active accounts.".to_string());
     }
 
     let existing_accounts = product_repository::list_products_by_customer(db, &customer_id)
         .await
         .map_err(|_| "Could not check your existing bank account products.".to_string())?;
 
+    // Pending, active and frozen accounts all count as already applied.
     if existing_accounts
         .iter()
         .any(|account| account.product_id == product_id && account.status != "closed")
@@ -116,7 +118,7 @@ pub async fn deposit(
 ) -> Result<Product, String> {
     let amount = Money::parse_dollars(&form.amount)?;
     if amount.cents() > 1_000_000_00 {
-        return Err("Single customer deposits are capped at $1,000,000.00 for this demo environment.".to_string());
+        return Err("Single customer deposits are capped at $1,000,000.00.".to_string());
     }
 
     let description = clean_optional_text(&form.description);
@@ -189,6 +191,20 @@ pub async fn transfer(
     {
         return Err("Both accounts must be active before a transfer can be made.".to_string());
     }
+
+    let is_own_account_transfer = recipient_product.customer_id == customer_id;
+
+    // Own-account transfers stay under the same customer, so they do not use the daily external transfer limit.
+    crate::services::transaction_control_service::validate_outgoing_transaction(
+        &app_state.db,
+        customer_id,
+        Some(sender_product.id),
+        amount.cents(),
+        note.as_deref(),
+        "Bank transfer",
+        !is_own_account_transfer,
+    )
+    .await?;
 
     match product_repository::transfer(
         &app_state.db,

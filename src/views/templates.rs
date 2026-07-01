@@ -2,6 +2,7 @@ use crate::models::{
     AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser,
     FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, HomeLoanApplication,
     HomeLoanSummary, PayNowRegistration, PersonalLoan, Product, StatementTransaction, Transaction, Card,
+    TransactionControl, FraudAlert, GiroArrangement, HighValueAlertRecord,
 };
 use askama::Template;
 use uuid::Uuid;
@@ -180,6 +181,11 @@ pub struct DashboardTemplate {
     pub has_accounts: bool,
     pub can_apply_everyday_savings: bool,
     pub can_apply_high_yield_savings: bool,
+    pub account_application_notice: String,
+    pub has_account_application_notice: bool,
+    pub daily_limit_display: String,
+    pub outgoing_today_display: String,
+    pub remaining_today_display: String,
     pub create_account_error: String,
     pub has_create_account_error: bool,
 }
@@ -249,6 +255,32 @@ pub struct CardDashboardTemplate {
     pub has_cards: bool,
     pub accounts: Vec<Product>,
     pub has_accounts: bool,
+    pub error: String,
+    pub has_error: bool,
+    pub success: String,
+    pub has_success: bool,
+}
+
+
+#[derive(Template)]
+#[template(path = "customer/transaction_controls.html")]
+pub struct TransactionControlsTemplate {
+    pub controls: TransactionControl,
+    pub alerts: Vec<FraudAlert>,
+    pub has_alerts: bool,
+    pub error: String,
+    pub has_error: bool,
+    pub success: String,
+    pub has_success: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/giro.html")]
+pub struct GiroTemplate {
+    pub accounts: Vec<Product>,
+    pub has_accounts: bool,
+    pub arrangements: Vec<GiroArrangement>,
+    pub has_arrangements: bool,
     pub error: String,
     pub has_error: bool,
     pub success: String,
@@ -363,6 +395,19 @@ pub struct AdminCustomerApplicationsTemplate {
     pub has_error: bool,
 }
 
+
+
+#[derive(Template)]
+#[template(path = "admin/high_value_monitoring.html")]
+pub struct AdminHighValueMonitoringTemplate {
+    pub alerts: Vec<HighValueAlertRecord>,
+    pub has_alerts: bool,
+    pub blocked_count: i64,
+    pub flagged_count: i64,
+    pub cleared_count: i64,
+    pub error: String,
+    pub has_error: bool,
+}
 
 #[derive(Template)]
 #[template(path = "admin/staff.html")]
