@@ -87,6 +87,16 @@ impl HomeLoanApplication {
     pub fn is_pending(&self) -> bool {
         self.status == "pending"
     }
+
+    // Explains the down-payment hold in customer-facing language.
+    pub fn down_payment_note(&self) -> &'static str {
+        match self.status.as_str() {
+            "pending" => "Down payment is reserved while the bank reviews this application.",
+            "rejected" => "Down payment was released back to your account.",
+            "approved" | "fully_paid" => "Down payment remains applied to this approved home loan.",
+            _ => "Down payment status follows this application record.",
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

@@ -620,7 +620,21 @@ impl AdminAuditLogRecord {
 
     // Formats the value for display in templates.
     pub fn action_display(&self) -> String {
-        title_case(&self.action)
+        match self.action.as_str() {
+            "approve_customer_application" => "Approved Customer".to_string(),
+            "reject_customer_application" => "Rejected Customer".to_string(),
+            "set_product_status" | "set_customer_product_status" => "Updated Product".to_string(),
+            "set_customer_user_status" => "Updated User Status".to_string(),
+            "approve_personal_loan" => "Approved Personal Loan".to_string(),
+            "reject_personal_loan" => "Rejected Personal Loan".to_string(),
+            "approve_home_loan" => "Approved Home Loan".to_string(),
+            "reject_home_loan" => "Rejected Home Loan".to_string(),
+            "create_staff_user" => "Created Staff User".to_string(),
+            "update_staff_user" => "Updated Staff User".to_string(),
+            "delete_staff_user" => "Deleted Staff User".to_string(),
+            "clear_high_value_alert" => "Cleared Monitoring Record".to_string(),
+            _ => title_case(&self.action),
+        }
     }
 
     // Formats the value for display in templates.

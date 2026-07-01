@@ -16,7 +16,7 @@
           <div>
             <p class="customer-kicker">Home Loan</p>
             <h1>Apply for Home Loan</h1>
-            <p>RustToGold automatically calculates a 20% down payment and checks the selected account before submission.</p>
+            <p>RustToGold automatically calculates a 20% down payment and locks it from the selected account while the application is pending.</p>
           </div>
         </div>
         <div class="customer-card__body">
@@ -30,10 +30,10 @@
                 <option value="{{ account.account_number }}">{{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}</option>
                 {% endfor %}
               </select>
-              <p class="form-help">This account must have enough funds for the automatic 20% down payment check.</p>
+              <p class="form-help">The 20% down payment is deducted and held once you submit. If the application is rejected, it is released back to this account.</p>
             </div>
             <div class="form-field"><label class="form-label" for="property_type">Property Type</label><select class="form-select" id="property_type" name="property_type" required><option value="HDB Flat">HDB Flat</option><option value="Executive Condominium">Executive Condominium</option><option value="Condominium">Condominium</option><option value="Landed Property">Landed Property</option></select></div>
-            <div class="form-grid"><div class="form-field"><label class="form-label" for="property_value">Property Value</label><input class="form-input" id="property_value" name="property_value" placeholder="e.g. 650000.00" required /><p class="form-help">Estimated down payment: <strong id="estimated-down-payment">$0.00</strong> (20% of property value)</p></div><div class="form-field"><label class="form-label">Down Payment Policy</label><div class="info-callout"><strong>Auto-calculated by RustToGold</strong><span>The selected account must hold the 20% down payment amount before applying.</span></div></div></div>
+            <div class="form-grid"><div class="form-field"><label class="form-label" for="property_value">Property Value</label><input class="form-input" id="property_value" name="property_value" placeholder="e.g. 650000.00" required /><p class="form-help">Estimated amount to hold: <strong id="estimated-down-payment">$0.00</strong> (20% of property value)</p></div><div class="form-field"><label class="form-label">Down Payment Hold</label><div class="info-callout"><strong>Funds are reserved immediately</strong><span>The held amount will appear in your loan activity log. It stays reserved during review and is released automatically if rejected.</span></div></div></div>
             <div class="form-field"><label class="form-label" for="term_years">Loan Term</label><select class="form-select" id="term_years" name="term_years" required><option value="10">10 years</option><option value="15">15 years</option><option value="20">20 years</option><option value="25">25 years</option><option value="30">30 years</option></select></div>
             <button class="c-button c-button--primary" type="submit"><i data-lucide="home"></i> Submit Application</button>
           </form>

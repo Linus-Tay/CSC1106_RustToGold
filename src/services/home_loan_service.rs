@@ -184,7 +184,7 @@ pub async fn approve_home_loan(
         "approve_home_loan",
         "home_loan_application",
         Some(application_id.to_string()),
-        Some("Home loan application approved".to_string()),
+        Some("Home loan approved. Down payment hold remains applied to the property financing record.".to_string()),
     )
     .await;
 
@@ -210,7 +210,7 @@ pub async fn reject_home_loan(
         "reject_home_loan",
         "home_loan_application",
         Some(application_id.to_string()),
-        Some("Home loan application rejected".to_string()),
+        Some("Home loan rejected and down payment hold released.".to_string()),
     )
     .await;
 

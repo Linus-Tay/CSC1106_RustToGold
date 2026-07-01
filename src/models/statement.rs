@@ -40,6 +40,8 @@ impl StatementTransaction {
             "paynow_transfer_out" => "PayNow Out".to_string(),
             "loan_disbursement" => "Loan Disbursement".to_string(),
             "loan_payment" => "Loan Payment".to_string(),
+            "home_loan_down_payment_hold" => "Home Loan Down Payment Hold".to_string(),
+            "home_loan_down_payment_release" => "Home Loan Down Payment Release".to_string(),
             "home_loan_payment" => "Home Loan Payment".to_string(),
             "fixed_deposit_open" => "Fixed Deposit Opened".to_string(),
             "fixed_deposit_withdrawal" => "Fixed Deposit Withdrawal".to_string(),
@@ -71,7 +73,7 @@ impl StatementTransaction {
     pub fn is_credit(&self) -> bool {
         matches!(
             self.transaction_type.as_str(),
-            "deposit" | "transfer_in" | "paynow_transfer_in" | "loan_disbursement" | "fixed_deposit_payout" | "fixed_deposit_withdrawal"
+            "deposit" | "transfer_in" | "internal_transfer_in" | "paynow_transfer_in" | "loan_disbursement" | "home_loan_down_payment_release" | "fixed_deposit_payout" | "fixed_deposit_withdrawal"
         )
     }
 

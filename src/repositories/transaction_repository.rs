@@ -64,7 +64,7 @@ pub async fn find_customer_loan_transactions(
         FROM transactions t
         JOIN customer_products cp ON cp.id = t.product_id
         WHERE cp.customer_id = $1
-          AND t.transaction_type IN ('loan_disbursement', 'loan_payment', 'home_loan_payment')
+          AND t.transaction_type IN ('loan_disbursement', 'loan_payment', 'home_loan_down_payment_hold', 'home_loan_down_payment_release', 'home_loan_payment')
         ORDER BY t.created_at DESC, t.id DESC
         LIMIT $2
         "#,

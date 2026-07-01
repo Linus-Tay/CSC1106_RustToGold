@@ -22,6 +22,13 @@
 
     <section class="mt-8 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
       {% if has_logs %}
+      <div class="border-b border-slate-200 bg-white p-5">
+        <label class="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-slate-400" for="audit-search">Search audit trail</label>
+        <div class="relative max-w-xl">
+          <i data-lucide="search" class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
+          <input id="audit-search" class="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm font-semibold text-slate-800 outline-none transition focus:border-[#1D4ED8] focus:bg-white focus:ring-4 focus:ring-blue-100" placeholder="Search actor, action, entity or details" type="search" />
+        </div>
+      </div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
           <thead class="bg-slate-50 text-xs font-black uppercase tracking-[0.18em] text-slate-400">
@@ -35,10 +42,10 @@
           </thead>
           <tbody class="divide-y divide-slate-100">
             {% for log in logs %}
-            <tr class="align-top">
+            <tr class="align-top" data-audit-row>
               <td class="px-5 py-4 font-semibold text-slate-500">{{ log.created_at_display() }}</td>
               <td class="px-5 py-4 font-black text-[#0B1F3A]">{{ log.actor_display() }}</td>
-              <td class="px-5 py-4"><span class="rounded-full bg-[#1D4ED8]/10 px-3 py-1 text-xs font-black text-[#1D4ED8]">{{ log.action_display() }}</span></td>
+              <td class="px-5 py-4"><span class="whitespace-nowrap rounded-full bg-[#1D4ED8]/10 px-3 py-1 text-xs font-black text-[#1D4ED8]">{{ log.action_display() }}</span></td>
               <td class="px-5 py-4 font-semibold text-slate-700">{{ log.entity_display() }}</td>
               <td class="px-5 py-4 text-slate-500">{{ log.details_display() }}</td>
             </tr>
@@ -57,6 +64,16 @@
   </main>
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script>lucide.createIcons();</script>
+  <script>
+    lucide.createIcons();
+    const auditSearch = document.getElementById('audit-search');
+    const auditRows = Array.from(document.querySelectorAll('[data-audit-row]'));
+    auditSearch?.addEventListener('input', () => {
+      const term = auditSearch.value.trim().toLowerCase();
+      auditRows.forEach((row) => {
+        row.classList.toggle('hidden', term !== '' && !row.textContent.toLowerCase().includes(term));
+      });
+    });
+  </script>
 </body>
 </html>

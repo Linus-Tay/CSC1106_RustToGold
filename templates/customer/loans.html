@@ -35,7 +35,7 @@
                 <div>
                   <span class="badge {% if loan.status == "rejected" %}badge--danger{% else %}badge--info{% endif %}">{{ loan.status_display() }}</span>
                   <h3>{{ loan.purpose }}</h3>
-                  <p>Principal {{ loan.principal_display() }} · {{ loan.term_months }} months · {{ loan.rate_display() }} p.a.</p>
+                  <p>Principal {{ loan.principal_display() }} · {{ loan.term_months }} months · {{ loan.rate_display() }} p.a.</p><small class="text-muted">{{ loan.customer_status_note() }}</small>
                 </div>
                 <div class="record-card__amount"><span>Outstanding</span><strong>{{ loan.outstanding_display() }}</strong><small>Monthly {{ loan.monthly_payment_display() }}</small></div>
               </div>

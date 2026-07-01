@@ -12,7 +12,7 @@
     <div class="customer-container">
       <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
       <section class="module-hero module-hero--navy">
-        <div><p class="customer-kicker">Property Financing</p><h1>Home Loans</h1><p>Submit property financing applications and track approval, outstanding amount and repayments.</p><div class="hero-actions"><a class="c-button c-button--primary" href="/customer/home-loans/apply"><i data-lucide="home"></i> Apply for Home Loan</a><a class="c-button c-button--secondary" href="/customer/loan-activity"><i data-lucide="file-clock"></i> Loan Log</a></div></div>
+        <div><p class="customer-kicker">Property Financing</p><h1>Home Loans</h1><p>Submit property financing applications, hold the required down payment, and track approval, outstanding amount and repayments.</p><div class="hero-actions"><a class="c-button c-button--primary" href="/customer/home-loans/apply"><i data-lucide="home"></i> Apply for Home Loan</a><a class="c-button c-button--secondary" href="/customer/loan-activity"><i data-lucide="file-clock"></i> Loan Log</a></div></div>
         <div class="module-stat"><span>Default Payment Account</span><strong>{{ account.balance_display() }}</strong><small>{{ account.account_number }}</small></div>
       </section>
 
@@ -24,7 +24,7 @@
           {% for application in applications %}
           <article class="record-card">
             <div class="record-card__main">
-              <div><span class="badge badge--info">{{ application.status_display() }}</span><h3>{{ application.property_type }}</h3><p>Property {{ application.property_value_display() }} · Down payment {{ application.down_payment_display() }} · {{ application.term_years }} years · {{ application.rate_display() }} p.a.</p></div>
+              <div><span class="badge badge--info">{{ application.status_display() }}</span><h3>{{ application.property_type }}</h3><p>Property {{ application.property_value_display() }} · Down payment held {{ application.down_payment_display() }} · {{ application.term_years }} years · {{ application.rate_display() }} p.a.</p><small class="text-muted">{{ application.down_payment_note() }}</small></div>
               <div class="record-card__amount"><span>Outstanding</span><strong>{{ application.outstanding_display() }}</strong><small>Monthly {{ application.monthly_payment_display() }}</small></div>
             </div>
             {% if application.status == "approved" %}

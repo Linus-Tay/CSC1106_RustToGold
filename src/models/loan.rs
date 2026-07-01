@@ -69,4 +69,15 @@ impl PersonalLoan {
     pub fn is_payable(&self) -> bool {
         self.status == "active" && self.outstanding_cents > 0
     }
+
+    // Explains the approval state beside each customer loan record.
+    pub fn customer_status_note(&self) -> &'static str {
+        match self.status.as_str() {
+            "pending" => "Awaiting bank review. No funds have been disbursed yet.",
+            "active" => "Approved and disbursed into your selected account.",
+            "rejected" => "Application was not approved.",
+            "fully_paid" => "Loan has been fully repaid.",
+            _ => "Status updated by the bank.",
+        }
+    }
 }

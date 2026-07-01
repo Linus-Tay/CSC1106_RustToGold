@@ -54,7 +54,25 @@ pub async fn create_home_loan_application(
     term_years: i32,
     monthly_payment_cents: i64,
 ) -> Result<HomeLoanApplication, sqlx::Error> {
-    sqlx::query_as::<_, HomeLoanApplication>(
+    let mut tx = db.begin().await?;
+    let product_id = account_product_id.expect("home loan applications require a down-payment account");
+    let product = lock_product_by_id(&mut tx, customer_id, product_id).await?;
+    let new_balance = product.balance_cents - down_payment_cents;
+
+    // The 20% down payment is locked immediately so the customer cannot spend it elsewhere while the loan is pending.
+    sqlx::query(
+        r#"
+        UPDATE customer_products
+        SET balance_cents = $1, updated_at = NOW()
+        WHERE id = $2
+        "#,
+    )
+    .bind(new_balance)
+    .bind(product.id)
+    .execute(&mut *tx)
+    .await?;
+
+    let application = sqlx::query_as::<_, HomeLoanApplication>(
         r#"
         INSERT INTO home_loan_applications (
             customer_id, account_product_id, property_type, property_value_cents,
@@ -69,7 +87,7 @@ pub async fn create_home_loan_application(
         "#,
     )
     .bind(customer_id)
-    .bind(account_product_id)
+    .bind(product.id)
     .bind(property_type)
     .bind(property_value_cents)
     .bind(down_payment_cents)
@@ -77,8 +95,22 @@ pub async fn create_home_loan_application(
     .bind(annual_rate_bps)
     .bind(term_years)
     .bind(monthly_payment_cents)
-    .fetch_one(db)
-    .await
+    .fetch_one(&mut *tx)
+    .await?;
+
+    insert_product_transaction(
+        &mut tx,
+        product.id,
+        customer_id,
+        "home_loan_down_payment_hold",
+        down_payment_cents,
+        new_balance,
+        Some("Home loan down payment locked for review"),
+    )
+    .await?;
+
+    tx.commit().await?;
+    Ok(application)
 }
 
 // Persists the approve home loan database change.
@@ -114,11 +146,57 @@ pub async fn reject_home_loan(
     staff_user_id: Uuid,
     application_id: Uuid,
 ) -> Result<HomeLoanApplication, sqlx::Error> {
-    sqlx::query_as::<_, HomeLoanApplication>(
+    let mut tx = db.begin().await?;
+
+    let application = sqlx::query_as::<_, HomeLoanApplication>(
+        r#"
+        SELECT id, customer_id, account_product_id, property_type, property_value_cents,
+               down_payment_cents, loan_amount_cents, annual_rate_bps, term_years,
+               monthly_payment_cents, outstanding_cents, status, reviewed_by, reviewed_at,
+               created_at, updated_at
+        FROM home_loan_applications
+        WHERE id = $1 AND status = 'pending'
+        FOR UPDATE
+        "#,
+    )
+    .bind(application_id)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    if let Some(product_id) = application.account_product_id {
+        let product = lock_product_by_id(&mut tx, application.customer_id, product_id).await?;
+        let new_balance = product.balance_cents + application.down_payment_cents;
+
+        // Rejected applications release the reserved down payment back into the same account.
+        sqlx::query(
+            r#"
+            UPDATE customer_products
+            SET balance_cents = $1, updated_at = NOW()
+            WHERE id = $2
+            "#,
+        )
+        .bind(new_balance)
+        .bind(product.id)
+        .execute(&mut *tx)
+        .await?;
+
+        insert_product_transaction(
+            &mut tx,
+            product.id,
+            application.customer_id,
+            "home_loan_down_payment_release",
+            application.down_payment_cents,
+            new_balance,
+            Some("Home loan down payment released after rejection"),
+        )
+        .await?;
+    }
+
+    let rejected = sqlx::query_as::<_, HomeLoanApplication>(
         r#"
         UPDATE home_loan_applications
         SET status = 'rejected', reviewed_by = $1, reviewed_at = NOW(), updated_at = NOW()
-        WHERE id = $2 AND status = 'pending'
+        WHERE id = $2
         RETURNING id, customer_id, account_product_id, property_type, property_value_cents,
                   down_payment_cents, loan_amount_cents, annual_rate_bps, term_years,
                   monthly_payment_cents, outstanding_cents, status, reviewed_by, reviewed_at,
@@ -126,9 +204,12 @@ pub async fn reject_home_loan(
         "#,
     )
     .bind(staff_user_id)
-    .bind(application_id)
-    .fetch_one(db)
-    .await
+    .bind(application.id)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+    Ok(rejected)
 }
 
 // Persists the pay home loan database change.

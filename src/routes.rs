@@ -120,6 +120,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("/fixed-deposits", web::post().to(controllers::create_fixed_deposit))
                     .route("/fixed-deposits/new", web::get().to(controllers::fixed_deposit_new_page))
                     .route("/fixed-deposits/{id}/withdraw", web::post().to(controllers::withdraw_fixed_deposit))
+                    .route("/fixed-deposits/{id}/withdraw", web::get().to(controllers::withdraw_fixed_deposit))
                     .route("/profile", web::get().to(controllers::profile_page))
                     .route("/profile", web::post().to(controllers::update_profile)),
             )
