@@ -1,251 +1,252 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::{CreateFixedDepositForm, FixedDepositPlanForm};
 use crate::models::{
-    AdminFixedDepositRecord, BankAccount, FixedDeposit, FixedDepositPlan, FixedDepositSummary,
-    Money,
+    FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, Money, Product,
 };
-use crate::repositories::{account_repository, fixed_deposit_repository};
+use crate::repositories::{fixed_deposit_repository, product_repository};
+use chrono::{Duration, Utc};
 use sqlx::PgPool;
+use uuid::Uuid;
 
-#[derive(Debug, Clone)]
-pub struct FixedDepositDashboardData {
-    pub account: BankAccount,
+// Data carrier for the FixedDepositDashboard workflow.
+pub struct FixedDepositDashboard {
+    pub account: Product,
+    pub accounts: Vec<Product>,
     pub summary: FixedDepositSummary,
     pub fixed_deposits: Vec<FixedDeposit>,
 }
 
+// Loads fixed deposit dashboard data and applies page-level business rules.
 pub async fn load_fixed_deposit_dashboard(
     db: &PgPool,
-    user_id: i64,
-) -> Result<FixedDepositDashboardData, String> {
-    fixed_deposit_repository::mark_matured_deposits(db)
+    customer_id: Uuid,
+) -> Result<FixedDepositDashboard, String> {
+    fixed_deposit_repository::mark_customer_matured(db, customer_id)
         .await
         .map_err(|_| "Could not refresh fixed deposit maturity statuses.".to_string())?;
 
-    let account = account_repository::find_primary_account_by_user_id(db, user_id)
+    let accounts = product_repository::list_active_products_by_customer(db, &customer_id)
         .await
-        .map_err(|_| "Could not load your bank account.".to_string())?
-        .ok_or_else(|| "No bank account was found for this customer.".to_string())?;
+        .map_err(|_| "Could not load active customer accounts.".to_string())?;
 
-    let summary = fixed_deposit_repository::summary_by_user_id(db, user_id)
+    let account = accounts
+        .first()
+        .cloned()
+        .ok_or_else(|| "No active customer account was found for fixed deposits.".to_string())?;
+
+    let fixed_deposits = fixed_deposit_repository::list_fixed_deposits_by_customer(db, customer_id)
         .await
-        .map_err(|_| "Could not load the fixed deposit summary.".to_string())?;
+        .map_err(|_| "Could not load fixed deposits.".to_string())?;
 
-    let fixed_deposits = fixed_deposit_repository::list_by_user_id(db, user_id)
-        .await
-        .map_err(|_| "Could not load fixed deposit records.".to_string())?;
+    let summary = FixedDepositSummary::from_fixed_deposits(&fixed_deposits);
 
-    Ok(FixedDepositDashboardData {
+    Ok(FixedDepositDashboard {
         account,
+        accounts,
         summary,
         fixed_deposits,
     })
 }
 
-pub async fn load_create_fixed_deposit_page(
+// Loads fixed deposit create page data and applies page-level business rules.
+pub async fn load_fixed_deposit_create_page(
     db: &PgPool,
-    user_id: i64,
-) -> Result<(BankAccount, Vec<FixedDepositPlan>), String> {
-    let account = account_repository::find_primary_account_by_user_id(db, user_id)
+    customer_id: Uuid,
+) -> Result<(Product, Vec<Product>, Vec<FixedDepositPlan>), String> {
+    let accounts = product_repository::list_active_products_by_customer(db, &customer_id)
         .await
-        .map_err(|_| "Could not load your bank account.".to_string())?
-        .ok_or_else(|| "No bank account was found for this customer.".to_string())?;
+        .map_err(|_| "Could not load active customer accounts.".to_string())?;
+
+    let account = accounts
+        .first()
+        .cloned()
+        .ok_or_else(|| "No active customer account was found for fixed deposits.".to_string())?;
 
     let plans = fixed_deposit_repository::list_active_plans(db)
         .await
-        .map_err(|_| "Could not load active fixed deposit plans.".to_string())?;
+        .map_err(|_| "Could not load fixed deposit plans.".to_string())?;
 
-    Ok((account, plans))
+    Ok((account, accounts, plans))
 }
 
+// Validates and coordinates the create fixed deposit workflow.
 pub async fn create_fixed_deposit(
     db: &PgPool,
-    user_id: i64,
+    customer_id: Uuid,
     form: CreateFixedDepositForm,
 ) -> Result<FixedDeposit, String> {
-    let plan_id = form
-        .plan_id
-        .trim()
-        .parse::<i64>()
-        .map_err(|_| "Please select a valid fixed deposit plan.".to_string())?;
-    let amount = Money::parse_dollars(&form.amount)?;
-
-    let account = account_repository::find_primary_account_by_user_id(db, user_id)
+    let amount = Money::parse_dollars(&form.amount)
+        .map_err(|message| format!("Placement amount: {message}"))?;
+    let plan = fixed_deposit_repository::find_plan_by_id(db, form.plan_id)
         .await
-        .map_err(|_| "Could not load your bank account.".to_string())?
-        .ok_or_else(|| "No bank account was found for this customer.".to_string())?;
+        .map_err(|_| "Selected fixed deposit plan was not found.".to_string())?;
 
-    if account.status != "active" {
-        return Err("Your bank account is not active for fixed deposit placement.".to_string());
-    }
-
-    if account.balance_cents < amount.cents() {
-        return Err("Insufficient available balance for this fixed deposit.".to_string());
-    }
-
-    let plan = fixed_deposit_repository::find_plan_by_id(db, plan_id)
-        .await
-        .map_err(|_| "Could not load the selected fixed deposit plan.".to_string())?
-        .ok_or_else(|| "The selected fixed deposit plan does not exist.".to_string())?;
-
-    if !plan.is_active() {
-        return Err("The selected fixed deposit plan is no longer active.".to_string());
+    if !plan.is_active {
+        return Err("This fixed deposit plan is not active.".to_string());
     }
 
     if amount.cents() < plan.minimum_amount_cents {
         return Err(format!(
-            "The minimum amount for {} is {}.",
-            plan.name,
-            plan.minimum_amount_display()
+            "{} requires a minimum placement of {}. You entered {}.",
+            plan.plan_name,
+            Money::from_cents(plan.minimum_amount_cents).display(),
+            amount.display()
         ));
     }
 
-    let interest_cents = calculate_simple_interest_cents(
-        amount.cents(),
-        plan.interest_rate_bps,
-        plan.duration_months,
-    );
-    let expected_payout_cents = amount.cents() + interest_cents;
+    let account = product_repository::get_active_product_for_customer_by_account_number(
+        db,
+        &customer_id,
+        form.account_number.trim(),
+    )
+    .await
+    .map_err(|_| "Choose an active funding account for this fixed deposit.".to_string())?;
+
+    if account.balance_cents < amount.cents() {
+        return Err(format!(
+            "Insufficient balance. Your available balance is {}, but this placement is {}.",
+            Money::from_cents(account.balance_cents).display(),
+            amount.display()
+        ));
+    }
+
+    let interest_cents =
+        projected_interest_cents(amount.cents(), plan.annual_rate_bps, plan.tenure_months);
+    let maturity_date = Utc::now().date_naive() + Duration::days((plan.tenure_months as i64) * 30);
 
     fixed_deposit_repository::create_fixed_deposit(
         db,
-        user_id,
+        customer_id,
         account.id,
-        plan.id,
+        &plan,
         amount.cents(),
-        plan.interest_rate_bps,
         interest_cents,
-        expected_payout_cents,
-        plan.duration_months,
+        maturity_date,
     )
     .await
-    .map_err(|_| "Fixed deposit creation failed. Please try again.".to_string())
+    .map_err(|error| {
+        println!("fixed deposit create failed: {}", error);
+        "Could not create the fixed deposit.".to_string()
+    })
 }
 
+// Validates and coordinates the withdraw fixed deposit workflow.
 pub async fn withdraw_fixed_deposit(
     db: &PgPool,
-    user_id: i64,
-    fixed_deposit_id: i64,
-) -> Result<FixedDeposit, String> {
-    fixed_deposit_repository::mark_matured_deposits(db)
+    customer_id: Uuid,
+    fixed_deposit_id: Uuid,
+) -> Result<String, String> {
+    fixed_deposit_repository::withdraw_fixed_deposit(db, customer_id, fixed_deposit_id)
         .await
-        .map_err(|_| "Could not refresh fixed deposit maturity statuses.".to_string())?;
-
-    fixed_deposit_repository::withdraw_fixed_deposit(db, user_id, fixed_deposit_id)
-        .await
-        .map_err(|_| {
-            "Withdrawal failed. This fixed deposit may already be withdrawn or paid out.".to_string()
+        .map_err(|error| {
+            println!("fixed deposit withdrawal failed: {}", error);
+            "Could not withdraw this fixed deposit.".to_string()
         })
 }
 
-pub async fn list_all_fixed_deposit_records(
+// Returns admin fixed deposits records in the shape needed by the UI.
+pub async fn list_admin_fixed_deposits(
     db: &PgPool,
-) -> Result<Vec<AdminFixedDepositRecord>, String> {
-    fixed_deposit_repository::mark_matured_deposits(db)
-        .await
-        .map_err(|_| "Could not refresh fixed deposit maturity statuses.".to_string())?;
-
-    fixed_deposit_repository::list_all_for_admin(db)
+) -> Result<Vec<FixedDepositAdminRecord>, String> {
+    fixed_deposit_repository::list_all_fixed_deposit_records(db)
         .await
         .map_err(|_| "Could not load fixed deposit records.".to_string())
 }
 
-pub async fn list_all_fixed_deposit_plans(
-    db: &PgPool,
-) -> Result<Vec<FixedDepositPlan>, String> {
+// Returns admin plans records in the shape needed by the UI.
+pub async fn list_admin_plans(db: &PgPool) -> Result<Vec<FixedDepositPlan>, String> {
     fixed_deposit_repository::list_all_plans(db)
         .await
         .map_err(|_| "Could not load fixed deposit plans.".to_string())
 }
 
-pub async fn create_fixed_deposit_plan(
+// Validates and coordinates the create plan workflow.
+pub async fn create_plan(
     db: &PgPool,
     form: FixedDepositPlanForm,
 ) -> Result<FixedDepositPlan, String> {
-    let (name, duration_months, interest_rate_bps, minimum_amount_cents, status) =
-        validate_plan_form(form)?;
+    let plan_name = form.plan_name.trim();
+    if plan_name.is_empty() {
+        return Err("Plan name is required.".to_string());
+    }
+
+    let minimum_amount = Money::parse_dollars(&form.minimum_amount)
+        .map_err(|message| format!("Minimum amount: {message}"))?;
+    validate_plan_numbers(form.tenure_months, form.annual_rate_bps, minimum_amount.cents())?;
 
     fixed_deposit_repository::create_plan(
         db,
-        &name,
-        duration_months,
-        interest_rate_bps,
-        minimum_amount_cents,
-        &status,
+        plan_name,
+        form.tenure_months,
+        form.annual_rate_bps,
+        minimum_amount.cents(),
+        form.is_active.is_some(),
     )
     .await
-    .map_err(|_| "Could not create the plan. The plan name may already exist.".to_string())
+    .map_err(|error| {
+        println!("fixed deposit plan create failed: {}", error);
+        "Could not create the fixed deposit plan.".to_string()
+    })
 }
 
-pub async fn update_fixed_deposit_plan(
+// Validates and coordinates the update plan workflow.
+pub async fn update_plan(
     db: &PgPool,
     plan_id: i64,
     form: FixedDepositPlanForm,
 ) -> Result<FixedDepositPlan, String> {
-    let (name, duration_months, interest_rate_bps, minimum_amount_cents, status) =
-        validate_plan_form(form)?;
+    let plan_name = form.plan_name.trim();
+    if plan_name.is_empty() {
+        return Err("Plan name is required.".to_string());
+    }
+
+    let minimum_amount = Money::parse_dollars(&form.minimum_amount)
+        .map_err(|message| format!("Minimum amount: {message}"))?;
+    validate_plan_numbers(form.tenure_months, form.annual_rate_bps, minimum_amount.cents())?;
 
     fixed_deposit_repository::update_plan(
         db,
         plan_id,
-        &name,
-        duration_months,
-        interest_rate_bps,
-        minimum_amount_cents,
-        &status,
+        plan_name,
+        form.tenure_months,
+        form.annual_rate_bps,
+        minimum_amount.cents(),
+        form.is_active.is_some(),
     )
     .await
-    .map_err(|_| "Could not update this fixed deposit plan.".to_string())
+    .map_err(|error| {
+        println!("fixed deposit plan update failed: {}", error);
+        "Could not update the fixed deposit plan.".to_string()
+    })
 }
 
-// Simple interest: principal x annual rate x months / 12.
-fn calculate_simple_interest_cents(
-    principal_cents: i64,
-    interest_rate_bps: i32,
-    duration_months: i32,
-) -> i64 {
-    principal_cents * interest_rate_bps as i64 * duration_months as i64 / 120_000
+// Checks plan numbers rules before the workflow continues.
+fn validate_plan_numbers(
+    tenure_months: i32,
+    annual_rate_bps: i32,
+    minimum_amount_cents: i64,
+) -> Result<(), String> {
+    if !(1..=60).contains(&tenure_months) {
+        return Err("Tenure must be between 1 and 60 months.".to_string());
+    }
+
+    if !(1..=1000).contains(&annual_rate_bps) {
+        return Err("Annual rate must be between 0.01% and 10.00%.".to_string());
+    }
+
+    if minimum_amount_cents < 100_000 {
+        return Err("Fixed deposit plan minimum amount must be at least $1000.00.".to_string());
+    }
+
+    Ok(())
 }
 
-fn validate_plan_form(
-    form: FixedDepositPlanForm,
-) -> Result<(String, i32, i32, i64, String), String> {
-    let name = form.name.trim().to_string();
-    if name.len() < 3 {
-        return Err("Plan name must have at least 3 characters.".to_string());
-    }
-
-    let duration_months = form
-        .duration_months
-        .trim()
-        .parse::<i32>()
-        .map_err(|_| "Duration must be a whole number of months.".to_string())?;
-    if !(1..=60).contains(&duration_months) {
-        return Err("Duration must be between 1 and 60 months.".to_string());
-    }
-
-    let interest_rate = form
-        .interest_rate
-        .trim()
-        .parse::<f64>()
-        .map_err(|_| "Interest rate must be a number, for example 3.20.".to_string())?;
-    if !(0.01..=20.0).contains(&interest_rate) {
-        return Err("Interest rate must be between 0.01% and 20.00%.".to_string());
-    }
-    let interest_rate_bps = (interest_rate * 100.0).round() as i32;
-
-    let minimum_amount = Money::parse_dollars(&form.minimum_amount)?;
-
-    let status = match form.status.trim() {
-        "active" => "active".to_string(),
-        "inactive" => "inactive".to_string(),
-        _ => return Err("Plan status must be active or inactive.".to_string()),
-    };
-
-    Ok((
-        name,
-        duration_months,
-        interest_rate_bps,
-        minimum_amount.cents(),
-        status,
-    ))
+// Returns the stored money amount in cents.
+fn projected_interest_cents(principal_cents: i64, annual_rate_bps: i32, tenure_months: i32) -> i64 {
+    principal_cents
+        .saturating_mul(annual_rate_bps as i64)
+        .saturating_mul(tenure_months as i64)
+        / 12
+        / 10_000
 }

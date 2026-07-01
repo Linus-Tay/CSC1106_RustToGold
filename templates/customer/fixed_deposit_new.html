@@ -3,72 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RustToGold | Create Fixed Deposit</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <title>RustToGold | New Fixed Deposit</title>
+  {% include "partials/customer_assets.html" %}
 </head>
-<body>
-  <nav class="c-navbar" aria-label="Customer navigation">
-    <div class="u-container c-navbar__inner">
-      <a class="c-navbar__brand" href="/customer/dashboard">RustToGold</a>
-      <div class="c-navbar__actions"><a class="c-navbar__login" href="/logout">Logout</a></div>
-    </div>
-  </nav>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
 
-  <main class="app-main">
-    <div class="u-container" style="max-width: 860px;">
-      <header class="app-page-header">
-        <div>
-          <h1 class="app-page-title">Create Fixed Deposit</h1>
-          <p class="app-page-description">Choose an active plan and place money from your savings account.</p>
-        </div>
-        <a class="c-button c-button--secondary" href="/customer/fixed-deposits">Back to Fixed Deposits</a>
-      </header>
+  <main class="customer-main">
+    <div class="customer-container customer-narrow">
+      <a class="back-link" href="/customer/fixed-deposits"><i data-lucide="arrow-left"></i> Back to fixed deposits</a>
 
-      <section class="c-card">
-        <div class="c-card__header">
+      <section class="customer-card form-card">
+        <div class="customer-card__header">
           <div>
-            <h2 class="c-card__title">Placement Details</h2>
-            <p class="c-card__subtitle">Account {{ account_number }} - available balance: ${{ balance }}</p>
+            <p class="customer-kicker">Savings</p>
+            <h1>Create Fixed Deposit</h1>
+            <p>Select the funding account and fixed deposit plan before placing funds.</p>
           </div>
         </div>
-        <div class="c-card__body">
-          {% if has_error %}
-          <div class="alert alert--danger"><i data-lucide="alert-circle"></i> {{ error }}</div>
-          {% endif %}
 
+        <div class="customer-card__body">
+          {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
           {% if has_plans %}
-          <form class="form" method="post" action="/customer/fixed-deposits">
+          <form class="form clean-form" action="/customer/fixed-deposits" method="post">
+            <div class="form-field">
+              <label class="form-label" for="account_number">Funding Account</label>
+              <select class="form-select" id="account_number" name="account_number" required>
+                {% for account in accounts %}
+                <option value="{{ account.account_number }}" {% if account.account_number == account_number %}selected{% endif %}>{{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}</option>
+                {% endfor %}
+              </select>
+              <p class="form-help">Only active accounts can be used to fund a fixed deposit placement.</p>
+            </div>
+
             <div class="form-field">
               <label class="form-label" for="plan_id">Fixed Deposit Plan</label>
               <select class="form-select" id="plan_id" name="plan_id" required>
-                <option value="">Select a plan</option>
                 {% for plan in plans %}
-                <option value="{{ plan.id }}">{{ plan.name }} - {{ plan.duration_months }} months - {{ plan.interest_rate_display() }} p.a. - minimum {{ plan.minimum_amount_display() }}</option>
+                <option value="{{ plan.id }}" data-min="{{ plan.minimum_amount_plain() }}" data-min-display="{{ plan.minimum_amount_display() }}">
+                  {{ plan.plan_name }} · {{ plan.tenure_months }} months · {{ plan.rate_display() }} p.a. · Min {{ plan.minimum_amount_display() }}
+                </option>
                 {% endfor %}
               </select>
+              <p class="form-help">Selected plan minimum: <strong id="fd-plan-minimum">-</strong></p>
             </div>
 
             <div class="form-field">
-              <label class="form-label" for="amount">Deposit Amount</label>
-              <input class="form-input" id="amount" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Example: 5000.00" required />
+              <label class="form-label" for="amount">Placement Amount</label>
+              <input class="form-input" id="amount" name="amount" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="Select a plan first" required />
+              <p class="form-help">The backend validates the selected plan minimum and your available balance before creating the placement.</p>
             </div>
 
-            <div class="alert alert--info"><i data-lucide="info"></i> The backend calculates simple interest using principal x annual rate x duration / 12. Money is locked until maturity. Early withdrawal returns principal only.</div>
-
-            <button class="c-button c-button--primary" type="submit"><i data-lucide="piggy-bank"></i> Create Fixed Deposit</button>
+            <button class="c-button c-button--primary" type="submit"><i data-lucide="piggy-bank"></i> Create Placement</button>
           </form>
           {% else %}
-          <div class="alert alert--warning"><i data-lucide="triangle-alert"></i> There are no active fixed deposit plans. Please contact an administrator.</div>
+          <div class="empty-state"><div class="empty-state__icon"><i data-lucide="piggy-bank"></i></div><h3>No active plans available</h3><p>Create fixed deposit plans from the admin side first.</p></div>
           {% endif %}
         </div>
       </section>
     </div>
   </main>
 
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/static/js/app.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
+  <script>
+    const planSelect = document.getElementById('plan_id');
+    const amountInput = document.getElementById('amount');
+    const minText = document.getElementById('fd-plan-minimum');
+
+    function syncFixedDepositMinimum() {
+      if (!planSelect || !amountInput || !minText) return;
+      const selected = planSelect.options[planSelect.selectedIndex];
+      const min = selected?.dataset?.min || '0.01';
+      const minDisplay = selected?.dataset?.minDisplay || '-';
+      amountInput.min = min;
+      amountInput.placeholder = `Minimum ${minDisplay}`;
+      minText.textContent = minDisplay;
+    }
+
+    syncFixedDepositMinimum();
+    planSelect?.addEventListener('change', syncFixedDepositMinimum);
+  </script>
 </body>
 </html>

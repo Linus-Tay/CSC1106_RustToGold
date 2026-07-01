@@ -1,403 +1,369 @@
-use crate::models::{
-    AdminFixedDepositRecord, BankAccount, FixedDeposit, FixedDepositPlan, FixedDepositSummary,
-};
-use sqlx::{PgPool, Postgres, Transaction as SqlxTransaction};
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
 
+use crate::models::{FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, Product, Transaction};
+use chrono::NaiveDate;
+use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
+use uuid::Uuid;
+
+// Reads list active plans data from the database.
 pub async fn list_active_plans(db: &PgPool) -> Result<Vec<FixedDepositPlan>, sqlx::Error> {
     sqlx::query_as::<_, FixedDepositPlan>(
         r#"
-        SELECT id, name, duration_months, interest_rate_bps, minimum_amount_cents, status,
-               created_at, updated_at
+        SELECT id, plan_name, tenure_months, annual_rate_bps, minimum_amount_cents,
+               is_active, created_at, updated_at
         FROM fixed_deposit_plans
-        WHERE status = 'active'
-        ORDER BY duration_months, minimum_amount_cents
+        WHERE is_active = TRUE
+        ORDER BY tenure_months ASC, annual_rate_bps DESC
         "#,
     )
     .fetch_all(db)
     .await
 }
 
+// Reads list all plans data from the database.
 pub async fn list_all_plans(db: &PgPool) -> Result<Vec<FixedDepositPlan>, sqlx::Error> {
     sqlx::query_as::<_, FixedDepositPlan>(
         r#"
-        SELECT id, name, duration_months, interest_rate_bps, minimum_amount_cents, status,
-               created_at, updated_at
+        SELECT id, plan_name, tenure_months, annual_rate_bps, minimum_amount_cents,
+               is_active, created_at, updated_at
         FROM fixed_deposit_plans
-        ORDER BY duration_months, id
+        ORDER BY is_active DESC, tenure_months ASC, id ASC
         "#,
     )
     .fetch_all(db)
     .await
 }
 
-pub async fn find_plan_by_id(
-    db: &PgPool,
-    plan_id: i64,
-) -> Result<Option<FixedDepositPlan>, sqlx::Error> {
+// Reads find plan by id data from the database.
+pub async fn find_plan_by_id(db: &PgPool, plan_id: i64) -> Result<FixedDepositPlan, sqlx::Error> {
     sqlx::query_as::<_, FixedDepositPlan>(
         r#"
-        SELECT id, name, duration_months, interest_rate_bps, minimum_amount_cents, status,
-               created_at, updated_at
+        SELECT id, plan_name, tenure_months, annual_rate_bps, minimum_amount_cents,
+               is_active, created_at, updated_at
         FROM fixed_deposit_plans
         WHERE id = $1
         "#,
     )
     .bind(plan_id)
-    .fetch_optional(db)
-    .await
-}
-
-pub async fn create_plan(
-    db: &PgPool,
-    name: &str,
-    duration_months: i32,
-    interest_rate_bps: i32,
-    minimum_amount_cents: i64,
-    status: &str,
-) -> Result<FixedDepositPlan, sqlx::Error> {
-    sqlx::query_as::<_, FixedDepositPlan>(
-        r#"
-        INSERT INTO fixed_deposit_plans (
-            name, duration_months, interest_rate_bps, minimum_amount_cents, status
-        )
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, name, duration_months, interest_rate_bps, minimum_amount_cents, status,
-                  created_at, updated_at
-        "#,
-    )
-    .bind(name)
-    .bind(duration_months)
-    .bind(interest_rate_bps)
-    .bind(minimum_amount_cents)
-    .bind(status)
     .fetch_one(db)
     .await
 }
 
+// Reads list fixed deposits by customer data from the database.
+pub async fn list_fixed_deposits_by_customer(
+    db: &PgPool,
+    customer_id: Uuid,
+) -> Result<Vec<FixedDeposit>, sqlx::Error> {
+    sqlx::query_as::<_, FixedDeposit>(
+        r#"
+        SELECT fd.id, fd.customer_id, fd.funding_product_id, fd.plan_id,
+               COALESCE(p.plan_name, 'Fixed Deposit Plan') AS plan_name,
+               fd.principal_cents, fd.annual_rate_bps, fd.tenure_months, fd.interest_cents,
+               fd.maturity_date, fd.status, fd.created_at, fd.updated_at
+        FROM fixed_deposits fd
+        LEFT JOIN fixed_deposit_plans p ON p.id = fd.plan_id
+        WHERE fd.customer_id = $1
+        ORDER BY fd.created_at DESC
+        "#,
+    )
+    .bind(customer_id)
+    .fetch_all(db)
+    .await
+}
+
+// Reads list all fixed deposit records data from the database.
+pub async fn list_all_fixed_deposit_records(
+    db: &PgPool,
+) -> Result<Vec<FixedDepositAdminRecord>, sqlx::Error> {
+    sqlx::query_as::<_, FixedDepositAdminRecord>(
+        r#"
+        SELECT fd.id,
+               c.full_name AS customer_name,
+               c.email AS customer_email,
+               c.phone_number AS customer_phone,
+               c.nric AS customer_nric,
+               cp.account_number,
+               cp.balance_cents AS account_balance_cents,
+               COALESCE(p.plan_name, 'Fixed Deposit Plan') AS plan_name,
+               fd.principal_cents,
+               fd.annual_rate_bps,
+               fd.tenure_months,
+               fd.interest_cents,
+               fd.maturity_date,
+               fd.status,
+               fd.created_at
+        FROM fixed_deposits fd
+        JOIN customers c ON c.id = fd.customer_id
+        JOIN customer_products cp ON cp.id = fd.funding_product_id
+        LEFT JOIN fixed_deposit_plans p ON p.id = fd.plan_id
+        ORDER BY fd.created_at DESC
+        "#,
+    )
+    .fetch_all(db)
+    .await
+}
+
+// Persists the create fixed deposit database change.
+pub async fn create_fixed_deposit(
+    db: &PgPool,
+    customer_id: Uuid,
+    product_id: Uuid,
+    plan: &FixedDepositPlan,
+    principal_cents: i64,
+    interest_cents: i64,
+    maturity_date: NaiveDate,
+) -> Result<FixedDeposit, sqlx::Error> {
+    let mut tx = db.begin().await?;
+    let product = lock_product_by_id(&mut tx, customer_id, product_id).await?;
+    let new_balance = product.balance_cents - principal_cents;
+
+    sqlx::query(
+        r#"
+        UPDATE customer_products
+        SET balance_cents = $1, updated_at = NOW()
+        WHERE id = $2
+        "#,
+    )
+    .bind(new_balance)
+    .bind(product.id)
+    .execute(&mut *tx)
+    .await?;
+
+    let fd = sqlx::query_as::<_, FixedDeposit>(
+        r#"
+        INSERT INTO fixed_deposits (
+            customer_id, funding_product_id, plan_id, principal_cents, annual_rate_bps,
+            tenure_months, interest_cents, maturity_date, status
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active')
+        RETURNING id, customer_id, funding_product_id, plan_id,
+                  $9::TEXT AS plan_name,
+                  principal_cents, annual_rate_bps, tenure_months, interest_cents,
+                  maturity_date, status, created_at, updated_at
+        "#,
+    )
+    .bind(customer_id)
+    .bind(product.id)
+    .bind(plan.id)
+    .bind(principal_cents)
+    .bind(plan.annual_rate_bps)
+    .bind(plan.tenure_months)
+    .bind(interest_cents)
+    .bind(maturity_date)
+    .bind(&plan.plan_name)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    insert_product_transaction(
+        &mut tx,
+        product.id,
+        customer_id,
+        "fixed_deposit_open",
+        principal_cents,
+        new_balance,
+        Some("Fixed deposit placement opened"),
+    )
+    .await?;
+
+    tx.commit().await?;
+    Ok(fd)
+}
+
+// Executes the database operation for mark customer matured.
+pub async fn mark_customer_matured(db: &PgPool, customer_id: Uuid) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        UPDATE fixed_deposits
+        SET status = 'matured', updated_at = NOW()
+        WHERE customer_id = $1 AND status = 'active' AND maturity_date <= CURRENT_DATE
+        "#,
+    )
+    .bind(customer_id)
+    .execute(db)
+    .await?;
+    Ok(())
+}
+
+// Executes the database operation for withdraw fixed deposit.
+pub async fn withdraw_fixed_deposit(
+    db: &PgPool,
+    customer_id: Uuid,
+    fixed_deposit_id: Uuid,
+) -> Result<String, sqlx::Error> {
+    let mut tx = db.begin().await?;
+
+    let fd = sqlx::query_as::<_, FixedDeposit>(
+        r#"
+        SELECT fd.id, fd.customer_id, fd.funding_product_id, fd.plan_id,
+               COALESCE(p.plan_name, 'Fixed Deposit Plan') AS plan_name,
+               fd.principal_cents, fd.annual_rate_bps, fd.tenure_months, fd.interest_cents,
+               fd.maturity_date, fd.status, fd.created_at, fd.updated_at
+        FROM fixed_deposits fd
+        LEFT JOIN fixed_deposit_plans p ON p.id = fd.plan_id
+        WHERE fd.id = $1 AND fd.customer_id = $2
+        FOR UPDATE
+        "#,
+    )
+    .bind(fixed_deposit_id)
+    .bind(customer_id)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    let product = lock_product_by_id(&mut tx, customer_id, fd.funding_product_id).await?;
+    let is_matured = fd.status == "matured" || (fd.status == "active" && fd.maturity_date <= chrono::Utc::now().date_naive());
+    let payout_cents = if is_matured {
+        fd.principal_cents + fd.interest_cents
+    } else {
+        fd.principal_cents
+    };
+    let new_status = if is_matured { "paid_out" } else { "withdrawn" };
+    let transaction_type = if is_matured { "fixed_deposit_payout" } else { "fixed_deposit_withdrawal" };
+    let description = if is_matured {
+        "Matured fixed deposit payout"
+    } else {
+        "Early fixed deposit withdrawal"
+    };
+    let new_balance = product.balance_cents + payout_cents;
+
+    sqlx::query(
+        r#"
+        UPDATE customer_products
+        SET balance_cents = $1, updated_at = NOW()
+        WHERE id = $2
+        "#,
+    )
+    .bind(new_balance)
+    .bind(product.id)
+    .execute(&mut *tx)
+    .await?;
+
+    sqlx::query(
+        r#"
+        UPDATE fixed_deposits
+        SET status = $1, updated_at = NOW()
+        WHERE id = $2 AND status IN ('active', 'matured')
+        "#,
+    )
+    .bind(new_status)
+    .bind(fd.id)
+    .execute(&mut *tx)
+    .await?;
+
+    insert_product_transaction(
+        &mut tx,
+        product.id,
+        customer_id,
+        transaction_type,
+        payout_cents,
+        new_balance,
+        Some(description),
+    )
+    .await?;
+
+    tx.commit().await?;
+    Ok(new_status.to_string())
+}
+
+// Persists the create plan database change.
+pub async fn create_plan(
+    db: &PgPool,
+    plan_name: &str,
+    tenure_months: i32,
+    annual_rate_bps: i32,
+    minimum_amount_cents: i64,
+    is_active: bool,
+) -> Result<FixedDepositPlan, sqlx::Error> {
+    sqlx::query_as::<_, FixedDepositPlan>(
+        r#"
+        INSERT INTO fixed_deposit_plans (plan_name, tenure_months, annual_rate_bps, minimum_amount_cents, is_active)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, plan_name, tenure_months, annual_rate_bps, minimum_amount_cents, is_active, created_at, updated_at
+        "#,
+    )
+    .bind(plan_name)
+    .bind(tenure_months)
+    .bind(annual_rate_bps)
+    .bind(minimum_amount_cents)
+    .bind(is_active)
+    .fetch_one(db)
+    .await
+}
+
+// Persists the update plan database change.
 pub async fn update_plan(
     db: &PgPool,
     plan_id: i64,
-    name: &str,
-    duration_months: i32,
-    interest_rate_bps: i32,
+    plan_name: &str,
+    tenure_months: i32,
+    annual_rate_bps: i32,
     minimum_amount_cents: i64,
-    status: &str,
+    is_active: bool,
 ) -> Result<FixedDepositPlan, sqlx::Error> {
     sqlx::query_as::<_, FixedDepositPlan>(
         r#"
         UPDATE fixed_deposit_plans
-        SET name = $1,
-            duration_months = $2,
-            interest_rate_bps = $3,
+        SET plan_name = $1,
+            tenure_months = $2,
+            annual_rate_bps = $3,
             minimum_amount_cents = $4,
-            status = $5,
+            is_active = $5,
             updated_at = NOW()
         WHERE id = $6
-        RETURNING id, name, duration_months, interest_rate_bps, minimum_amount_cents, status,
-                  created_at, updated_at
+        RETURNING id, plan_name, tenure_months, annual_rate_bps, minimum_amount_cents, is_active, created_at, updated_at
         "#,
     )
-    .bind(name)
-    .bind(duration_months)
-    .bind(interest_rate_bps)
+    .bind(plan_name)
+    .bind(tenure_months)
+    .bind(annual_rate_bps)
     .bind(minimum_amount_cents)
-    .bind(status)
+    .bind(is_active)
     .bind(plan_id)
     .fetch_one(db)
     .await
 }
 
-// Update deposits that have reached their maturity date.
-pub async fn mark_matured_deposits(db: &PgPool) -> Result<u64, sqlx::Error> {
-    let result = sqlx::query(
+// Persists the lock product by id database change.
+async fn lock_product_by_id(
+    tx: &mut DbTransaction<'_, Postgres>,
+    customer_id: Uuid,
+    product_id: Uuid,
+) -> Result<Product, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
         r#"
-        UPDATE fixed_deposits
-        SET status = 'matured', updated_at = NOW()
-        WHERE status = 'active' AND maturity_date <= CURRENT_DATE
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE id = $1 AND customer_id = $2 AND status = 'active'
+        FOR UPDATE
         "#,
     )
-    .execute(db)
-    .await?;
-
-    Ok(result.rows_affected())
-}
-
-pub async fn list_by_user_id(
-    db: &PgPool,
-    user_id: i64,
-) -> Result<Vec<FixedDeposit>, sqlx::Error> {
-    sqlx::query_as::<_, FixedDeposit>(
-        r#"
-        SELECT id, user_id, account_id, plan_id, principal_cents, interest_rate_bps,
-               interest_cents, penalty_cents, payout_cents, start_date, maturity_date,
-               status, created_at, updated_at
-        FROM fixed_deposits
-        WHERE user_id = $1
-        ORDER BY created_at DESC, id DESC
-        "#,
-    )
-    .bind(user_id)
-    .fetch_all(db)
+    .bind(product_id)
+    .bind(customer_id)
+    .fetch_one(&mut **tx)
     .await
 }
 
-pub async fn list_all_for_admin(
-    db: &PgPool,
-) -> Result<Vec<AdminFixedDepositRecord>, sqlx::Error> {
-    sqlx::query_as::<_, AdminFixedDepositRecord>(
+// Persists the insert product transaction database change.
+async fn insert_product_transaction(
+    tx: &mut DbTransaction<'_, Postgres>,
+    product_id: Uuid,
+    _customer_id: Uuid,
+    transaction_type: &str,
+    amount_cents: i64,
+    balance_after_cents: i64,
+    description: Option<&str>,
+) -> Result<Transaction, sqlx::Error> {
+    sqlx::query_as::<_, Transaction>(
         r#"
-        SELECT fd.id,
-               fd.user_id,
-               fd.account_id,
-               fd.plan_id,
-               fd.principal_cents,
-               fd.interest_rate_bps,
-               fd.interest_cents,
-               fd.penalty_cents,
-               fd.payout_cents,
-               fd.start_date,
-               fd.maturity_date,
-               fd.status,
-               u.full_name AS customer_name,
-               u.email AS customer_email,
-               ba.account_number,
-               fp.name AS plan_name
-        FROM fixed_deposits fd
-        JOIN users u ON u.id = fd.user_id
-        JOIN bank_accounts ba ON ba.id = fd.account_id
-        JOIN fixed_deposit_plans fp ON fp.id = fd.plan_id
-        ORDER BY fd.created_at DESC, fd.id DESC
+        INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, product_id, transaction_type, amount_cents, balance_after_cents, description, created_at
         "#,
     )
-    .fetch_all(db)
-    .await
-}
-
-pub async fn summary_by_user_id(
-    db: &PgPool,
-    user_id: i64,
-) -> Result<FixedDepositSummary, sqlx::Error> {
-    sqlx::query_as::<_, FixedDepositSummary>(
-        r#"
-        SELECT
-            COUNT(*)::BIGINT AS total_count,
-            COUNT(*) FILTER (WHERE status = 'active')::BIGINT AS active_count,
-            COUNT(*) FILTER (WHERE status = 'matured')::BIGINT AS matured_count,
-            COALESCE(SUM(principal_cents) FILTER (WHERE status IN ('active', 'matured')), 0)::BIGINT
-                AS total_principal_cents,
-            COALESCE(SUM(interest_cents) FILTER (WHERE status IN ('active', 'matured')), 0)::BIGINT
-                AS total_interest_cents,
-            COALESCE(SUM(payout_cents) FILTER (WHERE status IN ('active', 'matured')), 0)::BIGINT
-                AS total_payout_cents
-        FROM fixed_deposits
-        WHERE user_id = $1
-        "#,
-    )
-    .bind(user_id)
-    .fetch_one(db)
-    .await
-}
-
-pub async fn create_fixed_deposit(
-    db: &PgPool,
-    user_id: i64,
-    account_id: i64,
-    plan_id: i64,
-    principal_cents: i64,
-    interest_rate_bps: i32,
-    interest_cents: i64,
-    expected_payout_cents: i64,
-    duration_months: i32,
-) -> Result<FixedDeposit, sqlx::Error> {
-    let mut transaction = db.begin().await?;
-
-    // Lock the account row so the balance cannot be used twice at the same time.
-    let account = get_account_for_update(&mut transaction, account_id, user_id).await?;
-    let new_balance = account.balance_cents - principal_cents;
-
-    sqlx::query(
-        r#"
-        UPDATE bank_accounts
-        SET balance_cents = $1, updated_at = NOW()
-        WHERE id = $2
-        "#,
-    )
-    .bind(new_balance)
-    .bind(account_id)
-    .execute(&mut *transaction)
-    .await?;
-
-    let fixed_deposit = sqlx::query_as::<_, FixedDeposit>(
-        r#"
-        INSERT INTO fixed_deposits (
-            user_id, account_id, plan_id, principal_cents, interest_rate_bps, interest_cents,
-            penalty_cents, payout_cents, start_date, maturity_date, status
-        )
-        VALUES (
-            $1, $2, $3, $4, $5, $6,
-            0, $7, CURRENT_DATE, (CURRENT_DATE + make_interval(months => $8))::DATE, 'active'
-        )
-        RETURNING id, user_id, account_id, plan_id, principal_cents, interest_rate_bps,
-                  interest_cents, penalty_cents, payout_cents, start_date, maturity_date,
-                  status, created_at, updated_at
-        "#,
-    )
-    .bind(user_id)
-    .bind(account_id)
-    .bind(plan_id)
-    .bind(principal_cents)
-    .bind(interest_rate_bps)
-    .bind(interest_cents)
-    .bind(expected_payout_cents)
-    .bind(duration_months)
-    .fetch_one(&mut *transaction)
-    .await?;
-
-    sqlx::query(
-        r#"
-        INSERT INTO transactions (
-            account_id, user_id, transaction_type, amount_cents, balance_after_cents, description
-        )
-        VALUES ($1, $2, 'fixed_deposit_opening', $3, $4, $5)
-        "#,
-    )
-    .bind(account_id)
-    .bind(user_id)
-    .bind(principal_cents)
-    .bind(new_balance)
-    .bind(format!("Fixed deposit #{} opened", fixed_deposit.id))
-    .execute(&mut *transaction)
-    .await?;
-
-    transaction.commit().await?;
-    Ok(fixed_deposit)
-}
-
-pub async fn withdraw_fixed_deposit(
-    db: &PgPool,
-    user_id: i64,
-    fixed_deposit_id: i64,
-) -> Result<FixedDeposit, sqlx::Error> {
-    let mut transaction = db.begin().await?;
-
-    // Lock the FD row so it cannot be paid twice at the same time.
-    let fixed_deposit = get_fixed_deposit_for_update(&mut transaction, user_id, fixed_deposit_id).await?;
-    let account = get_account_for_update(&mut transaction, fixed_deposit.account_id, user_id).await?;
-
-    let is_matured = fixed_deposit.status == "matured";
-    let penalty_cents = if is_matured {
-        0
-    } else {
-        fixed_deposit.interest_cents
-    };
-    let payout_cents = if is_matured {
-        fixed_deposit.principal_cents + fixed_deposit.interest_cents
-    } else {
-        fixed_deposit.principal_cents
-    };
-    let final_status = if is_matured { "paid_out" } else { "withdrawn" };
-    let transaction_type = if is_matured {
-        "fixed_deposit_payout"
-    } else {
-        "fixed_deposit_early_withdrawal"
-    };
-    let new_balance = account.balance_cents + payout_cents;
-
-    let updated_fixed_deposit = sqlx::query_as::<_, FixedDeposit>(
-        r#"
-        UPDATE fixed_deposits
-        SET penalty_cents = $1,
-            payout_cents = $2,
-            status = $3,
-            updated_at = NOW()
-        WHERE id = $4
-        RETURNING id, user_id, account_id, plan_id, principal_cents, interest_rate_bps,
-                  interest_cents, penalty_cents, payout_cents, start_date, maturity_date,
-                  status, created_at, updated_at
-        "#,
-    )
-    .bind(penalty_cents)
-    .bind(payout_cents)
-    .bind(final_status)
-    .bind(fixed_deposit_id)
-    .fetch_one(&mut *transaction)
-    .await?;
-
-    sqlx::query(
-        r#"
-        UPDATE bank_accounts
-        SET balance_cents = $1, updated_at = NOW()
-        WHERE id = $2
-        "#,
-    )
-    .bind(new_balance)
-    .bind(account.id)
-    .execute(&mut *transaction)
-    .await?;
-
-    let description = if is_matured {
-        format!("Fixed deposit #{} maturity payout", fixed_deposit_id)
-    } else {
-        format!("Fixed deposit #{} early withdrawal - interest forfeited", fixed_deposit_id)
-    };
-
-    sqlx::query(
-        r#"
-        INSERT INTO transactions (
-            account_id, user_id, transaction_type, amount_cents, balance_after_cents, description
-        )
-        VALUES ($1, $2, $3, $4, $5, $6)
-        "#,
-    )
-    .bind(account.id)
-    .bind(user_id)
+    .bind(product_id)
     .bind(transaction_type)
-    .bind(payout_cents)
-    .bind(new_balance)
+    .bind(amount_cents)
+    .bind(balance_after_cents)
     .bind(description)
-    .execute(&mut *transaction)
-    .await?;
-
-    transaction.commit().await?;
-    Ok(updated_fixed_deposit)
-}
-
-async fn get_account_for_update(
-    transaction: &mut SqlxTransaction<'_, Postgres>,
-    account_id: i64,
-    user_id: i64,
-) -> Result<BankAccount, sqlx::Error> {
-    sqlx::query_as::<_, BankAccount>(
-        r#"
-        SELECT id, user_id, account_number, account_type, balance_cents, status, created_at, updated_at
-        FROM bank_accounts
-        WHERE id = $1 AND user_id = $2 AND status = 'active'
-        FOR UPDATE
-        "#,
-    )
-    .bind(account_id)
-    .bind(user_id)
-    .fetch_one(&mut **transaction)
-    .await
-}
-
-async fn get_fixed_deposit_for_update(
-    transaction: &mut SqlxTransaction<'_, Postgres>,
-    user_id: i64,
-    fixed_deposit_id: i64,
-) -> Result<FixedDeposit, sqlx::Error> {
-    sqlx::query_as::<_, FixedDeposit>(
-        r#"
-        SELECT id, user_id, account_id, plan_id, principal_cents, interest_rate_bps,
-               interest_cents, penalty_cents, payout_cents, start_date, maturity_date,
-               status, created_at, updated_at
-        FROM fixed_deposits
-        WHERE id = $1 AND user_id = $2 AND status IN ('active', 'matured')
-        FOR UPDATE
-        "#,
-    )
-    .bind(fixed_deposit_id)
-    .bind(user_id)
-    .fetch_one(&mut **transaction)
+    .fetch_one(&mut **tx)
     .await
 }

@@ -1,0 +1,29 @@
+{% extends "layouts/public.html" %}
+
+{% block title %}RustToGold | Access Denied{% endblock %}
+{% block meta_description %}Access denied. You do not have permission to view this RustToGold banking page.{% endblock %}
+
+{% block content %}
+<main class="error-shell error-shell--forbidden">
+  <a class="error-brand" href="/">
+    <span class="marketing-brand__logo" aria-hidden="true">
+      <img src="/static/images/rusttogold-logo.png" alt="" />
+    </span>
+    <span>RustToGold</span>
+  </a>
+
+  <section class="error-card">
+    <div class="error-card__icon"><i data-lucide="lock-keyhole"></i></div>
+    <p class="marketing-kicker">403 Access Denied</p>
+    <h1>This area is protected.</h1>
+    <p>
+      You are signed in with an account that does not have permission to access this page. This helps keep customer, staff, and admin banking actions properly separated.
+    </p>
+
+    <div class="error-card__actions">
+      <a class="marketing-button marketing-button--primary" href="/customer/dashboard">Return to Dashboard</a>
+      <a class="marketing-button marketing-button--secondary" href="/login">Switch Account</a>
+    </div>
+  </section>
+</main>
+{% endblock %}

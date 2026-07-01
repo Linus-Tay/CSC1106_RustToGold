@@ -1,212 +1,143 @@
-use super::formatting::title_case_code;
+// Model layer: domain structs plus small display helpers used by services and templates.
+
 use super::Money;
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{DateTime, Utc};
 use sqlx::FromRow;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
+// Domain record used by services, repositories and templates.
 pub struct HomeLoanApplication {
-    pub id: i64,
-    pub user_id: i64,
-    pub account_id: i64,
-    pub house_type: String,
-    pub requested_amount_cents: i64,
-    pub interest_rate_bps: i32,
-    pub term_months: i32,
+    pub id: Uuid,
+    pub customer_id: Uuid,
+    pub account_product_id: Option<Uuid>,
+    pub property_type: String,
+    pub property_value_cents: i64,
+    pub down_payment_cents: i64,
+    pub loan_amount_cents: i64,
+    pub annual_rate_bps: i32,
+    pub term_years: i32,
+    pub monthly_payment_cents: i64,
+    pub outstanding_cents: i64,
     pub status: String,
-    pub staff_remarks: Option<String>,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
-    pub approved_amount_cents: Option<i64>,
-    pub approved_by: Option<i64>,
-    pub approved_at: Option<NaiveDateTime>,
-    pub total_repayment_cents: Option<i64>,
-    pub remaining_cents: Option<i64>,
-    pub monthly_payment_cents: Option<i64>,
-    pub next_due_date: Option<NaiveDate>,
-}
-
-#[derive(Debug, Clone, FromRow)]
-pub struct AdminHomeLoanRecord {
-    pub id: i64,
-    pub user_id: i64,
-    pub account_id: i64,
-    pub house_type: String,
-    pub requested_amount_cents: i64,
-    pub interest_rate_bps: i32,
-    pub term_months: i32,
-    pub status: String,
-    pub staff_remarks: Option<String>,
-    pub approved_amount_cents: Option<i64>,
-    pub approved_by: Option<i64>,
-    pub approved_at: Option<NaiveDateTime>,
-    pub total_repayment_cents: Option<i64>,
-    pub remaining_cents: Option<i64>,
-    pub monthly_payment_cents: Option<i64>,
-    pub next_due_date: Option<NaiveDate>,
-    pub customer_name: String,
-    pub customer_email: String,
-    pub account_number: String,
-}
-
-#[derive(Debug, Clone, FromRow)]
-pub struct HomeLoanSummary {
-    pub total_count: i64,
-    pub pending_count: i64,
-    pub approved_count: i64,
-    pub completed_count: i64,
-    pub rejected_count: i64,
-    pub total_approved_cents: i64,
-    pub total_remaining_cents: i64,
-    pub total_monthly_payment_cents: i64,
-}
-
-impl HomeLoanSummary {
-    pub fn total_approved_display(&self) -> String {
-        Money::from_cents(self.total_approved_cents).display()
-    }
-
-    pub fn total_remaining_display(&self) -> String {
-        Money::from_cents(self.total_remaining_cents).display()
-    }
-
-    pub fn total_monthly_payment_display(&self) -> String {
-        Money::from_cents(self.total_monthly_payment_cents).display()
-    }
+    pub reviewed_by: Option<Uuid>,
+    pub reviewed_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl HomeLoanApplication {
-    pub fn house_type_display(&self) -> String {
-        match self.house_type.as_str() {
-            "hdb_1_or_2_room" => "HDB 1- or 2-Room Flat".to_string(),
-            "hdb_3_or_larger" => "HDB 3-Room or Larger Flat".to_string(),
-            "condo" => "Private Condominium".to_string(),
-            "landed" => "Landed Property".to_string(),
-            value => title_case_code(value),
-        }
+    // Formats the value for display in templates.
+    pub fn property_value_display(&self) -> String {
+        Money::from_cents(self.property_value_cents).display()
     }
 
-    pub fn requested_amount_display(&self) -> String {
-        Money::from_cents(self.requested_amount_cents).display()
+    // Formats the value for display in templates.
+    pub fn down_payment_display(&self) -> String {
+        Money::from_cents(self.down_payment_cents).display()
     }
 
-    pub fn approved_amount_display(&self) -> String {
-        self.approved_amount_cents
-            .map(|value| Money::from_cents(value).display())
-            .unwrap_or_else(|| "-".to_string())
+    // Formats the value for display in templates.
+    pub fn loan_amount_display(&self) -> String {
+        Money::from_cents(self.loan_amount_cents).display()
     }
 
-    pub fn total_repayment_display(&self) -> String {
-        self.total_repayment_cents
-            .map(|value| Money::from_cents(value).display())
-            .unwrap_or_else(|| "-".to_string())
-    }
-
-    pub fn remaining_display(&self) -> String {
-        self.remaining_cents
-            .map(|value| Money::from_cents(value).display())
-            .unwrap_or_else(|| "-".to_string())
-    }
-
+    // Formats the value for display in templates.
     pub fn monthly_payment_display(&self) -> String {
-        self.monthly_payment_cents
-            .map(|value| Money::from_cents(value).display())
-            .unwrap_or_else(|| "Pending approval".to_string())
+        Money::from_cents(self.monthly_payment_cents).display()
     }
 
-
-    pub fn next_due_date_display(&self) -> String {
-        self.next_due_date
-            .map(|value| value.format("%d %b %Y").to_string())
-            .unwrap_or_else(|| "-".to_string())
+    // Formats the value for display in templates.
+    pub fn outstanding_display(&self) -> String {
+        Money::from_cents(self.outstanding_cents).display()
     }
 
-    pub fn interest_rate_display(&self) -> String {
-        format!("{:.2}%", self.interest_rate_bps as f64 / 100.0)
+    // Returns the raw value used by form fields and validation.
+    pub fn outstanding_plain(&self) -> String {
+        format!("{:.2}", self.outstanding_cents as f64 / 100.0)
     }
 
-    pub fn term_years_display(&self) -> String {
-        format!("{} years", self.term_months / 12)
+    // Formats the value for display in templates.
+    pub fn rate_display(&self) -> String {
+        format!("{:.2}%", self.annual_rate_bps as f64 / 100.0)
     }
 
-    pub fn is_overdue(&self) -> bool {
-        let today = chrono::Local::now().date_naive();
-
-        self.status == "approved"
-            && self.next_due_date
-                .map(|date| date < today)
-                .unwrap_or(false)
-    }
-
-
+    // Formats the value for display in templates.
     pub fn status_display(&self) -> String {
-        if self.is_overdue() {
-            return "Overdue".to_string();
-        }
-
         match self.status.as_str() {
-            "pending_review" => "Pending Review".to_string(),
-            value => title_case_code(value),
+            "pending" => "Pending Review".to_string(),
+            "approved" => "Approved".to_string(),
+            "rejected" => "Rejected".to_string(),
+            "fully_paid" => "Fully Paid".to_string(),
+            value => value.replace('_', " "),
         }
     }
 
-    pub fn can_pay(&self) -> bool {
-        self.status == "approved"
-            && self.remaining_cents.unwrap_or(0) > 0
-            && self.monthly_payment_cents.unwrap_or(0) > 0
+    // Formats the value for display in templates.
+    pub fn created_at_display(&self) -> String {
+        self.created_at.format("%d %b %Y").to_string()
+    }
+
+    // Returns whether this record is payable.
+    pub fn is_payable(&self) -> bool {
+        self.status == "approved" && self.outstanding_cents > 0
+    }
+
+    // Returns whether this record is pending.
+    pub fn is_pending(&self) -> bool {
+        self.status == "pending"
+    }
+
+    // Explains the down-payment hold in customer-facing language.
+    pub fn down_payment_note(&self) -> &'static str {
+        match self.status.as_str() {
+            "pending" => "Down payment is reserved while the bank reviews this application.",
+            "rejected" => "Down payment was released back to your account.",
+            "approved" | "fully_paid" => "Down payment remains applied to this approved home loan.",
+            _ => "Down payment status follows this application record.",
+        }
     }
 }
 
+#[derive(Debug, Clone)]
+// Domain record used by services, repositories and templates.
+pub struct HomeLoanSummary {
+    pub total_outstanding_cents: i64,
+    pub pending_count: usize,
+    pub approved_count: usize,
+}
 
-impl AdminHomeLoanRecord {
-    pub fn house_type_display(&self) -> String {
-        match self.house_type.as_str() {
-            "hdb_1_or_2_room" => "HDB 1- or 2-Room Flat".to_string(),
-            "hdb_3_or_larger" => "HDB 3-Room or Larger Flat".to_string(),
-            "condo" => "Private Condominium".to_string(),
-            "landed" => "Landed Property".to_string(),
-            value => title_case_code(value),
+impl HomeLoanSummary {
+    // Builds the model value from applications.
+    pub fn from_applications(applications: &[HomeLoanApplication]) -> Self {
+        let total_outstanding_cents = applications
+            .iter()
+            .filter(|application| application.status == "approved")
+            .map(|application| application.outstanding_cents)
+            .sum();
+        let pending_count = applications
+            .iter()
+            .filter(|application| application.status == "pending")
+            .count();
+        let approved_count = applications
+            .iter()
+            .filter(|application| application.status == "approved")
+            .count();
+
+        Self {
+            total_outstanding_cents,
+            pending_count,
+            approved_count,
         }
     }
 
-    pub fn requested_amount_display(&self) -> String {
-        Money::from_cents(self.requested_amount_cents).display()
+    // Formats the value for display in templates.
+    pub fn outstanding_display(&self) -> String {
+        Money::from_cents(self.total_outstanding_cents).display()
     }
 
-    pub fn approved_amount_display(&self) -> String {
-        self.approved_amount_cents
-            .map(|value| Money::from_cents(value).display())
-            .unwrap_or_else(|| "-".to_string())
-    }
-
-    pub fn remaining_display(&self) -> String {
-        self.remaining_cents
-            .map(|value| Money::from_cents(value).display())
-            .unwrap_or_else(|| "-".to_string())
-    }
-
-    pub fn monthly_payment_display(&self) -> String {
-        self.monthly_payment_cents
-            .map(|value| Money::from_cents(value).display())
-            .unwrap_or_else(|| "-".to_string())
-    }
-
-    pub fn is_overdue(&self) -> bool {
-        let today = chrono::Local::now().date_naive();
-
-        self.status == "approved"
-            && self.next_due_date
-                .map(|date| date < today)
-                .unwrap_or(false)
-    }
-
-    pub fn status_display(&self) -> String {
-        if self.is_overdue() {
-            return "Overdue".to_string();
-        }
-
-        match self.status.as_str() {
-            "pending_review" => "Pending Review".to_string(),
-            value => title_case_code(value),
-        }
+    // Formats the value for display in templates.
+    pub fn total_outstanding_display(&self) -> String {
+        self.outstanding_display()
     }
 }

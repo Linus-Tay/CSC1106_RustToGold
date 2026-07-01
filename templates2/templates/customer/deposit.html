@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Askama template: templates/customer/deposit.html -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Deposit Money</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <nav class="c-navbar" aria-label="Customer navigation">
+    <div class="u-container c-navbar__inner">
+      <a class="c-navbar__brand" href="/customer/dashboard" data-route="/customer/dashboard">
+        <span class="c-navbar__logo-wrap" aria-hidden="true">
+          <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
+        </span>
+        <span>RustToGold</span>
+      </a>
+      <ul class="c-navbar__links">
+        <li><a class="c-navbar__link" href="/customer/dashboard" data-route="/customer/dashboard"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
+        <li><a class="c-navbar__link is-active" href="/customer/deposit" data-route="/customer/deposit"><i data-lucide="circle-dollar-sign"></i>Deposit</a></li>
+        <li><a class="c-navbar__link" href="/customer/transfer" data-route="/customer/transfer"><i data-lucide="send"></i>Transfer</a></li>
+        <li><a class="c-navbar__link" href="/customer/transactions" data-route="/customer/transactions"><i data-lucide="receipt-text"></i>Transactions</a></li>
+        <li><a class="c-navbar__link" href="/customer/loans" data-route="/customer/loans"><i data-lucide="file-signature"></i>Loans</a></li>
+        <li><a class="c-navbar__link" href="/customer/fixed-deposits" data-route="/customer/fixed-deposits"><i data-lucide="piggy-bank"></i>Fixed Deposits</a></li>
+        <li><a class="c-navbar__link" href="/customer/profile" data-route="/customer/profile"><i data-lucide="user-round"></i>Profile</a></li>
+      </ul>
+      <div class="c-navbar__actions">
+        <a class="c-navbar__login" href="/logout" data-route="/logout"><i data-lucide="log-out"></i> Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="app-main">
+    <div class="u-container">
+      <header class="app-page-header">
+        <div>
+          <h1 class="app-page-title">Deposit Money</h1>
+          <p class="app-page-description">Add funds into your RustToGold savings account. Every successful deposit is recorded in your transaction history.</p>
+        </div>
+      </header>
+
+      <div class="app-grid app-grid--2">
+        <section class="c-card">
+          <div class="c-card__header">
+            <div>
+              <h2 class="c-card__title">Deposit Details</h2>
+              <p class="c-card__subtitle">Enter an amount greater than $0.00.</p>
+            </div>
+          </div>
+          <div class="c-card__body">
+            {% if has_error %}
+            <div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div><br>
+            {% endif %}
+            {% if has_success %}
+            <div class="alert alert--info"><i data-lucide="circle-check"></i> {{ success }}</div><br>
+            {% endif %}
+
+            <form class="form" action="/customer/deposit" method="post">
+              <div class="form-field">
+                <label class="form-label" for="amount">Amount</label>
+                <input class="form-input" id="amount" name="amount" type="text" placeholder="50.00" required />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="description">Description</label>
+                <input class="form-input" id="description" name="description" type="text" placeholder="Cash deposit" />
+              </div>
+              <button class="c-button c-button--primary" type="submit"><i data-lucide="circle-dollar-sign"></i> Deposit Money</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="c-card c-card--navy">
+          <div class="c-card__header">
+            <div>
+              <h2 class="c-card__title">Account Summary</h2>
+              <p class="c-card__subtitle">Current account information.</p>
+            </div>
+          </div>
+          <div class="c-card__body">
+            <div class="detail-list">
+              <div class="detail-row"><div class="detail-row__label">Account Number</div><div class="detail-row__value">{{ account_number }}</div></div>
+              <div class="detail-row"><div class="detail-row__label">Account Type</div><div class="detail-row__value">Savings</div></div>
+              <div class="detail-row"><div class="detail-row__label">Available Balance</div><div class="detail-row__value">${{ balance }}</div></div>
+              <div class="detail-row"><div class="detail-row__label">Status</div><div class="detail-row__value"><span class="badge badge--success">Active</span></div></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="c-footer">
+    <div class="u-container c-footer__inner">
+      <div>
+        <div class="c-footer__brand"><span class="c-footer__dot"></span> RustToGold</div>
+        <p class="c-footer__note">Secure digital banking for accounts, transfers, savings, loans, and customer support.</p>
+      </div>
+      <div class="c-footer__links">
+        <a href="/customer/dashboard">Dashboard</a>
+        <a href="/customer/transactions">Transactions</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </footer>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

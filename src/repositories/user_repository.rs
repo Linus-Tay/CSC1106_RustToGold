@@ -1,61 +1,89 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::User;
-use chrono::NaiveDate;
 use sqlx::PgPool;
+use uuid::Uuid;
 
+const USER_SELECT: &str = r#"
+    SELECT id, customer_id, username, email, password_hash, role, status, last_login_at, created_at, updated_at
+    FROM users
+"#;
+
+// Reads find user by email data from the database.
 pub async fn find_user_by_email(db: &PgPool, email: &str) -> Result<Option<User>, sqlx::Error> {
-    sqlx::query_as::<_, User>(
-        r#"
-        SELECT id, full_name, email, phone_number, date_of_birth, password_hash, role, status, monthly_income_cents,
-               last_login_at, created_at, updated_at
-        FROM users
-        WHERE email = $1
-        "#,
-    )
-    .bind(email)
-    .fetch_optional(db)
-    .await
+    let query = format!("{} WHERE lower(email) = lower($1)", USER_SELECT);
+    sqlx::query_as::<_, User>(&query)
+        .bind(email)
+        .fetch_optional(db)
+        .await
 }
 
-pub async fn find_user_by_id(db: &PgPool, user_id: i64) -> Result<Option<User>, sqlx::Error> {
-    sqlx::query_as::<_, User>(
-        r#"
-        SELECT id, full_name, email, phone_number, date_of_birth, password_hash, role, status, monthly_income_cents, 
-               last_login_at, created_at, updated_at
-        FROM users
-        WHERE id = $1
-        "#,
-    )
-    .bind(user_id)
-    .fetch_optional(db)
-    .await
+// Reads find user by username data from the database.
+pub async fn find_user_by_username(db: &PgPool, username: &str) -> Result<Option<User>, sqlx::Error> {
+    let query = format!("{} WHERE lower(username) = lower($1)", USER_SELECT);
+    sqlx::query_as::<_, User>(&query)
+        .bind(username)
+        .fetch_optional(db)
+        .await
 }
 
-pub async fn create_customer(
+// Reads find user by login data from the database.
+pub async fn find_user_by_login(db: &PgPool, login: &str) -> Result<Option<User>, sqlx::Error> {
+    let query = format!("{} WHERE lower(username) = lower($1) OR lower(email) = lower($1)", USER_SELECT);
+    sqlx::query_as::<_, User>(&query)
+        .bind(login)
+        .fetch_optional(db)
+        .await
+}
+
+// Reads find user by id data from the database.
+pub async fn find_user_by_id(db: &PgPool, user_id: Uuid) -> Result<Option<User>, sqlx::Error> {
+    let query = format!("{} WHERE id = $1", USER_SELECT);
+    sqlx::query_as::<_, User>(&query)
+        .bind(user_id)
+        .fetch_optional(db)
+        .await
+}
+
+// Persists the create customer user database change.
+pub async fn create_customer_user(
     db: &PgPool,
-    full_name: &str,
+    customer_id: Uuid,
+    username: &str,
     email: &str,
-    phone_number: &str,
-    date_of_birth: NaiveDate,
     password_hash: &str,
 ) -> Result<User, sqlx::Error> {
     sqlx::query_as::<_, User>(
         r#"
-        INSERT INTO users (full_name, email, phone_number, date_of_birth, password_hash, role, status)
-        VALUES ($1, $2, $3, $4, $5, 'customer', 'active')
-        RETURNING id, full_name, email, phone_number, date_of_birth, password_hash, role, status, monthly_income_cents, 
-                  last_login_at, created_at, updated_at
+        INSERT INTO users (customer_id, username, email, password_hash, role, status)
+        VALUES ($1, $2, $3, $4, 'customer', 'active')
+        RETURNING id, customer_id, username, email, password_hash, role, status, last_login_at, created_at, updated_at
         "#,
     )
-    .bind(full_name)
+    .bind(customer_id)
+    .bind(username)
     .bind(email)
-    .bind(phone_number)
-    .bind(date_of_birth)
     .bind(password_hash)
     .fetch_one(db)
     .await
 }
 
-pub async fn update_last_login(db: &PgPool, user_id: i64) -> Result<(), sqlx::Error> {
+// Backwards-compatible name for older imports. Customer identity belongs to customers, not users.
+pub async fn create_customer(
+    db: &PgPool,
+    customer_id: Uuid,
+    _full_name: &str,
+    email: &str,
+    _phone_number: &str,
+    _date_of_birth: chrono::NaiveDate,
+    password_hash: &str,
+) -> Result<User, sqlx::Error> {
+    let fallback_username = email.split('@').next().unwrap_or(email).to_lowercase();
+    create_customer_user(db, customer_id, &fallback_username, email, password_hash).await
+}
+
+// Persists the update last login database change.
+pub async fn update_last_login(db: &PgPool, user_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1")
         .bind(user_id)
         .execute(db)
@@ -64,23 +92,21 @@ pub async fn update_last_login(db: &PgPool, user_id: i64) -> Result<(), sqlx::Er
     Ok(())
 }
 
-pub async fn update_profile(
+// Persists the update password database change.
+pub async fn update_password(
     db: &PgPool,
-    user_id: i64,
-    full_name: &str,
-    phone_number: &str,
+    user_id: Uuid,
+    password_hash: &str,
 ) -> Result<User, sqlx::Error> {
     sqlx::query_as::<_, User>(
         r#"
         UPDATE users
-        SET full_name = $1, phone_number = $2, updated_at = NOW()
-        WHERE id = $3
-        RETURNING id, full_name, email, phone_number, date_of_birth, password_hash, role, status, monthly_income_cents, 
-                  last_login_at, created_at, updated_at
+        SET password_hash = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING id, customer_id, username, email, password_hash, role, status, last_login_at, created_at, updated_at
         "#,
     )
-    .bind(full_name)
-    .bind(phone_number)
+    .bind(password_hash)
     .bind(user_id)
     .fetch_one(db)
     .await

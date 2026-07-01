@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" style="color-scheme: light only;">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light" />
+  <title>RustToGold Application Received</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap');
+
+    :root { color-scheme: light only; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      margin: 0;
+      padding: 40px 16px;
+      background: #EEF4FF !important;
+      color: #0B1F3A !important;
+      font-family: 'Inter', Arial, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .email-wrapper {
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    .header {
+      padding: 34px 36px;
+      border-radius: 24px 24px 0 0;
+      background: #0B1F3A !important;
+      background-image: radial-gradient(circle at top right, rgba(212,168,79,0.35), transparent 220px) !important;
+      text-align: center;
+    }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: #FFFFFF !important;
+      font-family: 'Manrope', 'Inter', Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      background: #D4A84F !important;
+      color: #0B1F3A !important;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .card {
+      padding: 42px 42px 36px;
+      background: #FFFFFF !important;
+    }
+
+    .kicker {
+      margin-bottom: 12px;
+      color: #1D4ED8 !important;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .headline {
+      max-width: 460px;
+      color: #0B1F3A !important;
+      font-family: 'Manrope', 'Inter', Arial, sans-serif;
+      font-size: 30px;
+      line-height: 1.12;
+      letter-spacing: -0.05em;
+      font-weight: 800;
+    }
+
+    .body-text {
+      margin-top: 18px;
+      color: #475569 !important;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .status-box {
+      margin: 28px 0;
+      padding: 20px;
+      border: 1px solid #BFDBFE;
+      border-radius: 18px;
+      background: #EFF6FF !important;
+    }
+
+    .status-row {
+      display: table;
+      width: 100%;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(191, 219, 254, 0.85);
+    }
+
+    .status-row:last-child { border-bottom: 0; }
+    .status-label,
+    .status-value {
+      display: table-cell;
+      vertical-align: middle;
+      font-size: 13px;
+    }
+
+    .status-label {
+      width: 42%;
+      color: #64748B !important;
+      font-weight: 700;
+    }
+
+    .status-value {
+      color: #0B1F3A !important;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #FEF3C7 !important;
+      color: #92400E !important;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .timeline-title {
+      margin-bottom: 14px;
+      color: #0B1F3A !important;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .step {
+      display: table;
+      width: 100%;
+      margin-bottom: 14px;
+    }
+
+    .step-num {
+      display: table-cell;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: #DBEAFE !important;
+      color: #1D4ED8 !important;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .step-copy {
+      display: table-cell;
+      padding-left: 14px;
+      vertical-align: middle;
+    }
+
+    .step-copy strong {
+      display: block;
+      color: #0B1F3A !important;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .step-copy span {
+      display: block;
+      margin-top: 3px;
+      color: #64748B !important;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .notice {
+      margin-top: 26px;
+      padding: 16px 18px;
+      border-left: 4px solid #10B981;
+      border-radius: 0 14px 14px 0;
+      background: #ECFDF5 !important;
+      color: #065F46 !important;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .footer {
+      padding: 26px 36px;
+      border-radius: 0 0 24px 24px;
+      background: #071B33 !important;
+      text-align: center;
+    }
+
+    .footer strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #FFFFFF !important;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .footer p {
+      color: rgba(255, 255, 255, 0.65) !important;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 24px 12px; }
+      .header, .card, .footer { padding-left: 24px; padding-right: 24px; }
+      .headline { font-size: 25px; }
+      .status-label, .status-value { display: block; width: 100%; text-align: left; }
+      .status-value { margin-top: 4px; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:40px 16px; background:#EEF4FF; color:#0B1F3A; font-family:'Inter',Arial,sans-serif;">
+  <div class="email-wrapper" style="max-width:620px; margin:0 auto;">
+    <div class="header" style="padding:34px 36px; border-radius:24px 24px 0 0; background:#0B1F3A; text-align:center;">
+      <div class="brand-mark" style="display:inline-flex; align-items:center; gap:12px; color:#FFFFFF; font-family:'Manrope','Inter',Arial,sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.03em;">
+        <span class="brand-icon" style="display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:16px; background:#D4A84F; color:#0B1F3A; font-size:17px; font-weight:900;">RTG</span>
+        RustToGold Bank
+      </div>
+    </div>
+
+    <main class="card" style="padding:42px 42px 36px; background:#FFFFFF;">
+      <p class="kicker" style="margin-bottom:12px; color:#1D4ED8; font-size:12px; font-weight:800; letter-spacing:0.16em; text-transform:uppercase;">Application received</p>
+      <h1 class="headline" style="max-width:460px; color:#0B1F3A; font-family:'Manrope','Inter',Arial,sans-serif; font-size:30px; line-height:1.12; letter-spacing:-0.05em; font-weight:800;">Thanks for applying with RustToGold.</h1>
+      <p class="body-text" style="margin-top:18px; color:#475569; font-size:15px; line-height:1.75;">We have received your account application and it is now queued for staff review. This email confirms submission only — your account is not active yet.</p>
+
+      <section class="status-box" style="margin:28px 0; padding:20px; border:1px solid #BFDBFE; border-radius:18px; background:#EFF6FF;">
+        <div class="status-row" style="display:table; width:100%; padding:10px 0; border-bottom:1px solid rgba(191,219,254,0.85);">
+          <span class="status-label" style="display:table-cell; width:42%; color:#64748B; font-size:13px; font-weight:700;">Current status</span>
+          <span class="status-value" style="display:table-cell; color:#0B1F3A; font-size:13px; font-weight:800; text-align:right;"><span class="pill" style="display:inline-block; padding:7px 12px; border-radius:999px; background:#FEF3C7; color:#92400E; font-size:12px; font-weight:800;">Under review</span></span>
+        </div>
+        <div class="status-row" style="display:table; width:100%; padding:10px 0; border-bottom:1px solid rgba(191,219,254,0.85);">
+          <span class="status-label" style="display:table-cell; width:42%; color:#64748B; font-size:13px; font-weight:700;">Email type</span>
+          <span class="status-value" style="display:table-cell; color:#0B1F3A; font-size:13px; font-weight:800; text-align:right;">Submission confirmation</span>
+        </div>
+        <div class="status-row" style="display:table; width:100%; padding:10px 0;">
+          <span class="status-label" style="display:table-cell; width:42%; color:#64748B; font-size:13px; font-weight:700;">Next email</span>
+          <span class="status-value" style="display:table-cell; color:#0B1F3A; font-size:13px; font-weight:800; text-align:right;">Activation link after approval</span>
+        </div>
+      </section>
+
+      <p class="timeline-title" style="margin-bottom:14px; color:#0B1F3A; font-size:13px; font-weight:900; letter-spacing:0.12em; text-transform:uppercase;">What happens next</p>
+      <div class="step" style="display:table; width:100%; margin-bottom:14px;">
+        <div class="step-num" style="display:table-cell; width:34px; height:34px; border-radius:999px; background:#DBEAFE; color:#1D4ED8; text-align:center; vertical-align:middle; font-size:13px; font-weight:900;">1</div>
+        <div class="step-copy" style="display:table-cell; padding-left:14px; vertical-align:middle;"><strong style="display:block; color:#0B1F3A; font-size:14px; font-weight:800;">Staff review</strong><span style="display:block; margin-top:3px; color:#64748B; font-size:13px; line-height:1.5;">Your application details are checked by an admin user.</span></div>
+      </div>
+      <div class="step" style="display:table; width:100%; margin-bottom:14px;">
+        <div class="step-num" style="display:table-cell; width:34px; height:34px; border-radius:999px; background:#DBEAFE; color:#1D4ED8; text-align:center; vertical-align:middle; font-size:13px; font-weight:900;">2</div>
+        <div class="step-copy" style="display:table-cell; padding-left:14px; vertical-align:middle;"><strong style="display:block; color:#0B1F3A; font-size:14px; font-weight:800;">Activation email</strong><span style="display:block; margin-top:3px; color:#64748B; font-size:13px; line-height:1.5;">If approved, you will receive a secure account setup link.</span></div>
+      </div>
+      <div class="step" style="display:table; width:100%; margin-bottom:14px;">
+        <div class="step-num" style="display:table-cell; width:34px; height:34px; border-radius:999px; background:#DBEAFE; color:#1D4ED8; text-align:center; vertical-align:middle; font-size:13px; font-weight:900;">3</div>
+        <div class="step-copy" style="display:table-cell; padding-left:14px; vertical-align:middle;"><strong style="display:block; color:#0B1F3A; font-size:14px; font-weight:800;">Start banking</strong><span style="display:block; margin-top:3px; color:#64748B; font-size:13px; line-height:1.5;">After setup, your customer dashboard and product features become available.</span></div>
+      </div>
+
+      <div class="notice" style="margin-top:26px; padding:16px 18px; border-left:4px solid #10B981; border-radius:0 14px 14px 0; background:#ECFDF5; color:#065F46; font-size:13px; font-weight:700; line-height:1.6;">No action is needed right now. Please wait for the approval and activation email.</div>
+    </main>
+
+    <footer class="footer" style="padding:26px 36px; border-radius:0 0 24px 24px; background:#071B33; text-align:center;">
+      <strong style="display:block; margin-bottom:8px; color:#FFFFFF; font-size:14px; font-weight:800;">RustToGold Bank</strong>
+      <p style="color:rgba(255,255,255,0.65); font-size:12px; line-height:1.7;">This is a system-generated confirmation from RustToGold. Please do not reply to this email.</p>
+    </footer>
+  </div>
+</body>
+</html>

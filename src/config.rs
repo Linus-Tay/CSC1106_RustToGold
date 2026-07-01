@@ -1,22 +1,32 @@
+// Application configuration loaded from environment variables.
+
 use std::env;
 
 #[derive(Debug, Clone)]
+// Data carrier for the Config workflow.
 pub struct Config {
     pub database_url: String,
     pub session_secret: String,
     pub host: String,
     pub port: u16,
+    pub smtp_port: u16,
 }
 
 impl Config {
+    // Builds configuration value for from env.
     pub fn from_env() -> Self {
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env");
-        let session_secret = env::var("SESSION_SECRET").expect("SESSION_SECRET must be set in .env");
+        let session_secret =
+            env::var("SESSION_SECRET").expect("SESSION_SECRET must be set in .env");
         let host = env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
         let port = env::var("SERVER_PORT")
             .ok()
             .and_then(|value| value.parse::<u16>().ok())
             .unwrap_or(3000);
+        let smtp_port = env::var("SMTP_PORT")
+            .ok()
+            .and_then(|value| value.parse::<u16>().ok())
+            .unwrap_or(587);
 
         if session_secret.as_bytes().len() < 64 {
             panic!("SESSION_SECRET must be at least 64 bytes for cookie session security.");
@@ -27,9 +37,11 @@ impl Config {
             session_secret,
             host,
             port,
+            smtp_port,
         }
     }
 
+    // Builds configuration value for bind address.
     pub fn bind_address(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }

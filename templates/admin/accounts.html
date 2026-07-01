@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold Admin | Customer Accounts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#F8FAFC] text-slate-900">
+  {% include "partials/admin_nav.html" %}
+
+  <main class="mx-auto max-w-7xl px-6 py-10">
+    <section class="rounded-[2rem] bg-[#0B1F3A] p-8 text-white shadow-xl shadow-[#0B1F3A]/20">
+      <p class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.24em] text-[#D6A54A]"><i data-lucide="wallet-cards" class="h-4 w-4"></i> Account Opening Review</p>
+      <h1 class="text-4xl font-black tracking-tight">Customer Account Applications</h1>
+      <p class="mt-4 max-w-3xl text-white/70">Review newly requested bank products, approve pending accounts, and manage existing customer access from one admin view.</p>
+    </section>
+
+    {% if has_error %}
+    <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">{{ error }}</div>
+    {% endif %}
+
+    <section class="mt-8 grid gap-5">
+      {% if has_accounts %}
+      {% for acc in accounts %}
+      <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div class="min-w-0">
+            <div class="mb-3 flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-[#1D4ED8]/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-[#1D4ED8]">{{ acc.product_status_display() }}</span>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">User: {{ acc.user_status_display() }}</span>
+              <span class="rounded-full bg-[#D6A54A]/15 px-3 py-1 text-xs font-bold text-[#0B1F3A]">KYC: {{ acc.kyc_status_display() }}</span>
+            </div>
+            <h2 class="text-2xl font-black text-[#0B1F3A]">{{ acc.customer_name }}</h2>
+            <p class="mt-1 text-sm font-semibold text-slate-500">{{ acc.customer_email }} · {{ acc.username_display() }}</p>
+            <p class="mt-3 text-sm leading-6 text-slate-500">Bank ID: <strong>{{ acc.account_number }}</strong> · {{ acc.product_display() }} · {{ acc.product_type_display() }}</p>
+          </div>
+
+          <div class="text-left xl:text-right">
+            <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Balance</p>
+            <strong class="mt-2 block text-3xl font-black text-[#0B1F3A]">{{ acc.balance_display() }}</strong>
+            <p class="mt-2 text-xs font-semibold text-slate-400">Opened {{ acc.created_at_display() }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-4 lg:grid-cols-2">
+          <div class="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+            <h3 class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#0B1F3A]"><i data-lucide="user-round-cog" class="h-4 w-4 text-[#1D4ED8]"></i> User access</h3>
+            <p class="text-sm leading-6 text-slate-500">Suspending the customer user blocks login to the dashboard entirely.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              {% if acc.can_suspend_user() %}
+              <form action="/admin/accounts/users/{{ acc.user_action_id() }}/suspend" method="post">
+                <button class="inline-flex min-h-10 items-center gap-2 rounded-2xl bg-amber-600 px-4 py-2 text-sm font-black text-white" type="submit"><i data-lucide="ban" class="h-4 w-4"></i> Suspend User</button>
+              </form>
+              {% endif %}
+              {% if acc.can_activate_user() %}
+              <form action="/admin/accounts/users/{{ acc.user_action_id() }}/activate" method="post">
+                <button class="inline-flex min-h-10 items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-black text-white" type="submit"><i data-lucide="check" class="h-4 w-4"></i> Reactivate User</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+            <h3 class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#0B1F3A]"><i data-lucide="lock-keyhole" class="h-4 w-4 text-[#1D4ED8]"></i> Product review</h3>
+            <p class="text-sm leading-6 text-slate-500">Inactive products are pending account applications. Activating them makes the account available for deposits, transfers, loans and fixed deposit funding.</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              {% if acc.can_activate_product() %}
+              <form action="/admin/accounts/products/{{ acc.product_id }}/activate" method="post">
+                <button class="inline-flex min-h-10 items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-black text-white" type="submit"><i data-lucide="check" class="h-4 w-4"></i> Approve / Activate</button>
+              </form>
+              {% endif %}
+              {% if acc.can_freeze_product() %}
+              <form action="/admin/accounts/products/{{ acc.product_id }}/freeze" method="post">
+                <button class="inline-flex min-h-10 items-center gap-2 rounded-2xl bg-amber-600 px-4 py-2 text-sm font-black text-white" type="submit"><i data-lucide="snowflake" class="h-4 w-4"></i> Freeze</button>
+              </form>
+              {% endif %}
+              {% if acc.can_close_product() %}
+              <form action="/admin/accounts/products/{{ acc.product_id }}/close" method="post">
+                <button class="inline-flex min-h-10 items-center gap-2 rounded-2xl bg-red-600 px-4 py-2 text-sm font-black text-white" type="submit"><i data-lucide="x" class="h-4 w-4"></i> Close</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+      {% else %}
+      <div class="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+        <div class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-slate-500"><i data-lucide="wallet-cards" class="h-7 w-7"></i></div>
+        <h2 class="text-2xl font-black text-[#0B1F3A]">No customer products yet</h2>
+        <p class="mt-2 text-sm text-slate-500">Approved customer accounts and created products will appear here.</p>
+      </div>
+      {% endif %}
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

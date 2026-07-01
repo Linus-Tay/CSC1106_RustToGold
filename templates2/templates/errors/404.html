@@ -1,0 +1,35 @@
+{% extends "layouts/public.html" %}
+
+{% block title %}RustToGold | Page Not Found{% endblock %}
+{% block meta_description %}The RustToGold page you are looking for could not be found.{% endblock %}
+
+{% block content %}
+<main class="error-shell error-shell--missing">
+  <a class="error-brand" href="/">
+    <span class="marketing-brand__logo" aria-hidden="true">
+      <img src="/static/images/rusttogold-logo.png" alt="" />
+    </span>
+    <span>RustToGold</span>
+  </a>
+
+  <section class="error-card">
+    <div class="error-card__icon"><i data-lucide="search-x"></i></div>
+    <p class="marketing-kicker">404 Page Not Found</p>
+    <h1>This banking page does not exist.</h1>
+    <p>
+      The link may be outdated, mistyped, or not part of the current RustToGold banking workflow.
+    </p>
+
+    <div class="error-card__suggestions" aria-label="Useful links">
+      <a href="/">Landing Page</a>
+      <a href="/login">Online Banking Login</a>
+      <a href="/signup">Open Account</a>
+    </div>
+
+    <div class="error-card__actions">
+      <a class="marketing-button marketing-button--primary" href="/">Return Home</a>
+      <a class="marketing-button marketing-button--secondary" href="/login">Login</a>
+    </div>
+  </section>
+</main>
+{% endblock %}

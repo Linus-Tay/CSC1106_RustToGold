@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | PayNow</title>
+  {% include "partials/customer_assets.html" %}
+</head>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+
+  <main class="customer-main">
+    <div class="customer-container">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+
+      <section class="module-hero module-hero--navy paynow-hero paynow-hero--simple">
+        <div>
+          <p class="customer-kicker">PayNow</p>
+          {% if has_registrations %}
+          <h1>Send money by PayNow number.</h1>
+          <p>Your PayNow mobile number is already linked. Transfers now only need a recipient mobile number, amount and source account.</p>
+          {% else %}
+          <h1>Register your PayNow number first.</h1>
+          <p>PayNow is kept simple: one mobile number is linked to your primary active RustToGold account.</p>
+          {% endif %}
+        </div>
+        <div class="paynow-status-card">
+          <span>{% if has_registrations %}Registered{% else %}Not registered{% endif %}</span>
+          {% if has_registrations %}
+            {% for registration in registrations %}
+              {% if loop.first %}<strong>{{ registration.identifier_display() }}</strong><small>Linked to {{ registration.account_number }}</small>{% endif %}
+            {% endfor %}
+          {% else %}
+          <strong>PayNow setup required</strong>
+          <small>Register once before making PayNow transfers.</small>
+          {% endif %}
+        </div>
+      </section>
+
+      {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+      {% if has_success %}<div class="alert alert--success"><i data-lucide="check-circle"></i> {{ success }}</div>{% endif %}
+
+      <div class="paynow-grid paynow-grid--single-flow">
+        {% if has_registrations %}
+        <section class="customer-card paynow-panel paynow-panel--transfer">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="send"></i></span>
+            <div>
+              <p class="customer-kicker">Transfer</p>
+              <h2>Transfer via PayNow</h2>
+              <p>Select the account to debit, then enter the recipient's PayNow mobile number.</p>
+            </div>
+          </div>
+
+          <div class="customer-card__body">
+            <form class="form-grid" action="/customer/paynow/transfer" method="post">
+              <input type="hidden" name="recipient_type" value="phone_number" />
+
+              <div class="form-field form-field--full">
+                <label class="form-label" for="from_product_id">From Account</label>
+                <select class="form-input" id="from_product_id" name="from_product_id" required>
+                  {% for account in accounts %}
+                  <option value="{{ account.id }}">{{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}</option>
+                  {% endfor %}
+                </select>
+                <p class="form-help">This is the account RustToGold will debit for the PayNow transfer.</p>
+              </div>
+
+              <div class="form-field">
+                <label class="form-label" for="recipient_id">Recipient PayNow Number</label>
+                <input class="form-input" id="recipient_id" name="recipient_id" inputmode="numeric" placeholder="91234567" required />
+              </div>
+
+              <div class="form-field">
+                <label class="form-label" for="amount">Amount</label>
+                <input class="form-input" id="amount" name="amount" type="number" min="0.01" max="50000" step="0.01" placeholder="50.00" required />
+              </div>
+
+              <div class="form-field form-field--full">
+                <label class="form-label" for="note">Reference</label>
+                <input class="form-input" id="note" name="note" maxlength="120" placeholder="Dinner, allowance, invoice" />
+              </div>
+
+              <button class="c-button c-button--primary" type="submit"><i data-lucide="send"></i> Send PayNow Transfer</button>
+            </form>
+          </div>
+        </section>
+        {% else %}
+        <section class="customer-card paynow-panel paynow-panel--register paynow-register-only">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="badge-plus"></i></span>
+            <div>
+              <p class="customer-kicker">Register</p>
+              <h2>Register PayNow Number</h2>
+              <p>Enter your Singapore mobile number. RustToGold will link it to your first active account.</p>
+            </div>
+          </div>
+
+          <div class="customer-card__body">
+            {% if has_accounts %}
+            <form class="form-grid paynow-number-form" action="/customer/paynow/register" method="post">
+              <input type="hidden" name="paynow_type" value="phone_number" />
+              {% for account in accounts %}{% if loop.first %}<input type="hidden" name="linked_product_id" value="{{ account.id }}" />{% endif %}{% endfor %}
+
+              <div class="form-field form-field--full">
+                <label class="form-label" for="paynow_id">Your PayNow Mobile Number</label>
+                <input class="form-input form-input--large" id="paynow_id" name="paynow_id" inputmode="numeric" placeholder="91234567" required />
+                <p class="form-help">Use an 8-digit Singapore mobile number starting with 8 or 9.</p>
+              </div>
+
+              <button class="c-button c-button--primary" type="submit"><i data-lucide="badge-plus"></i> Register PayNow</button>
+            </form>
+            {% else %}
+            <div class="empty-state empty-state--small">
+              <div class="empty-state__icon"><i data-lucide="wallet"></i></div>
+              <h3>No active account found</h3>
+              <p>You need an active bank account before registering PayNow.</p>
+            </div>
+            {% endif %}
+          </div>
+        </section>
+        {% endif %}
+
+        <section class="customer-card paynow-panel paynow-panel--records">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="scan-line"></i></span>
+            <div>
+              <p class="customer-kicker">Linked PayNow</p>
+              <h2>Your registration</h2>
+              <p>Edit your PayNow mobile number from Profile when you need to change it.</p>
+            </div>
+          </div>
+
+          <div class="customer-card__body paynow-registration-list">
+            {% if has_registrations %}
+            {% for registration in registrations %}
+            <article class="paynow-registration-card">
+              <div class="paynow-registration-card__icon"><i data-lucide="scan-line"></i></div>
+              <div>
+                <span class="badge {% if registration.is_active() %}badge--success{% else %}badge--warning{% endif %}">{{ registration.status_display() }}</span>
+                <h3>{{ registration.paynow_type_display() }} · {{ registration.identifier_display() }}</h3>
+                <p>Linked to {{ registration.account_number }} · {{ registration.linked_product_display() }}</p>
+                <small>Registered {{ registration.registered_at_display() }} · Balance {{ registration.balance_display() }}</small>
+              </div>
+            </article>
+            {% endfor %}
+            {% else %}
+            <div class="paynow-locked-state">
+              <div><i data-lucide="lock-keyhole"></i></div>
+              <h3>Transfer locked</h3>
+              <p>Register your PayNow mobile number first. The transfer form will appear after registration.</p>
+            </div>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

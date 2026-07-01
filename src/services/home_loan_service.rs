@@ -1,219 +1,230 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::{HomeLoanApplicationForm, HomeLoanPaymentForm};
-use crate::models::{AdminHomeLoanRecord, BankAccount, HomeLoanApplication, HomeLoanSummary, Money};
-use crate::repositories::{account_repository, home_loan_repository};
+use crate::models::{AdminHomeLoanRecord, HomeLoanApplication, HomeLoanSummary, Money, Product};
+use crate::repositories::{admin_repository, home_loan_repository, product_repository};
 use sqlx::PgPool;
+use uuid::Uuid;
 
-//home loan interest are usually lower cuz its secured
-//simple interest no float
-const HOME_LOAN_INTEREST_RATE_BPS: i32 = 170;
-
+// Data carrier for the HomeLoanDashboard workflow.
 pub struct HomeLoanDashboard {
-    pub account: BankAccount,
+    pub account: Product,
+    pub accounts: Vec<Product>,
     pub summary: HomeLoanSummary,
     pub applications: Vec<HomeLoanApplication>,
 }
 
-pub async fn apply_home_loan(
-    db: &PgPool,
-    user_id: i64,
-    form: HomeLoanApplicationForm,
-) -> Result<HomeLoanApplication, String> {
-    let amount: Money = Money::parse_dollars(&form.amount)?;
-    let amount_cents: i64 = amount.cents();
-    
-    let account = account_repository::find_primary_account_by_user_id(db, user_id)
-        .await
-        .map_err(|_| "Could not load your bank account.".to_string())?
-        .ok_or_else(|| "No active bank account found.".to_string())?;
-
-    if account.status != "active" {
-        return Err("Your account is not active.".to_string());
-    }
-
-    let home_loan_years = form
-        .home_loan_years
-        .trim()
-        .parse::<i32>()
-        .map_err(|_| "Invalid home loan term.".to_string())?; //jic if customer can enter 
-
-    let (max_amount_cents, allowed_years): (i64, Vec<i32>) = match form.house_type.as_str() {
-        "hdb_1_or_2_room" => (20_000_000, vec![5, 10, 15]),
-        "hdb_3_or_larger" => (50_000_000, vec![10, 15, 20, 25]),
-        "condo" => (100_000_000, vec![10, 15, 20, 25, 30]),
-        "landed" => (200_000_000, vec![15, 20, 25, 30, 35]),
-        _ => return Err("Invalid house type selected.".to_string()),
-    };
-
-   // if less customer shld borrow from personal loan
-    if amount_cents < 2000000 {
-        return Err("Home loan must at least be $20,000. Otherwise, kindly borrow through your personal loan channel.".to_string(),);
-    }
-   
-    if amount_cents > max_amount_cents {
-    return Err(format!(
-        "Requested amount exceeds the maximum allowed. Maximum: {}.",
-        Money::from_cents(max_amount_cents).display()
-    ));
-    }
-
-    if !allowed_years.contains(&home_loan_years) {
-        return Err("Selected loan duration is not allowed for this property type.".to_string());
-    }
-
-    let home_loan_duration_months: i32 = home_loan_years * 12;
-
-    let application = home_loan_repository::create_application(
-        db,
-        user_id,
-        account.id,
-        &form.house_type,
-        amount_cents,
-        HOME_LOAN_INTEREST_RATE_BPS,
-        home_loan_duration_months,
-    )
-    .await
-    .map_err(|_| "Home loan application could not be submitted.".to_string())?;
-
-Ok(application)
-}
-
-
-pub async fn approve_home_loan(
-    db: &PgPool,
-    staff_user_id: i64,
-    application_id: i64,
-) -> Result<HomeLoanApplication, String> {
-    let application = home_loan_repository::find_by_id(db, application_id)
-        .await
-        .map_err(|_| "Could not load home loan application.".to_string())?
-        .ok_or_else(|| "Home loan application not found.".to_string())?;
-
-    if application.status != "pending_review" {
-        return Err("Only pending home loan applications can be approved.".to_string());
-    }
-
-    let approved_amount_cents = application.requested_amount_cents;
-
-    let home_loan_interest_cents = calculate_home_loan_interest_cents(
-        approved_amount_cents,
-        application.interest_rate_bps,
-        application.term_months,
-    );
-
-    let home_loan_plus_interest_amount_cents = calculate_home_loan_plus_interest_amount(
-        approved_amount_cents,
-        home_loan_interest_cents,
-    );
-
-    let monthly_payment_cents = calculate_monthly_home_payment_cents(
-        home_loan_plus_interest_amount_cents,
-        application.term_months,
-    );
-
-    let (updated_application, _, _) = home_loan_repository::approve_application(
-        db,
-        application_id,
-        staff_user_id,
-        approved_amount_cents,
-        home_loan_plus_interest_amount_cents,
-        monthly_payment_cents,
-    )
-    .await
-    .map_err(|_| "Home loan approval failed. Please try again.".to_string())?;
-
-    Ok(updated_application)
-}
-
+// Loads home loan dashboard data and applies page-level business rules.
 pub async fn load_home_loan_dashboard(
     db: &PgPool,
-    user_id: i64,
+    customer_id: Uuid,
 ) -> Result<HomeLoanDashboard, String> {
-    let account = account_repository::find_primary_account_by_user_id(db, user_id)
+    let accounts = product_repository::list_active_products_by_customer(db, &customer_id)
         .await
-        .map_err(|_| "Could not load your bank account.".to_string())?
-        .ok_or_else(|| "No active bank account found.".to_string())?;
+        .map_err(|_| "Could not load active customer accounts.".to_string())?;
 
-    let summary = home_loan_repository::summary_by_user_id(db, user_id)
-        .await
-        .map_err(|_| "Could not load home loan summary.".to_string())?;
+    let account = accounts
+        .first()
+        .cloned()
+        .ok_or_else(|| "No active customer account was found for home loan repayments.".to_string())?;
 
-    let applications = home_loan_repository::list_by_user_id(db, user_id)
+    let applications = home_loan_repository::list_home_loans_by_customer(db, customer_id)
         .await
         .map_err(|_| "Could not load home loan applications.".to_string())?;
 
+    let summary = HomeLoanSummary::from_applications(&applications);
+
     Ok(HomeLoanDashboard {
         account,
+        accounts,
         summary,
         applications,
     })
 }
 
-pub async fn list_all_home_loans_for_admin(
+// Validates and coordinates the submit home loan application workflow.
+pub async fn submit_home_loan_application(
     db: &PgPool,
-) -> Result<Vec<AdminHomeLoanRecord>, String> {
-    home_loan_repository::list_all_for_admin(db)
-        .await
-        .map_err(|_| "Could not load home loan applications.".to_string())
-}
-
-pub async fn reject_home_loan(
-    db: &PgPool,
-    application_id: i64,
+    customer_id: Uuid,
+    form: HomeLoanApplicationForm,
 ) -> Result<HomeLoanApplication, String> {
-    home_loan_repository::reject_application(
+    let property_type = form.property_type.trim();
+    if property_type.is_empty() {
+        return Err("Property type is required.".to_string());
+    }
+
+    let property_value = Money::parse_dollars(&form.property_value)?;
+    if property_value.cents() > 2_000_000_00 {
+        return Err("Property value is above the allowed limit for this simulation.".to_string());
+    }
+
+    let down_payment_cents = property_value.cents() / 5;
+    let down_payment = Money::from_cents(down_payment_cents);
+
+    let term_years = form.term_years;
+    if !(5..=35).contains(&term_years) {
+        return Err("Choose a home loan term between 5 and 35 years.".to_string());
+    }
+
+    let account = product_repository::get_active_product_for_customer_by_account_number(
         db,
-        application_id,
-        "Rejected by staff.",
+        &customer_id,
+        form.account_number.trim(),
     )
     .await
-    .map_err(|_| "Home loan rejection failed. Please try again.".to_string())
+    .map_err(|_| "Choose an active account for the required 20% down payment.".to_string())?;
+
+    if account.balance_cents < down_payment.cents() {
+        return Err(format!(
+            "Home loan requires a 20% down payment of {}. Selected account balance is {}.",
+            down_payment.display(),
+            Money::from_cents(account.balance_cents).display()
+        ));
+    }
+
+    let loan_amount_cents = property_value.cents() - down_payment.cents();
+    let annual_rate_bps = 325;
+    let monthly_payment_cents = estimated_monthly_payment_cents(
+        loan_amount_cents,
+        annual_rate_bps,
+        term_years * 12,
+    );
+
+    home_loan_repository::create_home_loan_application(
+        db,
+        customer_id,
+        Some(account.id),
+        property_type,
+        property_value.cents(),
+        down_payment.cents(),
+        loan_amount_cents,
+        annual_rate_bps,
+        term_years,
+        monthly_payment_cents,
+    )
+    .await
+    .map_err(|error| {
+        println!("home loan application failed: {}", error);
+        "Could not submit the home loan application.".to_string()
+    })
 }
 
+// Validates and coordinates the pay home loan workflow.
 pub async fn pay_home_loan(
     db: &PgPool,
-    user_id: i64,
-    application_id: i64,
+    customer_id: Uuid,
+    application_id: Uuid,
     form: HomeLoanPaymentForm,
 ) -> Result<HomeLoanApplication, String> {
-    let payment_cents = match form.amount {
-        Some(value) if !value.trim().is_empty() => {
-            Some(Money::parse_dollars(&value)?.cents())
-        }
-        _ => None,
-    };
+    let amount = Money::parse_dollars(&form.amount)?;
 
-    home_loan_repository::pay_home_loan(db, user_id, application_id, payment_cents)
+    let application = home_loan_repository::list_home_loans_by_customer(db, customer_id)
         .await
-        .map_err(|_| {
-            "Home loan repayment failed. Please check your balance or loan status.".to_string()
+        .map_err(|_| "Could not load the home loan before repayment.".to_string())?
+        .into_iter()
+        .find(|application| application.id == application_id && application.status == "approved")
+        .ok_or_else(|| "This home loan is not approved or cannot be repaid.".to_string())?;
+
+    if amount.cents() > application.outstanding_cents {
+        return Err(format!(
+            "Repayment cannot exceed the outstanding home loan amount of {}.",
+            Money::from_cents(application.outstanding_cents).display()
+        ));
+    }
+
+    let account = product_repository::get_active_product_for_customer_by_account_number(
+        db,
+        &customer_id,
+        form.account_number.trim(),
+    )
+    .await
+    .map_err(|_| "Choose an active account for repayment.".to_string())?;
+
+    if account.balance_cents < amount.cents() {
+        return Err(format!(
+            "Insufficient balance for this home loan repayment. Selected account balance is {}.",
+            Money::from_cents(account.balance_cents).display()
+        ));
+    }
+
+    home_loan_repository::pay_home_loan(db, customer_id, application_id, account.id, amount.cents())
+        .await
+        .map_err(|error| {
+            println!("home loan repayment failed: {}", error);
+            "Could not apply the home loan repayment.".to_string()
         })
 }
 
-
-
-fn calculate_home_loan_interest_cents(
-    principal_home_loan_cents: i64,
-    home_loan_interest_rate_bps: i32,
-    home_loan_duration_months: i32,
-) -> i64 {
-    principal_home_loan_cents
-        * home_loan_interest_rate_bps as i64
-        * home_loan_duration_months as i64
-        / 120000
+// Returns admin home loans records in the shape needed by the UI.
+pub async fn list_admin_home_loans(db: &PgPool) -> Result<Vec<AdminHomeLoanRecord>, String> {
+    admin_repository::list_home_loans(db)
+        .await
+        .map_err(|error| {
+            eprintln!("admin home loan list failed: {error:?}");
+            "Could not load home loan applications.".to_string()
+        })
 }
 
-fn calculate_home_loan_plus_interest_amount(
-    principal_home_loan_cents: i64,
-    home_loan_interest_cents: i64,
-) -> i64 {
-    principal_home_loan_cents + home_loan_interest_cents
+// Validates and coordinates the approve home loan workflow.
+pub async fn approve_home_loan(
+    db: &PgPool,
+    staff_user_id: Uuid,
+    application_id: Uuid,
+) -> Result<HomeLoanApplication, String> {
+    let approved = home_loan_repository::approve_home_loan(db, staff_user_id, application_id)
+        .await
+        .map_err(|error| {
+            println!("home loan approve failed: {}", error);
+            "Could not approve the home loan application.".to_string()
+        })?;
+
+    let _ = admin_repository::record_audit_log(
+        db,
+        Some(staff_user_id),
+        "approve_home_loan",
+        "home_loan_application",
+        Some(application_id.to_string()),
+        Some("Home loan approved. Down payment hold remains applied to the property financing record.".to_string()),
+    )
+    .await;
+
+    Ok(approved)
 }
 
-fn calculate_monthly_home_payment_cents(
-    home_loan_plus_interest_cents: i64,
-    home_loan_duration_months: i32,
-) -> i64 {
-    (home_loan_plus_interest_cents + home_loan_duration_months as i64 - 1)
-        / home_loan_duration_months as i64
+// Validates and coordinates the reject home loan workflow.
+pub async fn reject_home_loan(
+    db: &PgPool,
+    staff_user_id: Uuid,
+    application_id: Uuid,
+) -> Result<HomeLoanApplication, String> {
+    let rejected = home_loan_repository::reject_home_loan(db, staff_user_id, application_id)
+        .await
+        .map_err(|error| {
+            println!("home loan reject failed: {}", error);
+            "Could not reject the home loan application.".to_string()
+        })?;
+
+    let _ = admin_repository::record_audit_log(
+        db,
+        Some(staff_user_id),
+        "reject_home_loan",
+        "home_loan_application",
+        Some(application_id.to_string()),
+        Some("Home loan rejected and down payment hold released.".to_string()),
+    )
+    .await;
+
+    Ok(rejected)
 }
 
+// Returns the stored money amount in cents.
+fn estimated_monthly_payment_cents(principal_cents: i64, annual_rate_bps: i32, term_months: i32) -> i64 {
+    let months = term_months.max(1) as i64;
+    let simple_interest = principal_cents
+        .saturating_mul(annual_rate_bps as i64)
+        .saturating_mul(term_months.max(1) as i64)
+        / 12
+        / 10_000;
+
+    (principal_cents + simple_interest + months - 1) / months
+}

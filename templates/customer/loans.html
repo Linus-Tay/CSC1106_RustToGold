@@ -3,159 +3,63 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RustToGold | My Loans</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <title>RustToGold | Personal Loans</title>
+  {% include "partials/customer_assets.html" %}
 </head>
-<body>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
 
-<p>
-    <a href="/customer/loans/apply">Apply for Personal Loan</a> |
-    <a href="/customer/home-loans">View Home Loans</a> |
-    <a href="/customer/home-loans/apply">Apply for Home Loan</a>
-</p>
-
-<nav class="c-navbar" aria-label="Customer navigation">
-  <div class="u-container c-navbar__inner">
-    <a class="c-navbar__brand" href="/customer/dashboard">
-      <span class="c-navbar__logo-wrap" aria-hidden="true">
-        <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
-      </span>
-      <span>RustToGold</span>
-    </a>
-    <ul class="c-navbar__links">
-      <li><a class="c-navbar__link" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
-      <li><a class="c-navbar__link" href="/customer/deposit"><i data-lucide="circle-dollar-sign"></i>Deposit</a></li>
-      <li><a class="c-navbar__link" href="/customer/transactions"><i data-lucide="receipt-text"></i>Transactions</a></li>
-      <li><a class="c-navbar__link is-active" href="/customer/loans"><i data-lucide="file-signature"></i>Loans</a></li>
-      <li><a class="c-navbar__link" href="/customer/fixed-deposits"><i data-lucide="piggy-bank"></i>Fixed Deposits</a></li>
-      <li><a class="c-navbar__link" href="/customer/profile"><i data-lucide="user-round"></i>Profile</a></li>
-    </ul>
-    <div class="c-navbar__actions">
-      <a class="c-navbar__login" href="/logout"><i data-lucide="log-out"></i> Logout</a>
-    </div>
-  </div>
-</nav>
-
-<main class="app-main">
-  <div class="u-container">
-    <header class="app-page-header">
-      <div>
-        <h1 class="app-page-title">My Loans</h1>
-        <p class="app-page-description">View your loan balances, due dates, and repayment status.</p>
-      </div>
-      <div style="display:flex; gap:12px;">
-  <a class="c-button c-button--primary" href="/customer/loans/apply">
-    <i data-lucide="file-plus"></i> Apply Personal Loan
-  </a>
-
-  <a class="c-button c-button--secondary" href="/customer/home-loans/apply">
-    <i data-lucide="home"></i> Apply Home Loan
-  </a>
-</div>
-      
-    </header>
-
-    <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-card__label"><i data-lucide="landmark"></i> Account</div>
-        <div class="stat-card__value">{{ account.account_number }}</div>
-        <div class="stat-card__meta">Savings Account</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card__label"><i data-lucide="wallet"></i> Balance</div>
-        <div class="stat-card__value">{{ account.balance_display() }}</div>
-        <div class="stat-card__meta">Available after loan activity</div>
-      </div>
-    </div>
-
-    {% if has_error %}
-    <div class="alert alert--danger">{{ error }}</div>
-    {% endif %}
-
-    <section class="c-card">
-      <div class="c-card__header">
+  <main class="customer-main">
+    <div class="customer-container">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+      <section class="module-hero module-hero--navy">
         <div>
-          <h2 class="c-card__title">Loan Records</h2>
-          <p class="c-card__subtitle">Newest loans are shown first.</p>
+          <p class="customer-kicker">Borrowing</p>
+          <h1>Personal Loans</h1>
+          <p>Apply first, then wait for admin approval before the loan is disbursed into the selected account.</p>
+          <div class="hero-actions"><a class="c-button c-button--gold" href="/customer/loans/apply"><i data-lucide="file-plus"></i> Apply for Loan</a><a class="c-button c-button--secondary" href="/customer/loan-activity"><i data-lucide="file-clock"></i> Loan Log</a></div>
         </div>
-      </div>
+        <div class="module-stat"><span>Default Repayment Account</span><strong>{{ account.balance_display() }}</strong><small>{{ account.account_number }}</small></div>
+      </section>
 
-      <div class="c-card__body">
-        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Loan ID</th>
-                <th>Principal</th>
-                <th>Total Repayment</th>
-                <th>Remaining</th>
-                <th>Monthly Payment</th>
-                <th>Next Due Date</th>
-                <th>Status</th>
-                <th>Repayment</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if has_loans %}
-              {% for loan in loans %}
-              <tr>
-                <td>#{{ loan.id }}</td>
-                <td>{{ loan.principal_loan_display() }}</td>
-                <td>{{ loan.total_repayment_display() }}</td>
-                <td>{{ loan.remaining_loan_display() }}</td>
-                <td>{{ loan.monthly_payment_display() }}</td>
-                <td>{{ loan.loan_due_date_display() }}</td>
-                <td>
-                  {% if loan.can_pay() %}
-                  <span class="badge badge--success">{{ loan.loan_status_display() }}</span>
-                  {% else %}
-                  <span class="badge badge--neutral">Completed</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if loan.can_pay() %}
-                   <form method="post" action="/customer/loans/{{ loan.id }}/pay">
-                     <button class="c-button c-button--secondary" type="submit">
-                      Pay Monthly Payment
-                    </button>
-                   </form>
-                  {% else %}
-                  Completed
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-              {% else %}
-              <tr>
-                <td colspan="8">You do not have any loans yet.</td>
-              </tr>
+      {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+
+      <section class="customer-card customer-section">
+        <div class="customer-card__header"><div><h2>Your Personal Loans</h2><p>Track pending, active and fully paid loan records.</p></div><a class="text-link" href="/customer/loans/apply">New loan</a></div>
+        <div class="customer-card__body">
+          {% if has_loans %}
+          <div class="record-list">
+            {% for loan in loans %}
+            <article class="record-card">
+              <div class="record-card__main">
+                <div>
+                  <span class="badge {% if loan.status == "rejected" %}badge--danger{% else %}badge--info{% endif %}">{{ loan.status_display() }}</span>
+                  <h3>{{ loan.purpose }}</h3>
+                  <p>Principal {{ loan.principal_display() }} · {{ loan.term_months }} months · {{ loan.rate_display() }} p.a.</p><small class="text-muted">{{ loan.customer_status_note() }}</small>
+                </div>
+                <div class="record-card__amount"><span>Outstanding</span><strong>{{ loan.outstanding_display() }}</strong><small>Monthly {{ loan.monthly_payment_display() }}</small></div>
+              </div>
+              {% if loan.status == "active" %}
+              <form class="inline-pay-form inline-pay-form--stacked" action="/customer/loans/{{ loan.id }}/pay" method="post">
+                <select class="form-select" name="account_number" required aria-label="Repayment account">
+                  {% for account in accounts %}
+                  <option value="{{ account.account_number }}">{{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}</option>
+                  {% endfor %}
+                </select>
+                <input class="form-input" name="amount" type="number" step="0.01" min="0.01" max="{{ loan.outstanding_plain() }}" placeholder="Max {{ loan.outstanding_display() }}" required />
+                <button class="c-button c-button--gold" type="submit">Pay Loan</button>
+              </form>
               {% endif %}
-            </tbody>
-          </table>
+            </article>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state"><div class="empty-state__icon"><i data-lucide="file-signature"></i></div><h3>No personal loans yet</h3><p>Start with an application. Admin approval will create the disbursement transaction.</p></div>
+          {% endif %}
         </div>
-      </div>
-    </section>
-  </div>
-</main>
-
-<footer class="c-footer">
-  <div class="u-container c-footer__inner">
-    <div>
-      <div class="c-footer__brand"><span class="c-footer__dot"></span> RustToGold</div>
-      <p class="c-footer__note">Secure digital banking for accounts, transfers, savings, loans, and customer support.</p>
+      </section>
     </div>
-    <div class="c-footer__links">
-      <a href="/customer/dashboard">Dashboard</a>
-      <a href="/customer/transactions">Transactions</a>
-      <a href="/logout">Logout</a>
-    </div>
-  </div>
-</footer>
-
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="/static/js/app.js"></script>
+  </main>
+  <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
 </body>
 </html>

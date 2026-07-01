@@ -1,9 +1,14 @@
+// View layer: Askama template structs and rendering helpers.
+
 pub mod renderer;
 pub mod templates;
 
 pub use self::renderer::render;
 pub use self::templates::{
-    CustomerPageTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate, ForbiddenTemplate,
-    HomeTemplate, LoginTemplate, NotFoundTemplate, ProfileTemplate, SignupTemplate, HomeLoanDashboardTemplate, HomeLoanApplyTemplate, AdminHomeLoansTemplate, 
-    LoanApplyTemplate, LoanDashboardTemplate, TransactionsTemplate, OnboardingTemplate
+    AboutTemplate, AccountCreationEmailTemplate, AccountCreationSetupTemplate, AccountCreationSuccessTemplate, ApplicationReceivedEmailTemplate, OnboardingAccountTemplate, OnboardingContactTemplate, OnboardingEmploymentTemplate, OnboardingPersonalTemplate, OnboardingReviewTemplate, AdminAuditLogTemplate, AdminCustomerAccountsTemplate, AdminCustomerApplicationsTemplate, AdminDashboardTemplate, AdminFixedDepositPlansTemplate, AdminFixedDepositsTemplate, AdminHighValueMonitoringTemplate, AdminHomeLoansTemplate, AdminLoginTemplate, AdminPersonalLoansTemplate, AdminStaffTemplate,
+    BankingTemplate, ContactTemplate, CardDashboardTemplate, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate,
+    ErrorTemplate, FaqTemplate, FixedDepositCreateTemplate, FixedDepositDashboardTemplate, GiroTemplate,
+    ForbiddenTemplate, HomeLoanApplyTemplate, HomeLoanDashboardTemplate, HomeTemplate, LoginTemplate,
+    LoanApplyTemplate, LoanDashboardTemplate, NotFoundTemplate, OnboardingResultTemplate, OnboardingTemplate, PayNowTemplate, ProfileTemplate,
+    SecurityTemplate, StatementTemplate, TransactionControlsTemplate, TransactionsTemplate, TransferTemplate,
 };

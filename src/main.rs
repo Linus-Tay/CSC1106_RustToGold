@@ -1,3 +1,5 @@
+// Application entry point that wires configuration, routes, database and middleware.
+
 mod config;
 mod controllers;
 mod forms;
@@ -14,11 +16,13 @@ use config::Config;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 #[derive(Clone)]
+// Data carrier for the AppState workflow.
 pub struct AppState {
     pub db: PgPool,
 }
 
 #[actix_web::main]
+// Starts the Actix server after the shared application state is ready.
 async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().ok();
 

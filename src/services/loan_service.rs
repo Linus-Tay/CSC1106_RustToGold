@@ -1,164 +1,144 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::{LoanApplicationForm, LoanPaymentForm};
-use crate::models::{BankAccount, Loan, Money};
-use crate::repositories::{account_repository, loan_repository};
+use crate::models::{Money, PersonalLoan, Product};
+use crate::repositories::{loan_repository, product_repository};
+use crate::services::support::clean_optional_text;
 use sqlx::PgPool;
+use uuid::Uuid;
 
+// Data carrier for the LoanDashboard workflow.
+pub struct LoanDashboard {
+    pub account: Product,
+    pub accounts: Vec<Product>,
+    pub loans: Vec<PersonalLoan>,
+}
 
-const LOAN_FIXED_INTEREST: i32 = 230;
+// Loads loan dashboard data and applies page-level business rules.
+pub async fn load_loan_dashboard(db: &PgPool, customer_id: Uuid) -> Result<LoanDashboard, String> {
+    let accounts = product_repository::list_active_products_by_customer(db, &customer_id)
+        .await
+        .map_err(|_| "Could not load active customer accounts.".to_string())?;
 
+    let account = accounts
+        .first()
+        .cloned()
+        .ok_or_else(|| "No active customer account was found for loan repayments.".to_string())?;
+
+    let loans = loan_repository::list_personal_loans_by_customer(db, customer_id)
+        .await
+        .map_err(|_| "Could not load personal loans.".to_string())?;
+
+    Ok(LoanDashboard { account, accounts, loans })
+}
+
+// Validates and coordinates the apply personal loan workflow.
 pub async fn apply_personal_loan(
     db: &PgPool,
-    user_id: i64,
+    customer_id: Uuid,
     form: LoanApplicationForm,
-) -> Result<Loan, String> {
-    let principal = Money::parse_dollars(&form.amount)?;
-
-
-    if principal.cents() < 50000 {
-        return Err("Loan amount must be at least $500.00.".to_string());
+) -> Result<PersonalLoan, String> {
+    let amount = Money::parse_dollars(&form.amount)?;
+    if amount.cents() > 200_000_00 {
+        return Err("Personal loan amount is above the allowed limit for this simulation.".to_string());
     }
 
-    let loan_duration_months = form
-    .term_months
-    .parse::<i32>()
-    .map_err(|_| "Loan duration is invalid.".to_string())?;
+    let purpose = clean_optional_text(&form.purpose)
+        .filter(|value| !value.trim().is_empty())
+        .ok_or_else(|| "Loan purpose is required.".to_string())?;
 
-    let account = account_repository::find_primary_account_by_user_id(db, user_id)
-        .await
-        .map_err(|_| "Your bank account could not be loaded".to_string())?
-        .ok_or_else(|| "No bank account could be found under you. Please contact service.".to_string())?;
-
-    if account.status != "active" {
-        return Err("Your account is not active. Please activate before applying for a loan.".to_string());
+    let term_months = form.term_months;
+    if !(6..=84).contains(&term_months) {
+        return Err("Choose a loan term between 6 and 84 months.".to_string());
     }
-    
 
-    let user_profile = crate::repositories::user_repository::find_user_by_id(db, user_id)
-        .await
-        .map_err(|_| "Could not load your profile.".to_string())?
-        .ok_or_else(|| "Customer record not found.".to_string())?; 
-  
-        //MAS rule for unsecured loans
-    let max_limit = user_profile.monthly_income_cents * 12;
-
-    let outstanding_loan = loan_repository::total_outstanding_by_user_id(db, user_id)
-        .await
-        .map_err(|_| "Could not check your existing loans.".to_string())?;
-
-    // NEED some safeguarding of bank interest
-    let has_three_month_overdue = loan_repository::has_three_month_overdue_loan(db, user_id)
+    let account = product_repository::get_active_product_for_customer_by_account_number(
+        db,
+        &customer_id,
+        form.account_number.trim(),
+    )
     .await
-    .map_err(|_| "Could not check overdue loan status.".to_string())?;
+    .map_err(|_| "Choose an active account to receive the loan disbursement.".to_string())?;
 
-    if has_three_month_overdue {
-        return Err("You cannot apply for a new loan because you have a loan overdue by 3 months or more. Kindly proceed with the overdue payment before borrowing.".to_string());
-    }
+    let annual_rate_bps = 550;
+    let monthly_payment_cents =
+        estimated_monthly_payment_cents(amount.cents(), annual_rate_bps, term_months);
 
-    let loan_available_limit = max_limit - outstanding_loan;
+    loan_repository::create_personal_loan(
+        db,
+        customer_id,
+        account.id,
+        &purpose,
+        amount.cents(),
+        annual_rate_bps,
+        term_months,
+        monthly_payment_cents,
+    )
+    .await
+    .map_err(|error| {
+        println!("personal loan create failed: {}", error);
+        "Could not create the personal loan.".to_string()
+    })
+}
 
-    if principal.cents() > loan_available_limit {
+// Validates and coordinates the pay personal loan workflow.
+pub async fn pay_personal_loan(
+    db: &PgPool,
+    customer_id: Uuid,
+    loan_id: Uuid,
+    form: LoanPaymentForm,
+) -> Result<PersonalLoan, String> {
+    let amount = Money::parse_dollars(&form.amount)?;
+
+    let current_loan = loan_repository::list_personal_loans_by_customer(db, customer_id)
+        .await
+        .map_err(|_| "Could not load the personal loan before repayment.".to_string())?
+        .into_iter()
+        .find(|loan| loan.id == loan_id && loan.status == "active")
+        .ok_or_else(|| "This personal loan is not active or cannot be repaid.".to_string())?;
+
+    if amount.cents() > current_loan.outstanding_cents {
         return Err(format!(
-            "You can only borrow up to {}.",
-            Money::from_cents(std::cmp::max(loan_available_limit, 0)).display()
+            "Repayment cannot exceed the outstanding loan amount of {}.",
+            Money::from_cents(current_loan.outstanding_cents).display()
         ));
     }
 
-
-    let loan_interest_amount_cents = calculate_personal_loan_interest_cents(
-        principal.cents(),
-        LOAN_FIXED_INTEREST,
-        loan_duration_months,
-    );
-
-    let principal_plus_interest_amount_cents = calculate_loan_plus_interest_amount(
-        principal.cents(), 
-        loan_interest_amount_cents,
-    );
-
-    let monthly_payment_cents = calculate_monthly_loan_payment_cents(
-        principal_plus_interest_amount_cents,
-        loan_duration_months,
-    );
-
-   
-    let loan = loan_repository::create_loan(
+    let account = product_repository::get_active_product_for_customer_by_account_number(
         db,
-        user_id,
-        account.id,
-        principal.cents(),
-        LOAN_FIXED_INTEREST,
-        loan_interest_amount_cents,
-        principal_plus_interest_amount_cents,
-        monthly_payment_cents,
-        loan_duration_months,
+        &customer_id,
+        form.account_number.trim(),
     )
     .await
-    .map_err(|_| "Loan application failed. Please try again.".to_string())?;
+    .map_err(|_| "Choose an active account for repayment.".to_string())?;
 
-    Ok(loan)
-}
+    if account.balance_cents < amount.cents() {
+        return Err(format!(
+            "Insufficient balance for this repayment. Selected account balance is {}.",
+            Money::from_cents(account.balance_cents).display()
+        ));
+    }
 
-
-fn calculate_personal_loan_interest_cents(
-    principal_loan_cents: i64,
-    loan_interest_rate: i32,
-    loan_duration_months: i32,
-) -> i64 {
-    (principal_loan_cents * loan_interest_rate as i64) * loan_duration_months as i64 /120000
-} 
-
-fn calculate_loan_plus_interest_amount(
-   principal_loan_cents: i64,
-    loan_interest_amount_cents: i64,
-) -> i64 {
-    principal_loan_cents + loan_interest_amount_cents
-} 
-
-fn calculate_monthly_loan_payment_cents(
-    principal_plus_interest_amount_cents: i64,
-    duration_of_loan_months: i32,
-) -> i64 {
-    (principal_plus_interest_amount_cents + duration_of_loan_months as i64 - 1)
-        / duration_of_loan_months as i64
-}
-
-pub struct LoanDashboard {
-    pub account: BankAccount,
-    pub loans: Vec<Loan>,
-}
-
-pub async fn load_loan_dashboard(
-    db: &PgPool,
-    user_id: i64,
-) -> Result<LoanDashboard, String> {
-    let account = account_repository::find_primary_account_by_user_id(db, user_id)
+    loan_repository::pay_personal_loan(db, customer_id, loan_id, account.id, amount.cents())
         .await
-        .map_err(|_| "Your bank account could not be loaded.".to_string())?
-        .ok_or_else(|| "No bank account found.".to_string())?;
-
-    let loans = loan_repository::list_by_user_id(db, user_id)
-        .await
-        .map_err(|_| "Could not load your loans.".to_string())?;
-
-    Ok(LoanDashboard { account, loans })
-}
-
-pub async fn pay_loan(
-    db: &PgPool,
-    user_id: i64,
-    loan_id: i64,
-    form: LoanPaymentForm,
-) -> Result<Loan, String> {
-    let payment_cents = match form.amount {
-        Some(value) if !value.trim().is_empty() => {
-            Some(Money::parse_dollars(&value)?.cents())
-        }
-        _ => None,
-    };
-
-    loan_repository::pay_loan(db, user_id, loan_id, payment_cents)
-        .await
-        .map_err(|_| {
-            "Loan repayment failed. Please check your balance or loan status.".to_string()
+        .map_err(|error| {
+            println!("personal loan payment failed: {}", error);
+            "Could not apply the personal loan repayment.".to_string()
         })
+}
+
+// Returns the stored money amount in cents.
+fn estimated_monthly_payment_cents(
+    principal_cents: i64,
+    annual_rate_bps: i32,
+    term_months: i32,
+) -> i64 {
+    let months = term_months.max(1) as i64;
+    let simple_interest = principal_cents
+        .saturating_mul(annual_rate_bps as i64)
+        .saturating_mul(months)
+        / 12
+        / 10_000;
+
+    (principal_cents + simple_interest + months - 1) / months
 }

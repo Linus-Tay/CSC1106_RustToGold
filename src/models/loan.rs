@@ -1,69 +1,83 @@
-use super::formatting::title_case_code;
+// Model layer: domain structs plus small display helpers used by services and templates.
+
 use super::Money;
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{DateTime, Utc};
 use sqlx::FromRow;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
-pub struct Loan {
-    pub id: i64,
-    pub user_id: i64,
-    pub account_id: i64,
+// Domain record used by services, repositories and templates.
+pub struct PersonalLoan {
+    pub id: Uuid,
+    pub customer_id: Uuid,
+    pub funding_product_id: Uuid,
+    pub purpose: String,
     pub principal_cents: i64,
-    pub interest_rate_bps: i32,
-    pub interest_cents: i64,
-    pub total_repayment_cents: i64,
-    pub remaining_cents: i64,
-    pub monthly_payment_cents: i64,
+    pub annual_rate_bps: i32,
     pub term_months: i32,
-    pub next_due_date: NaiveDate,
+    pub monthly_payment_cents: i64,
+    pub outstanding_cents: i64,
     pub status: String,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
-impl Loan {
-    pub fn interest_rate_display(&self) -> String {
-        format!("{:.2}%", self.interest_rate_bps as f64 / 100.0)
+impl PersonalLoan {
+    // Formats the value for display in templates.
+    pub fn principal_display(&self) -> String {
+        Money::from_cents(self.principal_cents).display()
     }
 
-    pub fn remaining_loan_display(&self) -> String {
-        Money::from_cents(self.remaining_cents).display()
-    }
-
+    // Formats the value for display in templates.
     pub fn monthly_payment_display(&self) -> String {
         Money::from_cents(self.monthly_payment_cents).display()
     }
 
-    pub fn principal_loan_display(&self) -> String {
-        Money::from_cents(self.principal_cents).display()
+    // Formats the value for display in templates.
+    pub fn outstanding_display(&self) -> String {
+        Money::from_cents(self.outstanding_cents).display()
     }
 
-    pub fn interest_amount_display(&self) -> String {
-        Money::from_cents(self.interest_cents).display()
+    // Returns the raw value used by form fields and validation.
+    pub fn outstanding_plain(&self) -> String {
+        format!("{:.2}", self.outstanding_cents as f64 / 100.0)
     }
 
-    pub fn total_repayment_display(&self) -> String {
-        Money::from_cents(self.total_repayment_cents).display()
+    // Formats the value for display in templates.
+    pub fn rate_display(&self) -> String {
+        format!("{:.2}%", self.annual_rate_bps as f64 / 100.0)
     }
 
-    pub fn loan_due_date_display(&self) -> String {
-        self.next_due_date.format("%d %b %Y").to_string()
-    }
-
-    pub fn loan_status_display(&self) -> String {
-        if self.loan_overdue() {
-            "Overdue".to_string()
-        } else {
-            title_case_code(&self.status)
+    // Formats the value for display in templates.
+    pub fn status_display(&self) -> String {
+        match self.status.as_str() {
+            "pending" => "Pending Review".to_string(),
+            "active" => "Active".to_string(),
+            "rejected" => "Rejected".to_string(),
+            "fully_paid" => "Fully Paid".to_string(),
+            "cancelled" => "Cancelled".to_string(),
+            value => value.replace('_', " "),
         }
     }
 
-    pub fn loan_overdue(&self) -> bool {
-        let today = chrono::Local::now().date_naive();
-        self.status == "active" && self.next_due_date < today
+    // Formats the value for display in templates.
+    pub fn created_at_display(&self) -> String {
+        self.created_at.format("%d %b %Y").to_string()
     }
 
-    pub fn can_pay(&self) -> bool {
-        self.status == "active" && self.remaining_cents > 0
+    // Returns whether this record is payable.
+    pub fn is_payable(&self) -> bool {
+        self.status == "active" && self.outstanding_cents > 0
+    }
+
+    // Explains the approval state beside each customer loan record.
+    pub fn customer_status_note(&self) -> &'static str {
+        match self.status.as_str() {
+            "pending" => "Awaiting bank review. No funds have been disbursed yet.",
+            "active" => "Approved and disbursed into your selected account.",
+            "rejected" => "Application was not approved.",
+            "fully_paid" => "Loan has been fully repaid.",
+            _ => "Status updated by the bank.",
+        }
     }
 }

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold Admin | Transaction Monitoring</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#F8FAFC] text-slate-900">
+  {% include "partials/admin_nav.html" %}
+
+  <main class="mx-auto max-w-7xl px-6 py-10">
+    <section class="rounded-[2rem] bg-[#0B1F3A] p-8 text-white shadow-xl shadow-[#0B1F3A]/20">
+      <p class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.24em] text-[#D6A54A]"><i data-lucide="radar" class="h-4 w-4"></i> Transaction Monitoring</p>
+      <h1 class="text-4xl font-black tracking-tight">High-Value Transaction Review</h1>
+      <p class="mt-4 max-w-3xl text-white/70">Review large transfers that were either blocked for manual checks or flagged after going through with a valid reference.</p>
+    </section>
+
+    {% if has_error %}
+    <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-bold text-red-700">{{ error }}</div>
+    {% endif %}
+
+    <section class="mt-8 grid gap-4 md:grid-cols-3">
+      <div class="rounded-[1.5rem] border border-red-100 bg-white p-5 shadow-sm">
+        <p class="text-xs font-black uppercase tracking-[0.2em] text-red-500">Blocked</p>
+        <strong class="mt-2 block text-4xl font-black text-red-700">{{ blocked_count }}</strong>
+        <span class="mt-2 block text-sm font-semibold leading-6 text-slate-500">High-value transfers stopped until admin follow-up is completed.</span>
+      </div>
+      <div class="rounded-[1.5rem] border border-amber-100 bg-white p-5 shadow-sm">
+        <p class="text-xs font-black uppercase tracking-[0.2em] text-amber-500">Flagged</p>
+        <strong class="mt-2 block text-4xl font-black text-[#0B1F3A]">{{ flagged_count }}</strong>
+        <span class="mt-2 block text-sm font-semibold text-slate-500">Large transfers that went through but are retained for review.</span>
+      </div>
+      <div class="rounded-[1.5rem] border border-emerald-100 bg-white p-5 shadow-sm">
+        <p class="text-xs font-black uppercase tracking-[0.2em] text-emerald-500">Cleared</p>
+        <strong class="mt-2 block text-4xl font-black text-emerald-700">{{ cleared_count }}</strong>
+        <span class="mt-2 block text-sm font-semibold text-slate-500">Records cleared after admin review notes were added.</span>
+      </div>
+    </section>
+
+    <section class="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p class="text-xs font-black uppercase tracking-[0.22em] text-[#1D4ED8]">Monitoring queue</p>
+          <h2 class="mt-2 text-2xl font-black text-[#0B1F3A]">Large transaction records</h2>
+          <p class="mt-1 max-w-2xl text-sm font-medium leading-6 text-slate-500">Search by customer, amount, channel, account, rule or status. Add a note before clearing a record.</p>
+        </div>
+        <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <label class="text-xs font-black uppercase tracking-[0.18em] text-slate-400" for="monitoring-search">Search records</label>
+          <div class="mt-2 flex items-center gap-2">
+            <i data-lucide="search" class="h-5 w-5 text-slate-400"></i>
+            <input id="monitoring-search" class="w-full bg-transparent text-sm font-bold text-slate-700 outline-none placeholder:text-slate-400" placeholder="e.g. blocked, PayNow, $10,000, Linus" />
+          </div>
+        </div>
+      </div>
+
+      {% if has_alerts %}
+      <div class="mt-6 space-y-4" id="monitoring-list">
+        {% for alert in alerts %}
+        <article class="monitoring-row rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm" data-search="{{ alert.customer_name }} {{ alert.customer_email }} {{ alert.rule_display() }} {{ alert.status_display() }} {{ alert.channel }} {{ alert.amount_display() }} {{ alert.account_display() }} {{ alert.message }}">
+          <div class="grid gap-4 xl:grid-cols-[1.2fr_0.9fr_0.65fr_0.65fr_0.55fr] xl:items-center">
+            <div>
+              <p class="text-base font-black text-[#0B1F3A]">{{ alert.customer_name }}</p>
+              <p class="mt-1 text-xs font-bold text-slate-400">{{ alert.customer_email }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Rule</p>
+              <p class="mt-1 text-sm font-black text-slate-700">{{ alert.rule_display() }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Amount</p>
+              <p class="mt-1 text-sm font-black text-[#0B1F3A]">{{ alert.amount_display() }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">Channel</p>
+              <p class="mt-1 text-sm font-black text-slate-700">{{ alert.channel }}</p>
+            </div>
+            <div>
+              {% if alert.is_blocked() %}
+              <span class="inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700 ring-1 ring-red-100">{{ alert.status_display() }}</span>
+              {% else %}
+              {% if alert.is_flagged() %}
+              <span class="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700 ring-1 ring-amber-100">{{ alert.status_display() }}</span>
+              {% else %}
+              <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">{{ alert.status_display() }}</span>
+              {% endif %}
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mt-5 grid gap-4 border-t border-slate-100 pt-5 lg:grid-cols-[1.05fr_0.95fr]">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Reason</p>
+              <p class="mt-2 text-sm font-semibold leading-6 text-slate-600">{{ alert.message }}</p>
+              <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                <div><dt class="font-black text-slate-400">Account</dt><dd class="font-bold text-slate-700">{{ alert.account_display() }}</dd></div>
+                <div><dt class="font-black text-slate-400">Product</dt><dd class="font-bold text-slate-700">{{ alert.product_display() }}</dd></div>
+                <div><dt class="font-black text-slate-400">Severity</dt><dd class="font-bold text-slate-700">{{ alert.severity_display() }}</dd></div>
+                <div><dt class="font-black text-slate-400">Created</dt><dd class="font-bold text-slate-700">{{ alert.created_at_display() }}</dd></div>
+              </dl>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 p-4">
+              <p class="text-xs font-black uppercase tracking-[0.18em] text-[#1D4ED8]">Admin review</p>
+              {% if alert.is_cleared() %}
+              <p class="mt-2 text-sm font-semibold leading-6 text-slate-500">Cleared on {{ alert.reviewed_at_display() }}</p>
+              <div class="mt-3 rounded-2xl bg-emerald-50 p-4 text-sm font-semibold leading-6 text-emerald-800 ring-1 ring-emerald-100">{{ alert.review_notes_display() }}</div>
+              {% else %}
+              <p class="mt-2 text-sm font-semibold leading-6 text-slate-500">Record the follow-up outcome before clearing. Example: customer contacted, purpose verified, or duplicate internal activity confirmed.</p>
+              <form class="mt-4 space-y-3" action="/admin/high-value-monitoring/{{ alert.id }}/status" method="post">
+                <input type="hidden" name="status" value="cleared" />
+                <textarea name="review_notes" rows="3" maxlength="500" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-[#1D4ED8] focus:bg-white" placeholder="Add review note before clearing"></textarea>
+                <button class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700" type="submit">Clear Record</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="mt-6 rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+        <div class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#1D4ED8]/10 text-[#1D4ED8]"><i data-lucide="radar" class="h-7 w-7"></i></div>
+        <h3 class="mt-4 text-xl font-black text-[#0B1F3A]">No monitoring records yet</h3>
+        <p class="mt-2 text-sm font-semibold text-slate-500">High-value transfer records will appear here when they require review.</p>
+      </div>
+      {% endif %}
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.createIcons();
+
+    const search = document.getElementById('monitoring-search');
+    const rows = Array.from(document.querySelectorAll('.monitoring-row'));
+
+    search?.addEventListener('input', () => {
+      const value = search.value.trim().toLowerCase();
+      rows.forEach((row) => {
+        const haystack = row.dataset.search?.toLowerCase() || '';
+        row.style.display = haystack.includes(value) ? '' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>

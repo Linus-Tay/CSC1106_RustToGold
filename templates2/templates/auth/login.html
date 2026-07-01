@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Askama template: templates/auth/login.html -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+
+
+  <!--
+    Route: GET/POST /login
+    Askama context: error_message: Option<String>
+    Integration note: Replace preview links with Actix route paths if needed. Form actions already use server routes.
+  -->
+
+  <main class="auth-shell">
+    <section class="auth-brand-panel">
+      <a class="c-navbar__brand" href="/"><span class="c-navbar__logo-wrap" aria-hidden="true">
+          <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
+        </span><span>RustToGold</span></a>
+      <div class="auth-brand-panel__content">
+        <div class="c-kicker">Secure Access</div>
+        <h1 class="auth-brand-panel__title">Banking access designed to feel clear and controlled.</h1>
+        <p class="auth-brand-panel__text">Log in to manage accounts, transfers, loans, fixed deposits, and transaction history from one secure portal.</p>
+      </div>
+      <p class="auth-brand-panel__text">After login: Customer → /customer/dashboard, Staff → /staff/dashboard, Admin → /admin/dashboard</p>
+    </section>
+    <section class="auth-form-panel">
+      <div class="auth-card">
+        <div class="u-stack">
+          <div>
+            <h1 class="app-page-title">Welcome Back</h1>
+            <p class="app-page-description">Log in to access your RustToGold banking dashboard.</p>
+          </div>
+          {% if has_error %}
+          <div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>
+          {% endif %}
+          <form class="form" action="/login" method="post">
+            <div class="form-field">
+              <label class="form-label" for="email">Email Address</label>
+              <input class="form-input" id="email" name="email" type="email" placeholder="customer@example.com" required />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="password">Password</label>
+              <input class="form-input" id="password" name="password" type="password" placeholder="Enter password" required />
+            </div>
+            <button class="c-button c-button--primary" type="submit"><i data-lucide="log-in"></i> Login</button>
+          </form>
+          <p class="form-help">New to RustToGold? <a class="c-button c-button--ghost" href="/signup" data-route="/signup">Open an account</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

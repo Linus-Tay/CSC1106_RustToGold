@@ -4,109 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RustToGold | Fixed Deposits</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css" />
+  {% include "partials/customer_assets.html" %}
 </head>
-<body>
-  <nav class="c-navbar" aria-label="Customer navigation">
-    <div class="u-container c-navbar__inner">
-      <a class="c-navbar__brand" href="/customer/dashboard">
-        <span class="c-navbar__logo-wrap" aria-hidden="true"><img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" /></span>
-        <span>RustToGold</span>
-      </a>
-      <ul class="c-navbar__links">
-        <li><a class="c-navbar__link" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
-        <li><a class="c-navbar__link" href="/customer/deposit"><i data-lucide="circle-dollar-sign"></i>Deposit</a></li>
-        <li><a class="c-navbar__link" href="/customer/transactions"><i data-lucide="receipt-text"></i>Transactions</a></li>
-        <li><a class="c-navbar__link is-active" href="/customer/fixed-deposits"><i data-lucide="piggy-bank"></i>Fixed Deposits</a></li>
-        <li><a class="c-navbar__link" href="/customer/profile"><i data-lucide="user-round"></i>Profile</a></li>
-      </ul>
-      <div class="c-navbar__actions"><a class="c-navbar__login" href="/logout"><i data-lucide="log-out"></i> Logout</a></div>
-    </div>
-  </nav>
-
-  <main class="app-main">
-    <div class="u-container">
-      <header class="app-page-header">
-        <div>
-          <h1 class="app-page-title">Fixed Deposits</h1>
-          <p class="app-page-description">Place funds for a fixed period, check maturity status, and receive payout safely.</p>
-        </div>
-        <a class="c-button c-button--primary" href="/customer/fixed-deposits/new"><i data-lucide="plus"></i> Create Fixed Deposit</a>
-      </header>
-
-      {% if has_error %}
-      <div class="alert alert--danger"><i data-lucide="alert-circle"></i> {{ error }}</div>
-      {% endif %}
-      {% if has_success %}
-      <div class="alert alert--success"><i data-lucide="check-circle"></i> {{ success }}</div>
-      {% endif %}
-
-      <div class="stat-grid" style="margin-top: 1rem;">
-        <div class="stat-card"><div class="stat-card__label">Account</div><div class="stat-card__value">{{ account_number }}</div><div class="stat-card__meta">Available balance: ${{ balance }}</div></div>
-        <div class="stat-card"><div class="stat-card__label">Active FDs</div><div class="stat-card__value">{{ summary.active_count }}</div><div class="stat-card__meta">Matured: {{ summary.matured_count }}</div></div>
-        <div class="stat-card"><div class="stat-card__label">Principal Locked</div><div class="stat-card__value">{{ summary.total_principal_display() }}</div><div class="stat-card__meta">Active and matured deposits</div></div>
-        <div class="stat-card"><div class="stat-card__label">Expected Interest</div><div class="stat-card__value">{{ summary.total_interest_display() }}</div><div class="stat-card__meta">For deposits not yet paid out</div></div>
-      </div>
-
-      <section class="c-card" style="margin-top: 2rem;">
-        <div class="c-card__header">
-          <div>
-            <h2 class="c-card__title">Your Fixed Deposit Records</h2>
-            <p class="c-card__subtitle">Early withdrawal returns principal only. Matured payout returns principal plus calculated interest.</p>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+  <main class="customer-main">
+    <div class="customer-container">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+      <section class="module-hero">
+        <div><p class="customer-kicker">Savings</p><h1>Fixed Deposits</h1><p>Create placements, track maturity dates and pay out principal with expected interest.</p><div class="hero-actions"><a class="c-button c-button--primary" href="/customer/fixed-deposits/new"><i data-lucide="piggy-bank"></i> New Placement</a><a class="c-button c-button--secondary" href="/customer/fixed-deposit-activity"><i data-lucide="calendar-clock"></i> FD Log</a></div></div>
+        <div class="module-stat"><span>Active Principal</span><strong>{{ summary.active_principal_display() }}</strong><small>{{ summary.active_count }} active · {{ summary.matured_count }} matured · {{ summary.projected_interest_display() }} projected interest</small></div>
+      </section>
+      {% if has_success %}<div class="alert alert--success"><i data-lucide="check-circle"></i> {{ success }}</div>{% endif %}
+      {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+      <section class="customer-card customer-section">
+        <div class="customer-card__header"><div><h2>Your Fixed Deposits</h2><p>Each new placement lets you select the funding account before funds are locked into the fixed deposit.</p></div><a class="text-link" href="/customer/fixed-deposits/new">New placement</a></div>
+        <div class="customer-card__body">
+          {% if has_fixed_deposits %}
+          <div class="record-list">
+            {% for fd in fixed_deposits %}
+            <article class="record-card">
+              <div class="record-card__main">
+                <div><span class="badge badge--info">{{ fd.status_display() }}</span><h3>{{ fd.plan_name }}</h3><p>{{ fd.tenure_months }} months · {{ fd.rate_display() }} p.a. · Matures {{ fd.maturity_date_display() }}</p></div>
+                <div class="record-card__amount"><span>Principal</span><strong>{{ fd.principal_display() }}</strong><small>Interest {{ fd.interest_display() }} · Payout {{ fd.payout_display() }}</small></div>
+              </div>
+              {% if fd.can_withdraw() %}
+              <form class="record-card__footer" action="/customer/fixed-deposits/{{ fd.id }}/withdraw" method="post"><button class="c-button c-button--gold" type="submit"><i data-lucide="banknote"></i> Withdraw / Payout</button></form>
+              {% endif %}
+            </article>
+            {% endfor %}
           </div>
-        </div>
-        <div class="c-card__body">
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Principal</th>
-                  <th>Rate</th>
-                  <th>Interest</th>
-                  <th>Maturity Date</th>
-                  <th>Payout</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% if has_fixed_deposits %}
-                {% for fd in fixed_deposits %}
-                <tr>
-                  <td>#{{ fd.id }}</td>
-                  <td>{{ fd.principal_display() }}</td>
-                  <td>{{ fd.interest_rate_display() }}</td>
-                  <td>{{ fd.interest_display() }}</td>
-                  <td>{{ fd.maturity_date_display() }}</td>
-                  <td>{{ fd.payout_display() }}<br><small>{{ fd.payout_label() }}</small></td>
-                  <td><span class="badge {{ fd.status_badge_class() }}">{{ fd.status_display() }}</span></td>
-                  <td>
-                    {% if fd.can_be_withdrawn() %}
-                    <form method="post" action="/customer/fixed-deposits/{{ fd.id }}/withdraw" onsubmit="return confirm('Continue with this fixed deposit action? Early withdrawal returns principal only and forfeits interest.');">
-                      <button class="c-button c-button--secondary" type="submit">{{ fd.action_label() }}</button>
-                    </form>
-                    {% else %}
-                    <span class="u-muted">No action</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-                {% else %}
-                <tr><td colspan="8">No fixed deposits yet. Create one after adding money to your bank account.</td></tr>
-                {% endif %}
-              </tbody>
-            </table>
-          </div>
+          {% else %}
+          <div class="empty-state"><div class="empty-state__icon"><i data-lucide="piggy-bank"></i></div><h3>No fixed deposits yet</h3><p>Create a placement to track funding, maturity and transaction logging.</p></div>
+          {% endif %}
         </div>
       </section>
     </div>
   </main>
-
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/static/js/app.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
 </body>
 </html>
