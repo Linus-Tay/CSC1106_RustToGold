@@ -1,3 +1,5 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::GiroArrangementForm;
 use crate::models::{GiroArrangement, Money, Product};
 use crate::repositories::{giro_repository, product_repository};
@@ -6,11 +8,13 @@ use chrono::{Duration, NaiveDate, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Data carrier for the GiroDashboard workflow.
 pub struct GiroDashboard {
     pub accounts: Vec<Product>,
     pub arrangements: Vec<GiroArrangement>,
 }
 
+// Loads giro dashboard data and applies page-level business rules.
 pub async fn load_giro_dashboard(
     db: &PgPool,
     customer_id: Uuid,
@@ -25,6 +29,7 @@ pub async fn load_giro_dashboard(
     Ok(GiroDashboard { accounts, arrangements })
 }
 
+// Validates and coordinates the create giro arrangement workflow.
 pub async fn create_giro_arrangement(
     db: &PgPool,
     customer_id: Uuid,
@@ -103,6 +108,7 @@ pub async fn create_giro_arrangement(
     Ok(())
 }
 
+// Validates and coordinates the cancel giro arrangement workflow.
 pub async fn cancel_giro_arrangement(
     db: &PgPool,
     customer_id: Uuid,
@@ -119,6 +125,7 @@ pub async fn cancel_giro_arrangement(
     }
 }
 
+// Normalises frequency before validation or storage.
 fn normalise_frequency(input: &str) -> Result<String, String> {
     match input.trim() {
         "weekly" => Ok("weekly".to_string()),
@@ -127,6 +134,7 @@ fn normalise_frequency(input: &str) -> Result<String, String> {
     }
 }
 
+// Parses start date from form input into a safer internal value.
 fn parse_start_date(input: &str) -> Result<NaiveDate, String> {
     let date = NaiveDate::parse_from_str(input.trim(), "%Y-%m-%d")
         .map_err(|_| "Choose a valid GIRO start date.".to_string())?;
@@ -141,6 +149,7 @@ fn parse_start_date(input: &str) -> Result<NaiveDate, String> {
     Ok(date)
 }
 
+// Parses end date from form input into a safer internal value.
 fn parse_end_date(input: &str, start_date: NaiveDate) -> Result<Option<NaiveDate>, String> {
     let value = input.trim();
     if value.is_empty() {

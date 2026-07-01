@@ -1,3 +1,4 @@
+// Controller layer: maps routes to services and chooses which template/redirect to return.
 pub mod admin_controller;
 pub mod auth_controller;
 pub mod customer_controller;

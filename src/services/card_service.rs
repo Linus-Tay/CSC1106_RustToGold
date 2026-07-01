@@ -1,9 +1,12 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::CardApplicationForm;
 use crate::models::{Card, Product};
 use crate::repositories::{card_repository, product_repository};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Data carrier for the CardDashboardData workflow.
 pub struct CardDashboardData {
     pub cards: Vec<Card>,
     pub has_cards: bool,
@@ -11,6 +14,7 @@ pub struct CardDashboardData {
     pub has_accounts: bool,
 }
 
+// Loads card dashboard data and applies page-level business rules.
 pub async fn load_card_dashboard(db: &PgPool, customer_id: Uuid) -> Result<CardDashboardData, String> {
     let cards = card_repository::list_cards_by_customer(db, customer_id)
         .await
@@ -27,6 +31,7 @@ pub async fn load_card_dashboard(db: &PgPool, customer_id: Uuid) -> Result<CardD
     })
 }
 
+// Validates and coordinates the create card workflow.
 pub async fn create_card(db: &PgPool, customer_id: Uuid, form: CardApplicationForm) -> Result<Card, String> {
     let linked_product_id = Uuid::parse_str(form.linked_account_id.trim())
         .map_err(|_| "Choose a valid account to link this card to.".to_string())?;
@@ -63,6 +68,7 @@ pub async fn create_card(db: &PgPool, customer_id: Uuid, form: CardApplicationFo
         .map_err(|_| "Could not create the card.".to_string())
 }
 
+// Validates and coordinates the set card status workflow.
 pub async fn set_card_status(db: &PgPool, customer_id: Uuid, card_id: Uuid, status: &str) -> Result<(), String> {
     let status = match status {
         "active" => "active",

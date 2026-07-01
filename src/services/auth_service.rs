@@ -1,3 +1,5 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::{AccountCreationForm, LoginForm};
 use crate::models::User;
 use crate::repositories::{customer_repository, user_repository};
@@ -9,6 +11,7 @@ use argon2::{
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Validates and coordinates the register user workflow.
 pub async fn register_user(
     db: &PgPool,
     customer_id: &Uuid,
@@ -57,6 +60,7 @@ pub async fn register_user(
     })
 }
 
+// Runs business logic for authenticate user.
 pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, String> {
     let login = form.username.trim().to_lowercase();
 
@@ -89,6 +93,7 @@ pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, Str
     Ok(user)
 }
 
+// Hashes sensitive input before it is stored.
 fn hash_password(password: &str) -> Result<String, Error> {
     let salt = SaltString::generate(&mut OsRng);
     let hash = Argon2::default()
@@ -97,6 +102,7 @@ fn hash_password(password: &str) -> Result<String, Error> {
     Ok(hash.to_string())
 }
 
+// Verifies sensitive input against its stored hash.
 fn verify_password(password: &str, password_hash: &str) -> bool {
     PasswordHash::new(password_hash)
         .ok()

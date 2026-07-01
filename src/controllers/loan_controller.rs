@@ -1,3 +1,5 @@
+// Controller layer: handles HTTP/session flow and delegates business rules to services.
+
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_customer};
 use crate::forms::{LoanApplicationForm, LoanPaymentForm};
@@ -8,6 +10,7 @@ use actix_session::Session;
 use actix_web::{web, HttpResponse, Result};
 use uuid::Uuid;
 
+// Renders the loans page screen with data prepared by the service layer.
 pub async fn loans_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -28,6 +31,7 @@ pub async fn loans_page(data: web::Data<AppState>, session: Session) -> Result<H
     }
 }
 
+// Renders the loan apply page screen with data prepared by the service layer.
 pub async fn loan_apply_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -48,6 +52,7 @@ pub async fn loan_apply_page(data: web::Data<AppState>, session: Session) -> Res
     })
 }
 
+// Handles the create personal loan form action and redirects after the service result.
 pub async fn create_personal_loan(
     data: web::Data<AppState>,
     session: Session,
@@ -75,6 +80,7 @@ pub async fn create_personal_loan(
     }
 }
 
+// Handles the pay loan form action and redirects after the service result.
 pub async fn pay_loan(
     data: web::Data<AppState>,
     session: Session,

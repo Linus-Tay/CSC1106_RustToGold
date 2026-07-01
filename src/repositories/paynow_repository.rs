@@ -1,7 +1,10 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::{PayNowRegistration, Product, Transaction};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Reads list by customer data from the database.
 pub async fn list_by_customer(
     db: &PgPool,
     customer_id: Uuid,
@@ -24,6 +27,7 @@ pub async fn list_by_customer(
     .await
 }
 
+// Reads find active by identifier data from the database.
 pub async fn find_active_by_identifier(
     db: &PgPool,
     paynow_type: &str,
@@ -48,6 +52,7 @@ pub async fn find_active_by_identifier(
     .await
 }
 
+// Persists the insert registration database change.
 pub async fn insert_registration(
     db: &PgPool,
     customer_id: Uuid,
@@ -78,6 +83,7 @@ pub async fn insert_registration(
 }
 
 
+// Executes the database operation for upsert phone registration.
 pub async fn upsert_phone_registration(
     db: &PgPool,
     customer_id: Uuid,
@@ -135,6 +141,7 @@ pub async fn upsert_phone_registration(
 }
 
 
+// Executes the database operation for execute paynow transfer.
 pub async fn execute_paynow_transfer(
     db: &PgPool,
     sender_customer_id: Uuid,

@@ -328,7 +328,7 @@ VALUES
     ('Growth 12 Month Deposit', 12, 325, 500000, TRUE),
     ('Premier 24 Month Deposit', 24, 380, 1000000, TRUE);
 
--- Seeded admin user for demo/testing.
+-- Seeded admin user for local setup.
 -- Username: admin
 -- Email: admin@rusttogold.test
 -- Password: Admin@12345

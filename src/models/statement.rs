@@ -1,9 +1,12 @@
+// Model layer: domain structs plus small display helpers used by services and templates.
+
 use super::{Money, Product};
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
+// Domain record used by services, repositories and templates.
 pub struct StatementTransaction {
     pub id: Uuid,
     pub transaction_type: String,
@@ -14,14 +17,17 @@ pub struct StatementTransaction {
 }
 
 impl StatementTransaction {
+    // Formats the value for display in templates.
     pub fn date_display(&self) -> String {
         self.created_at.format("%d %b %Y").to_string()
     }
 
+    // Formats the value for display in templates.
     pub fn time_display(&self) -> String {
         self.created_at.format("%I:%M %p").to_string()
     }
 
+    // Formats the value for display in templates.
     pub fn transaction_type_display(&self) -> String {
         match self.transaction_type.as_str() {
             "deposit" => "Deposit".to_string(),
@@ -42,6 +48,7 @@ impl StatementTransaction {
         }
     }
 
+    // Formats the value for display in templates.
     pub fn description_display(&self) -> String {
         self.description
             .as_deref()
@@ -51,6 +58,7 @@ impl StatementTransaction {
             .to_string()
     }
 
+    // Returns the stored money amount in cents.
     pub fn signed_amount_cents(&self) -> i64 {
         if self.is_credit() {
             self.amount_cents
@@ -59,6 +67,7 @@ impl StatementTransaction {
         }
     }
 
+    // Returns whether this record is credit.
     pub fn is_credit(&self) -> bool {
         matches!(
             self.transaction_type.as_str(),
@@ -66,6 +75,7 @@ impl StatementTransaction {
         )
     }
 
+    // Formats the value for display in templates.
     pub fn debit_display(&self) -> String {
         if self.is_credit() {
             "-".to_string()
@@ -74,6 +84,7 @@ impl StatementTransaction {
         }
     }
 
+    // Formats the value for display in templates.
     pub fn credit_display(&self) -> String {
         if self.is_credit() {
             Money::from_cents(self.amount_cents).display()
@@ -82,12 +93,14 @@ impl StatementTransaction {
         }
     }
 
+    // Formats the value for display in templates.
     pub fn balance_after_display(&self) -> String {
         Money::from_cents(self.balance_after_cents).display()
     }
 }
 
 #[derive(Debug, Clone)]
+// Domain record used by services, repositories and templates.
 pub struct BankStatement {
     pub customer_name: String,
     pub customer_email: String,
@@ -101,14 +114,17 @@ pub struct BankStatement {
 }
 
 impl BankStatement {
+    // Provides a small domain helper for account number.
     pub fn account_number(&self) -> &str {
         &self.account.account_number
     }
 
+    // Provides a small domain helper for product name.
     pub fn product_name(&self) -> String {
         self.account.product_id_display()
     }
 
+    // Formats the value for display in templates.
     pub fn period_display(&self) -> String {
         format!(
             "{} to {}",
@@ -117,18 +133,22 @@ impl BankStatement {
         )
     }
 
+    // Formats the value for display in templates.
     pub fn generated_at_display(&self) -> String {
         self.generated_at.format("%d %b %Y, %I:%M %p").to_string()
     }
 
+    // Formats the value for display in templates.
     pub fn opening_balance_display(&self) -> String {
         Money::from_cents(self.opening_balance_cents).display()
     }
 
+    // Formats the value for display in templates.
     pub fn closing_balance_display(&self) -> String {
         Money::from_cents(self.closing_balance_cents).display()
     }
 
+    // Returns whether this record has transactions.
     pub fn has_transactions(&self) -> bool {
         !self.transactions.is_empty()
     }

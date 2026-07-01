@@ -1,3 +1,5 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 pub struct ProductDetails {
     pub name: String,
     pub product_type: String,
@@ -7,6 +9,7 @@ pub struct ProductDetails {
     pub features: Vec<String>,
 }
 
+// Runs business logic for get product details.
 pub fn get_product_details(id: &str) -> Option<ProductDetails> {
     match id.to_uppercase().as_str() {
         "XS" => Some(ProductDetails {

@@ -1,8 +1,11 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::{AccountCreationLink, Customer, Product};
 use chrono::{Duration, NaiveDate, Utc};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
+// Data carrier for the NewCustomer workflow.
 pub struct NewCustomer<'a> {
     pub full_name: &'a str,
     pub nric: &'a str,
@@ -32,6 +35,7 @@ const CUSTOMER_SELECT: &str = r#"
     FROM customers
 "#;
 
+// Reads get customer by nric data from the database.
 pub async fn get_customer_by_nric(
     db: &PgPool,
     nric: &str,
@@ -44,6 +48,7 @@ pub async fn get_customer_by_nric(
 }
 
 
+// Reads get non rejected customer by nric data from the database.
 pub async fn get_non_rejected_customer_by_nric(
     db: &PgPool,
     nric: &str,
@@ -55,6 +60,7 @@ pub async fn get_non_rejected_customer_by_nric(
         .await
 }
 
+// Reads get non rejected customer by email data from the database.
 pub async fn get_non_rejected_customer_by_email(
     db: &PgPool,
     email: &str,
@@ -66,6 +72,7 @@ pub async fn get_non_rejected_customer_by_email(
         .await
 }
 
+// Reads get customer by id data from the database.
 pub async fn get_customer_by_id(db: &PgPool, id: &Uuid) -> Result<Customer, sqlx::Error> {
     let query = format!("{} WHERE id = $1", CUSTOMER_SELECT);
     sqlx::query_as::<_, Customer>(&query)
@@ -74,6 +81,7 @@ pub async fn get_customer_by_id(db: &PgPool, id: &Uuid) -> Result<Customer, sqlx
         .await
 }
 
+// Persists the create customer database change.
 pub async fn create_customer(
     db: &PgPool,
     new_customer: &NewCustomer<'_>,
@@ -114,6 +122,7 @@ pub async fn create_customer(
     .await
 }
 
+// Persists the create customer and product database change.
 pub async fn create_customer_and_product(
     db: &PgPool,
     new_customer: &NewCustomer<'_>,
@@ -177,6 +186,7 @@ pub async fn create_customer_and_product(
     Ok((customer, product))
 }
 
+// Persists the update customer database change.
 pub async fn update_customer(
     db: &PgPool,
     uuid: Uuid,
@@ -222,6 +232,7 @@ pub async fn update_customer(
 
 
 
+// Persists the update basic profile database change.
 pub async fn update_basic_profile(
     db: &PgPool,
     customer_id: Uuid,
@@ -248,6 +259,7 @@ pub async fn update_basic_profile(
     .await
 }
 
+// Persists the approve customer database change.
 pub async fn approve_customer(db: &PgPool, account_id: &Uuid) -> Result<Customer, sqlx::Error> {
     sqlx::query_as::<_, Customer>(
         r#"
@@ -265,6 +277,7 @@ pub async fn approve_customer(db: &PgPool, account_id: &Uuid) -> Result<Customer
     .await
 }
 
+// Persists the approve customer and product database change.
 pub async fn approve_customer_and_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -304,6 +317,7 @@ pub async fn approve_customer_and_product(
     Ok((updated_customer, updated_product))
 }
 
+// Persists the create user account creation link for customer database change.
 pub async fn create_user_account_creation_link_for_customer(
     db: &PgPool,
     customer_id: &Uuid,
@@ -321,6 +335,7 @@ pub async fn create_user_account_creation_link_for_customer(
     .await
 }
 
+// Reads get account creation link data from the database.
 pub async fn get_account_creation_link(
     db: &PgPool,
     account_creation_link: &Uuid,
@@ -337,6 +352,7 @@ pub async fn get_account_creation_link(
     .await
 }
 
+// Executes the database operation for invalidate account creation link.
 pub async fn invalidate_account_creation_link(
     db: &PgPool,
     account_creation_link: &Uuid,
@@ -354,6 +370,7 @@ pub async fn invalidate_account_creation_link(
     .await
 }
 
+// Persists the create customer profile for user database change.
 pub async fn create_customer_profile_for_user(
     db: &PgPool,
     customer_id: Uuid,

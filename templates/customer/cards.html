@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RustToGold | Card Products</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css" />
+  {% include "partials/customer_assets.html" %}
 </head>
 <body class="customer-body">
   {% include "partials/customer_nav.html" %}
@@ -16,18 +13,11 @@
     <div class="customer-container">
       <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
 
-      <section class="cards-hero cards-hero--polished">
+      <section class="cards-hero cards-hero--polished cards-hero--text-only">
         <div>
           <p class="customer-kicker">Card Products</p>
           <h1>Apply, link and control your cards.</h1>
           <p>Card applications are linked to an active bank account. After creation, you can freeze or reactivate the card from the same page.</p>
-        </div>
-        <div class="cards-hero__visual" aria-hidden="true">
-          <div class="demo-bank-card">
-            <div class="demo-bank-card__top"><span>RustToGold</span><i data-lucide="contactless"></i></div>
-            <strong>••••  ••••  ••••  2048</strong>
-            <div class="demo-bank-card__bottom"><small>Everyday Debit</small><small>Active</small></div>
-          </div>
         </div>
       </section>
 
@@ -70,7 +60,7 @@
               <div class="card-benefit-strip form-field--full">
                 <span><i data-lucide="snowflake"></i> Freeze anytime</span>
                 <span><i data-lucide="shield-check"></i> Account-linked</span>
-                <span><i data-lucide="receipt-text"></i> Demo-ready</span>
+                <span><i data-lucide="receipt-text"></i> Clear records</span>
               </div>
               <button class="c-button c-button--primary" type="submit"><i data-lucide="credit-card"></i> Apply for Card</button>
             </form>
@@ -84,6 +74,7 @@
           </div>
         </section>
 
+        {% if has_cards %}
         <section class="customer-card card-manage-panel">
           <div class="customer-card__header customer-card__header--with-icon">
             <span class="panel-icon"><i data-lucide="wallet-cards"></i></span>
@@ -96,7 +87,6 @@
 
           <div class="customer-card__body">
             <div class="card-showcase-list">
-              {% if has_cards %}
               {% for card in cards %}
               <article class="customer-bank-card {% if card.is_frozen() %}customer-bank-card--frozen{% endif %}">
                 <div class="customer-bank-card__face">
@@ -115,16 +105,10 @@
                 </div>
               </article>
               {% endfor %}
-              {% else %}
-              <div class="empty-state empty-state--small">
-                <div class="empty-state__icon"><i data-lucide="credit-card"></i></div>
-                <h3>No cards yet</h3>
-                <p>Create your first debit or student card linked to one active account.</p>
-              </div>
-              {% endif %}
             </div>
           </div>
         </section>
+        {% endif %}
       </div>
     </div>
   </main>

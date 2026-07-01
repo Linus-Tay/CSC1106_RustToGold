@@ -3178,7 +3178,7 @@ select:-webkit-autofill {
   }
 }
 
-/* Phase 1 validation/UI helpers */
+/* Form validation and shared UI helpers */
 .info-callout {
   min-height: 3rem;
   display: grid;
@@ -3252,7 +3252,7 @@ select:-webkit-autofill {
   justify-content: flex-end;
 }
 
-/* Phase 6A dashboard and PayNow polish */
+/* Dashboard and PayNow polish */
 .dashboard-hero-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
@@ -3422,7 +3422,7 @@ select:-webkit-autofill {
   }
 }
 
-/* Phase 6A.1 dashboard account switcher and stacked repayment forms */
+/* Account rows and stacked repayment forms */
 .balance-card--switchable {
   gap: 0.55rem;
 }
@@ -3479,7 +3479,7 @@ select:-webkit-autofill {
 }
 
 /* =========================================================
-   Phase 6B UI cleanup - customer dashboard, PayNow, cards
+   Customer dashboard, PayNow and card layout cleanup
    Frontend-only polish. Keeps existing Rust routes unchanged.
    ========================================================= */
 
@@ -3815,7 +3815,6 @@ select:-webkit-autofill {
   place-items: center;
 }
 
-.demo-bank-card,
 .customer-bank-card__face {
   min-height: 190px;
   width: 100%;
@@ -3829,12 +3828,7 @@ select:-webkit-autofill {
   box-shadow: 0 18px 42px rgba(11, 31, 58, 0.22);
 }
 
-.demo-bank-card {
-  transform: rotate(-2deg);
-}
 
-.demo-bank-card__top,
-.demo-bank-card__bottom,
 .customer-bank-card__top,
 .customer-bank-card__bottom {
   display: flex;
@@ -3843,13 +3837,11 @@ select:-webkit-autofill {
   gap: 1rem;
 }
 
-.demo-bank-card__top span,
 .customer-bank-card__top span {
   font-family: var(--font-heading);
   font-weight: 900;
 }
 
-.demo-bank-card strong,
 .customer-bank-card__face strong {
   display: block;
   margin: 2.5rem 0 1.25rem;
@@ -3857,7 +3849,6 @@ select:-webkit-autofill {
   letter-spacing: 0.08em;
 }
 
-.demo-bank-card small,
 .customer-bank-card__face small,
 .customer-bank-card__face p {
   color: rgba(255, 255, 255, 0.76);
@@ -4000,17 +3991,13 @@ select:-webkit-autofill {
     grid-template-columns: 1fr;
   }
 
-  .demo-bank-card {
-    transform: none;
-  }
-
   .customer-pill {
     width: auto;
   }
 }
 
 /* =========================================================
-   Phase 6B correction pass - customer/admin UI consistency
+   Customer/admin UI consistency
    ========================================================= */
 .customer-brand--clean {
   gap: 0.75rem;
@@ -4255,7 +4242,7 @@ select:-webkit-autofill {
 }
 
 /* =========================================================
-   Phase 6B UI + Statements patch
+   Statement page and PDF download UI
    ========================================================= */
 .customer-topbar__actions--simple {
   flex: 0 0 auto;
@@ -4535,7 +4522,7 @@ select:-webkit-autofill {
 }
 
 /* =========================================================
-   Phase 6B polish follow-up: dashboard, profile and statements
+   Dashboard, profile and statements polish
    ========================================================= */
 .section-heading--dashboard-clean {
   align-items: flex-start;
@@ -4859,7 +4846,7 @@ select:-webkit-autofill {
   }
 }
 
-/* Phase 8: cards, transaction controls, fraud rules and GIRO */
+/* Cards, transaction controls, monitoring rules and GIRO */
 .customer-topbar--minimal .customer-topbar__actions {
   gap: 0.6rem;
 }

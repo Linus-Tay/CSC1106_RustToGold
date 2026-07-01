@@ -1,7 +1,10 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::{Product, Transaction};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
+// Reads get product by user id and product id data from the database.
 pub async fn get_product_by_user_id_and_product_id(
     db: &PgPool,
     customer_id: &Uuid,
@@ -20,6 +23,7 @@ pub async fn get_product_by_user_id_and_product_id(
     .await
 }
 
+// Reads get product by account number data from the database.
 pub async fn get_product_by_account_number(
     db: &PgPool,
     account_number: &str,
@@ -37,6 +41,7 @@ pub async fn get_product_by_account_number(
 }
 
 
+// Reads list products by customer data from the database.
 pub async fn list_products_by_customer(
     db: &PgPool,
     customer_id: &Uuid,
@@ -56,6 +61,7 @@ pub async fn list_products_by_customer(
     .await
 }
 
+// Reads list active products by customer data from the database.
 pub async fn list_active_products_by_customer(
     db: &PgPool,
     customer_id: &Uuid,
@@ -74,6 +80,7 @@ pub async fn list_active_products_by_customer(
 }
 
 
+// Reads get active product for customer by id data from the database.
 pub async fn get_active_product_for_customer_by_id(
     db: &PgPool,
     customer_id: Uuid,
@@ -92,6 +99,7 @@ pub async fn get_active_product_for_customer_by_id(
     .await
 }
 
+// Reads get active product for customer by account number data from the database.
 pub async fn get_active_product_for_customer_by_account_number(
     db: &PgPool,
     customer_id: &Uuid,
@@ -110,6 +118,7 @@ pub async fn get_active_product_for_customer_by_account_number(
     .await
 }
 
+// Persists the insert product database change.
 pub async fn insert_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -133,6 +142,7 @@ pub async fn insert_product(
 }
 
 
+// Persists the insert active product database change.
 pub async fn insert_active_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -155,6 +165,7 @@ pub async fn insert_active_product(
     .await
 }
 
+// Persists the deposit into product database change.
 pub async fn deposit_into_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -197,6 +208,7 @@ pub async fn deposit_into_product(
     Ok((updated_product, transaction))
 }
 
+// Persists the transfer database change.
 pub async fn transfer(
     db: &PgPool,
     sender_account_number: &str,
@@ -293,6 +305,7 @@ pub async fn transfer(
     Ok((true, None))
 }
 
+// Reads get first product by customer id data from the database.
 pub async fn get_first_product_by_customer_id(
     db: &PgPool,
     customer_id: &Uuid,
@@ -311,6 +324,7 @@ pub async fn get_first_product_by_customer_id(
     .await
 }
 
+// Persists the lock product database change.
 async fn lock_product(
     tx: &mut DbTransaction<'_, Postgres>,
     customer_id: &Uuid,

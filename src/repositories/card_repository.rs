@@ -1,7 +1,10 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::Card;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Reads list cards by customer data from the database.
 pub async fn list_cards_by_customer(db: &PgPool, customer_id: Uuid) -> Result<Vec<Card>, sqlx::Error> {
     sqlx::query_as::<_, Card>(
         r#"
@@ -18,6 +21,7 @@ pub async fn list_cards_by_customer(db: &PgPool, customer_id: Uuid) -> Result<Ve
     .await
 }
 
+// Persists the create card database change.
 pub async fn create_card(
     db: &PgPool,
     customer_id: Uuid,
@@ -44,6 +48,7 @@ pub async fn create_card(
     .await
 }
 
+// Persists the set card status database change.
 pub async fn set_card_status(
     db: &PgPool,
     customer_id: Uuid,

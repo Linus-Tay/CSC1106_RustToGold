@@ -1,7 +1,10 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::{PersonalLoan, Product, Transaction};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
+// Reads find primary active product data from the database.
 pub async fn find_primary_active_product(db: &PgPool, customer_id: Uuid) -> Result<Product, sqlx::Error> {
     sqlx::query_as::<_, Product>(
         r#"
@@ -17,6 +20,7 @@ pub async fn find_primary_active_product(db: &PgPool, customer_id: Uuid) -> Resu
     .await
 }
 
+// Reads list personal loans by customer data from the database.
 pub async fn list_personal_loans_by_customer(
     db: &PgPool,
     customer_id: Uuid,
@@ -35,6 +39,7 @@ pub async fn list_personal_loans_by_customer(
     .await
 }
 
+// Persists the create personal loan database change.
 pub async fn create_personal_loan(
     db: &PgPool,
     customer_id: Uuid,
@@ -79,6 +84,7 @@ pub async fn create_personal_loan(
     .await
 }
 
+// Persists the pay personal loan database change.
 pub async fn pay_personal_loan(
     db: &PgPool,
     customer_id: Uuid,
@@ -150,6 +156,7 @@ pub async fn pay_personal_loan(
     Ok(updated)
 }
 
+// Persists the lock product by id database change.
 async fn lock_product_by_id(
     tx: &mut DbTransaction<'_, Postgres>,
     customer_id: Uuid,
@@ -169,6 +176,7 @@ async fn lock_product_by_id(
     .await
 }
 
+// Persists the insert product transaction database change.
 async fn insert_product_transaction(
     tx: &mut DbTransaction<'_, Postgres>,
     product_id: Uuid,

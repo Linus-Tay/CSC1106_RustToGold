@@ -1,3 +1,5 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::{
     AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary,
     AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser, Product,
@@ -5,6 +7,7 @@ use crate::models::{
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
+// Executes the database operation for dashboard summary.
 pub async fn dashboard_summary(db: &PgPool) -> Result<AdminDashboardSummary, sqlx::Error> {
     sqlx::query_as::<_, AdminDashboardSummary>(
         r#"
@@ -25,6 +28,7 @@ pub async fn dashboard_summary(db: &PgPool) -> Result<AdminDashboardSummary, sql
     .await
 }
 
+// Reads list customer applications data from the database.
 pub async fn list_customer_applications(
     db: &PgPool,
 ) -> Result<Vec<AdminCustomerApplication>, sqlx::Error> {
@@ -77,6 +81,7 @@ pub async fn list_customer_applications(
     .await
 }
 
+// Persists the approve customer application database change.
 pub async fn approve_customer_application(
     db: &PgPool,
     customer_id: Uuid,
@@ -119,6 +124,7 @@ pub async fn approve_customer_application(
     tx.commit().await
 }
 
+// Persists the reject customer application database change.
 pub async fn reject_customer_application(
     db: &PgPool,
     customer_id: Uuid,
@@ -150,6 +156,7 @@ pub async fn reject_customer_application(
     tx.commit().await
 }
 
+// Reads list personal loans data from the database.
 pub async fn list_personal_loans(
     db: &PgPool,
 ) -> Result<Vec<AdminPersonalLoanRecord>, sqlx::Error> {
@@ -158,6 +165,7 @@ pub async fn list_personal_loans(
         .await
 }
 
+// Reads list home loans data from the database.
 pub async fn list_home_loans(db: &PgPool) -> Result<Vec<AdminHomeLoanRecord>, sqlx::Error> {
     sqlx::query_as::<_, AdminHomeLoanRecord>(
         r#"
@@ -198,6 +206,7 @@ pub async fn list_home_loans(db: &PgPool) -> Result<Vec<AdminHomeLoanRecord>, sq
     .await
 }
 
+// Persists the approve personal loan database change.
 pub async fn approve_personal_loan(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -271,6 +280,7 @@ pub async fn approve_personal_loan(
     tx.commit().await
 }
 
+// Persists the reject personal loan database change.
 pub async fn reject_personal_loan(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -303,6 +313,7 @@ pub async fn reject_personal_loan(
     tx.commit().await
 }
 
+// Persists the record audit log database change.
 pub async fn record_audit_log(
     db: &PgPool,
     actor_user_id: Option<Uuid>,
@@ -328,6 +339,7 @@ pub async fn record_audit_log(
     Ok(())
 }
 
+// Reads list staff users data from the database.
 pub async fn list_staff_users(db: &PgPool) -> Result<Vec<AdminStaffUser>, sqlx::Error> {
     sqlx::query_as::<_, AdminStaffUser>(
         r#"
@@ -341,6 +353,7 @@ pub async fn list_staff_users(db: &PgPool) -> Result<Vec<AdminStaffUser>, sqlx::
     .await
 }
 
+// Persists the create staff user database change.
 pub async fn create_staff_user(
     db: &PgPool,
     username: &str,
@@ -382,6 +395,7 @@ pub async fn create_staff_user(
     tx.commit().await
 }
 
+// Persists the update staff user database change.
 pub async fn update_staff_user(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -443,6 +457,7 @@ pub async fn update_staff_user(
     tx.commit().await
 }
 
+// Executes the database operation for delete staff user.
 pub async fn delete_staff_user(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -468,6 +483,7 @@ pub async fn delete_staff_user(
     tx.commit().await
 }
 
+// Reads list customer accounts data from the database.
 pub async fn list_customer_accounts(db: &PgPool) -> Result<Vec<AdminCustomerAccountRecord>, sqlx::Error> {
     sqlx::query_as::<_, AdminCustomerAccountRecord>(
         r#"
@@ -496,6 +512,7 @@ pub async fn list_customer_accounts(db: &PgPool) -> Result<Vec<AdminCustomerAcco
     .await
 }
 
+// Persists the set user status database change.
 pub async fn set_user_status(
     db: &PgPool,
     target_user_id: Uuid,
@@ -529,6 +546,7 @@ pub async fn set_user_status(
     tx.commit().await
 }
 
+// Persists the set product status database change.
 pub async fn set_product_status(
     db: &PgPool,
     product_id: Uuid,
@@ -562,6 +580,7 @@ pub async fn set_product_status(
     tx.commit().await
 }
 
+// Reads list audit logs data from the database.
 pub async fn list_audit_logs(db: &PgPool) -> Result<Vec<AdminAuditLogRecord>, sqlx::Error> {
     sqlx::query_as::<_, AdminAuditLogRecord>(
         r#"
@@ -584,6 +603,7 @@ pub async fn list_audit_logs(db: &PgPool) -> Result<Vec<AdminAuditLogRecord>, sq
     .await
 }
 
+// Persists the insert audit log tx database change.
 async fn insert_audit_log_tx(
     tx: &mut DbTransaction<'_, Postgres>,
     actor_user_id: Option<Uuid>,
@@ -611,6 +631,7 @@ async fn insert_audit_log_tx(
 
 
 
+// Persists the lock customer product by id database change.
 async fn lock_customer_product_by_id(
     tx: &mut DbTransaction<'_, Postgres>,
     customer_id: Uuid,
@@ -630,6 +651,7 @@ async fn lock_customer_product_by_id(
     .await
 }
 
+// Persists the lock customer product database change.
 async fn lock_customer_product(
     tx: &mut DbTransaction<'_, Postgres>,
     customer_id: Uuid,
@@ -649,6 +671,7 @@ async fn lock_customer_product(
     .await
 }
 
+// Executes the database operation for personal loan select sql.
 fn personal_loan_select_sql() -> &'static str {
     r#"
     SELECT * FROM (
@@ -686,6 +709,7 @@ fn personal_loan_select_sql() -> &'static str {
     "#
 }
 
+// Executes the database operation for personal loan select base sql.
 fn personal_loan_select_base_sql() -> &'static str {
     r#"
     SELECT

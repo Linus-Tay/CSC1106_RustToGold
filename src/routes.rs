@@ -1,6 +1,9 @@
+// Central route registration for public, customer and admin pages.
+
 use crate::controllers;
 use actix_web::{guard, web};
 
+// Registers application routes with Actix Web.
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("")

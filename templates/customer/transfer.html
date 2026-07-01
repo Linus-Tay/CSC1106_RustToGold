@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RustToGold | Transfer Money</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css" />
+  {% include "partials/customer_assets.html" %}
 </head>
 <body class="customer-body">
   {% include "partials/customer_nav.html" %}
@@ -22,11 +19,6 @@
             <p class="customer-kicker">Everyday Banking</p>
             <h1>Transfer Money</h1>
             <p>Select the source account before sending money to another RustToGold account.</p>
-          </div>
-          <div class="mini-balance">
-            <span>Selected Balance</span>
-            <strong>${{ balance }}</strong>
-            <small>{{ selected_account_number }}</small>
           </div>
         </div>
 

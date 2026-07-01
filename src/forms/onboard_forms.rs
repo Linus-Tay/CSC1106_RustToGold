@@ -1,6 +1,9 @@
+// Form layer: request payload structs received from HTML forms.
+
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Default)]
+// Form payload for the OnboardingForm request.
 pub struct OnboardingForm {
     pub step1: Option<Step1Form>,
     pub step2: Option<Step2Form>,
@@ -9,6 +12,7 @@ pub struct OnboardingForm {
 }
 
 #[derive(Serialize, Deserialize, Default)]
+// Form payload for the Step1Form request.
 pub struct Step1Form {
     pub selected_account_type: Option<String>,
     pub account_purpose: String,
@@ -16,6 +20,7 @@ pub struct Step1Form {
 }
 
 #[derive(Serialize, Deserialize, Default)]
+// Form payload for the Step2Form request.
 pub struct Step2Form {
     pub full_name: String,
     pub nric: String,
@@ -30,6 +35,7 @@ pub struct Step2Form {
 }
 
 #[derive(Serialize, Deserialize, Default)]
+// Form payload for the Step3Form request.
 pub struct Step3Form {
     pub phone_number: String,
     pub email: String,
@@ -38,6 +44,7 @@ pub struct Step3Form {
 }
 
 #[derive(Serialize, Deserialize, Default)]
+// Form payload for the Step4Form request.
 pub struct Step4Form {
     pub employment_status: String,
     pub occupation: Option<String>,

@@ -1,8 +1,11 @@
+// Model layer: domain structs plus small display helpers used by services and templates.
+
 use chrono::{DateTime, Utc};
 use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
+// Domain record used by services, repositories and templates.
 pub struct Card {
     pub id: Uuid,
     pub customer_id: Uuid,
@@ -17,6 +20,7 @@ pub struct Card {
 }
 
 impl Card {
+    // Formats the value for display in templates.
     pub fn card_type_display(&self) -> String {
         match self.card_type.as_str() {
             "debit" => "Everyday Debit Card".to_string(),
@@ -25,6 +29,7 @@ impl Card {
         }
     }
 
+    // Formats the value for display in templates.
     pub fn status_display(&self) -> String {
         match self.status.as_str() {
             "active" => "Active".to_string(),
@@ -34,14 +39,17 @@ impl Card {
         }
     }
 
+    // Returns whether this record is active.
     pub fn is_active(&self) -> bool {
         self.status == "active"
     }
 
+    // Returns whether this record is frozen.
     pub fn is_frozen(&self) -> bool {
         self.status == "frozen"
     }
 
+    // Formats the value for display in templates.
     pub fn created_at_display(&self) -> String {
         self.created_at.format("%d %b %Y").to_string()
     }

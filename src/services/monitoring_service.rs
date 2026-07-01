@@ -1,9 +1,12 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::MonitoringStatusForm;
 use crate::models::HighValueAlertRecord;
 use crate::repositories::{admin_repository, monitoring_repository};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Data carrier for the HighValueMonitoringDashboard workflow.
 pub struct HighValueMonitoringDashboard {
     pub alerts: Vec<HighValueAlertRecord>,
     pub blocked_count: i64,
@@ -11,6 +14,7 @@ pub struct HighValueMonitoringDashboard {
     pub cleared_count: i64,
 }
 
+/// Loads only real high-value records for the admin monitoring queue.
 pub async fn load_high_value_monitoring_dashboard(
     db: &PgPool,
 ) -> Result<HighValueMonitoringDashboard, String> {
@@ -36,6 +40,7 @@ pub async fn load_high_value_monitoring_dashboard(
     })
 }
 
+/// Clears a monitoring record only after the staff user adds a review note.
 pub async fn update_high_value_alert_status(
     db: &PgPool,
     actor_user_id: Uuid,

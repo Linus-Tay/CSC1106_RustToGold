@@ -1,3 +1,5 @@
+// Controller layer: handles HTTP/session flow and delegates business rules to services.
+
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_admin, require_customer};
 use crate::forms::{HomeLoanApplicationForm, HomeLoanPaymentForm};
@@ -10,6 +12,7 @@ use actix_session::Session;
 use actix_web::{web, HttpResponse, Result};
 use uuid::Uuid;
 
+// Renders the home loans page screen with data prepared by the service layer.
 pub async fn home_loans_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -31,6 +34,7 @@ pub async fn home_loans_page(data: web::Data<AppState>, session: Session) -> Res
     }
 }
 
+// Renders the home loan apply page screen with data prepared by the service layer.
 pub async fn home_loan_apply_page(
     data: web::Data<AppState>,
     session: Session,
@@ -54,6 +58,7 @@ pub async fn home_loan_apply_page(
     })
 }
 
+// Handles the create home loan application form action and redirects after the service result.
 pub async fn create_home_loan_application(
     data: web::Data<AppState>,
     session: Session,
@@ -83,6 +88,7 @@ pub async fn create_home_loan_application(
     }
 }
 
+// Handles the pay home loan form action and redirects after the service result.
 pub async fn pay_home_loan(
     data: web::Data<AppState>,
     session: Session,
@@ -118,6 +124,7 @@ pub async fn pay_home_loan(
     }
 }
 
+// Renders the admin home loans page screen with data prepared by the service layer.
 pub async fn admin_home_loans_page(
     data: web::Data<AppState>,
     session: Session,
@@ -142,6 +149,7 @@ pub async fn admin_home_loans_page(
     }
 }
 
+// Handles the approve home loan form action and redirects after the service result.
 pub async fn approve_home_loan(
     data: web::Data<AppState>,
     session: Session,
@@ -163,6 +171,7 @@ pub async fn approve_home_loan(
     }
 }
 
+// Handles the reject home loan form action and redirects after the service result.
 pub async fn reject_home_loan(
     data: web::Data<AppState>,
     session: Session,

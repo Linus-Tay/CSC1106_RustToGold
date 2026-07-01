@@ -1,7 +1,10 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::{HomeLoanApplication, Product, Transaction};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
+// Reads list home loans by customer data from the database.
 pub async fn list_home_loans_by_customer(
     db: &PgPool,
     customer_id: Uuid,
@@ -22,6 +25,7 @@ pub async fn list_home_loans_by_customer(
     .await
 }
 
+// Reads list all home loans data from the database.
 pub async fn list_all_home_loans(db: &PgPool) -> Result<Vec<HomeLoanApplication>, sqlx::Error> {
     sqlx::query_as::<_, HomeLoanApplication>(
         r#"
@@ -37,6 +41,7 @@ pub async fn list_all_home_loans(db: &PgPool) -> Result<Vec<HomeLoanApplication>
     .await
 }
 
+// Persists the create home loan application database change.
 pub async fn create_home_loan_application(
     db: &PgPool,
     customer_id: Uuid,
@@ -76,6 +81,7 @@ pub async fn create_home_loan_application(
     .await
 }
 
+// Persists the approve home loan database change.
 pub async fn approve_home_loan(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -102,6 +108,7 @@ pub async fn approve_home_loan(
     .await
 }
 
+// Persists the reject home loan database change.
 pub async fn reject_home_loan(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -124,6 +131,7 @@ pub async fn reject_home_loan(
     .await
 }
 
+// Persists the pay home loan database change.
 pub async fn pay_home_loan(
     db: &PgPool,
     customer_id: Uuid,
@@ -203,6 +211,7 @@ pub async fn pay_home_loan(
     Ok(updated)
 }
 
+// Persists the lock product by id database change.
 async fn lock_product_by_id(
     tx: &mut DbTransaction<'_, Postgres>,
     customer_id: Uuid,
@@ -222,6 +231,7 @@ async fn lock_product_by_id(
     .await
 }
 
+// Persists the insert product transaction database change.
 async fn insert_product_transaction(
     tx: &mut DbTransaction<'_, Postgres>,
     product_id: Uuid,

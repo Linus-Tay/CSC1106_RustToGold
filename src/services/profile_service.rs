@@ -1,3 +1,5 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::ProfileForm;
 use crate::models::Customer;
 use crate::repositories::{customer_repository, paynow_repository, product_repository, user_repository};
@@ -8,6 +10,7 @@ use argon2::{
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Validates and coordinates the update customer profile workflow.
 pub async fn update_customer_profile(
     db: &PgPool,
     customer_id: Uuid,
@@ -35,6 +38,7 @@ pub async fn update_customer_profile(
     Ok(updated_customer)
 }
 
+// Validates and coordinates the update paynow number workflow.
 async fn update_paynow_number(
     db: &PgPool,
     customer_id: Uuid,
@@ -72,6 +76,7 @@ async fn update_paynow_number(
     Ok(())
 }
 
+// Validates and coordinates the update password if requested workflow.
 async fn update_password_if_requested(
     db: &PgPool,
     user_id: Uuid,
@@ -118,6 +123,7 @@ async fn update_password_if_requested(
     Ok(())
 }
 
+// Normalises phone number before validation or storage.
 fn normalise_phone_number(input: &str) -> Result<String, String> {
     let mut value = input
         .trim()
@@ -143,6 +149,7 @@ fn normalise_phone_number(input: &str) -> Result<String, String> {
     Ok(value)
 }
 
+// Hashes sensitive input before it is stored.
 fn hash_password(password: &str) -> Result<String, String> {
     let salt = SaltString::generate(&mut OsRng);
     Argon2::default()
@@ -151,6 +158,7 @@ fn hash_password(password: &str) -> Result<String, String> {
         .map_err(|_| "Could not prepare the new password.".to_string())
 }
 
+// Verifies sensitive input against its stored hash.
 fn verify_password(password: &str, password_hash: &str) -> bool {
     PasswordHash::new(password_hash)
         .ok()

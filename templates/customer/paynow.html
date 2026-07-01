@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RustToGold | PayNow</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css" />
+  {% include "partials/customer_assets.html" %}
 </head>
 <body class="customer-body">
   {% include "partials/customer_nav.html" %}
@@ -24,7 +21,7 @@
           <p>Your PayNow mobile number is already linked. Transfers now only need a recipient mobile number, amount and source account.</p>
           {% else %}
           <h1>Register your PayNow number first.</h1>
-          <p>For this demo, PayNow is kept realistic and simple: one mobile number is linked to your primary active RustToGold account.</p>
+          <p>PayNow is kept simple: one mobile number is linked to your primary active RustToGold account.</p>
           {% endif %}
         </div>
         <div class="paynow-status-card">
@@ -95,7 +92,7 @@
             <div>
               <p class="customer-kicker">Register</p>
               <h2>Register PayNow Number</h2>
-              <p>Enter your Singapore mobile number. RustToGold will link it to your first active account for the demo.</p>
+              <p>Enter your Singapore mobile number. RustToGold will link it to your first active account.</p>
             </div>
           </div>
 

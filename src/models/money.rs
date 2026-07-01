@@ -1,17 +1,23 @@
+// Model layer: domain structs plus small display helpers used by services and templates.
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// Domain record used by services, repositories and templates.
 pub struct Money {
     cents: i64,
 }
 
 impl Money {
+    // Returns the stored money amount in cents.
     pub fn from_cents(cents: i64) -> Self {
         Self { cents }
     }
 
+    // Returns the stored money amount in cents.
     pub fn cents(self) -> i64 {
         self.cents
     }
 
+    // Parses dollars from form input into a safer internal value.
     pub fn parse_dollars(input: &str) -> Result<Self, String> {
         let value = input.trim().replace(',', "");
 
@@ -59,12 +65,13 @@ impl Money {
         }
 
         if total_cents > 100_000_000_00 {
-            return Err("Amount is above the allowed demo limit for this operation.".to_string());
+            return Err("Amount is above the allowed limit for this operation.".to_string());
         }
 
         Ok(Self::from_cents(total_cents))
     }
 
+    // Formats the value for display in templates.
     pub fn display(self) -> String {
         let dollars = self.cents / 100;
         let cents = self.cents.abs() % 100;

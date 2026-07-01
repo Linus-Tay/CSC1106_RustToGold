@@ -1,3 +1,5 @@
+// Controller layer: handles HTTP/session flow and delegates business rules to services.
+
 use crate::controllers::session_guard::redirect;
 use crate::forms::auth_forms::AccountCreationForm;
 use crate::forms::onboard_forms::{Step3Form, Step4Form};
@@ -17,14 +19,17 @@ use askama::DynTemplate;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
+// Data carrier for the AccountCreationQueryParams workflow.
 pub struct AccountCreationQueryParams {
     link: String,
 }
 
+// Handles the onboarding entry redirect request.
 pub async fn onboarding_entry_redirect(_session: Session) -> Result<HttpResponse> {
     Ok(redirect("/onboarding/account"))
 }
 
+// Handles the legacy signup redirect request.
 pub async fn legacy_signup_redirect(session: Session) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -33,6 +38,7 @@ pub async fn legacy_signup_redirect(session: Session) -> Result<HttpResponse> {
     Ok(redirect("/onboarding/account"))
 }
 
+// Handles the legacy signup path redirect request.
 pub async fn legacy_signup_path_redirect(path: web::Path<String>, session: Session) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -50,12 +56,14 @@ pub async fn legacy_signup_path_redirect(path: web::Path<String>, session: Sessi
     Ok(redirect(target))
 }
 
+// Handles the logged in redirect request.
 fn logged_in_redirect(_session: &Session) -> Option<HttpResponse> {
-    // Public account-opening pages stay reachable for the project demo.
+    // Public account-opening pages stay reachable even when an admin is signed in.
     // Existing customer/admin sessions should not force the Sign Up button back to a dashboard.
     None
 }
 
+// Renders the onboarding screen with data prepared by the service layer.
 pub async fn onboarding(path: web::Path<String>, session: Session) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -76,12 +84,13 @@ pub async fn onboarding(path: web::Path<String>, session: Session) -> Result<Htt
     }
 }
 
+// Handles the account creation init request.
 pub async fn account_creation_init(
     query: web::Query<AccountCreationQueryParams>,
     data: web::Data<AppState>,
     session: Session,
 ) -> Result<HttpResponse> {
-    // Account-creation links are demo-safe public links.
+    // Account-creation links are one-time public setup links.
     // Do not redirect an existing admin/customer session away from this flow.
     match services::validate_account_creation_link(&data, &query.link).await {
         Ok(true) => {
@@ -92,6 +101,7 @@ pub async fn account_creation_init(
     }
 }
 
+// Handles the account creation request.
 pub async fn account_creation(
     data: web::Data<AppState>,
     session: Session,
@@ -112,6 +122,7 @@ pub async fn account_creation(
     }
 }
 
+// Handles the account creation submit request.
 pub async fn account_creation_submit(
     data: web::Data<AppState>,
     form: web::Form<AccountCreationForm>,
@@ -147,6 +158,7 @@ pub async fn account_creation_submit(
     }
 }
 
+// Handles the submit request.
 pub async fn submit(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -176,6 +188,7 @@ pub async fn submit(data: web::Data<AppState>, session: Session) -> Result<HttpR
     }
 }
 
+// Handles the step1 post request.
 pub async fn step1_post(session: Session, form: web::Form<Step1Form>) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -215,6 +228,7 @@ pub async fn step1_post(session: Session, form: web::Form<Step1Form>) -> Result<
     Ok(redirect("/onboarding/personal"))
 }
 
+// Handles the step2 post request.
 pub async fn step2_post(session: Session, form: web::Form<Step2Form>) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -269,6 +283,7 @@ pub async fn step2_post(session: Session, form: web::Form<Step2Form>) -> Result<
     Ok(redirect("/onboarding/contact"))
 }
 
+// Handles the step3 post request.
 pub async fn step3_post(session: Session, form: web::Form<Step3Form>) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -297,6 +312,7 @@ pub async fn step3_post(session: Session, form: web::Form<Step3Form>) -> Result<
     Ok(redirect("/onboarding/employment"))
 }
 
+// Handles the step4 post request.
 pub async fn step4_post(session: Session, form: web::Form<Step4Form>) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -325,6 +341,7 @@ pub async fn step4_post(session: Session, form: web::Form<Step4Form>) -> Result<
     Ok(redirect("/onboarding/review"))
 }
 
+// Handles the render form request.
 async fn render_form(
     form_data: OnboardingForm,
     form_path: String,
@@ -340,6 +357,7 @@ async fn render_form(
     }
 }
 
+// Handles the get path template request.
 fn get_path_template(
     id: &str,
     form_data: OnboardingForm,
@@ -429,6 +447,7 @@ fn get_path_template(
     }
 }
 
+// Handles the account type label request.
 fn account_type_label(value: &str) -> &'static str {
     match value {
         "high_yield_savings" => "RustToGold High Yield Savings Account",
@@ -436,6 +455,7 @@ fn account_type_label(value: &str) -> &'static str {
     }
 }
 
+// Handles the clean text request.
 fn clean_text(value: String) -> String {
     value.trim().to_string()
 }

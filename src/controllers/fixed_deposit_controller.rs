@@ -1,3 +1,5 @@
+// Controller layer: handles HTTP/session flow and delegates business rules to services.
+
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_admin, require_customer};
 use crate::forms::{CreateFixedDepositForm, FixedDepositMessageQuery, FixedDepositPlanForm};
@@ -11,10 +13,12 @@ use actix_session::Session;
 use actix_web::{web, HttpResponse, Result};
 use uuid::Uuid;
 
+// Handles the display money without symbol request.
 fn display_money_without_symbol(value: String) -> String {
     value.trim_start_matches('$').to_string()
 }
 
+// Renders the fixed deposits page screen with data prepared by the service layer.
 pub async fn fixed_deposits_page(
     data: web::Data<AppState>,
     session: Session,
@@ -57,6 +61,7 @@ pub async fn fixed_deposits_page(
     }
 }
 
+// Renders the fixed deposit new page screen with data prepared by the service layer.
 pub async fn fixed_deposit_new_page(
     data: web::Data<AppState>,
     session: Session,
@@ -81,6 +86,7 @@ pub async fn fixed_deposit_new_page(
     }
 }
 
+// Handles the create fixed deposit form action and redirects after the service result.
 pub async fn create_fixed_deposit(
     data: web::Data<AppState>,
     session: Session,
@@ -111,6 +117,7 @@ pub async fn create_fixed_deposit(
     }
 }
 
+// Handles the withdraw fixed deposit form action and redirects after the service result.
 pub async fn withdraw_fixed_deposit(
     data: web::Data<AppState>,
     session: Session,
@@ -139,6 +146,7 @@ pub async fn withdraw_fixed_deposit(
     }
 }
 
+// Renders the admin fixed deposits page screen with data prepared by the service layer.
 pub async fn admin_fixed_deposits_page(
     data: web::Data<AppState>,
     session: Session,
@@ -156,6 +164,7 @@ pub async fn admin_fixed_deposits_page(
     }
 }
 
+// Renders the admin fixed deposit plans page screen with data prepared by the service layer.
 pub async fn admin_fixed_deposit_plans_page(
     data: web::Data<AppState>,
     session: Session,
@@ -191,6 +200,7 @@ pub async fn admin_fixed_deposit_plans_page(
     }
 }
 
+// Handles the create fixed deposit plan form action and redirects after the service result.
 pub async fn create_fixed_deposit_plan(
     data: web::Data<AppState>,
     session: Session,
@@ -215,6 +225,7 @@ pub async fn create_fixed_deposit_plan(
     }
 }
 
+// Handles the update fixed deposit plan form action and redirects after the service result.
 pub async fn update_fixed_deposit_plan(
     data: web::Data<AppState>,
     session: Session,

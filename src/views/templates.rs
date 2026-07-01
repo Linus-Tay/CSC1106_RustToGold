@@ -1,3 +1,5 @@
+// View layer: Askama template structs and rendering helpers.
+
 use crate::models::{
     AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser,
     FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, HomeLoanApplication,
@@ -9,30 +11,37 @@ use uuid::Uuid;
 
 #[derive(Template)]
 #[template(path = "index.html")]
+// Data carrier for the HomeTemplate workflow.
 pub struct HomeTemplate;
 
 #[derive(Template)]
 #[template(path = "about.html")]
+// Data carrier for the AboutTemplate workflow.
 pub struct AboutTemplate;
 
 #[derive(Template)]
 #[template(path = "banking.html")]
+// Data carrier for the BankingTemplate workflow.
 pub struct BankingTemplate;
 
 #[derive(Template)]
 #[template(path = "contact.html")]
+// Data carrier for the ContactTemplate workflow.
 pub struct ContactTemplate;
 
 #[derive(Template)]
 #[template(path = "faq.html")]
+// Data carrier for the FaqTemplate workflow.
 pub struct FaqTemplate;
 
 #[derive(Template)]
 #[template(path = "security.html")]
+// Data carrier for the SecurityTemplate workflow.
 pub struct SecurityTemplate;
 
 #[derive(Template)]
 #[template(path = "onboarding/onboarding.html")]
+// Data carrier for the OnboardingTemplate workflow.
 pub struct OnboardingTemplate {
     pub product_available: bool,
     pub product_id: String,
@@ -46,6 +55,7 @@ pub struct OnboardingTemplate {
 
 #[derive(Template)]
 #[template(path = "onboarding/onboarding_result.html")]
+// Data carrier for the OnboardingResultTemplate workflow.
 pub struct OnboardingResultTemplate {
     pub reference_no: String,
     pub created_at: String,
@@ -53,6 +63,7 @@ pub struct OnboardingResultTemplate {
 
 #[derive(Template)]
 #[template(path = "onboarding/forms/onboarding_account.html")]
+// Data carrier for the OnboardingAccountTemplate workflow.
 pub struct OnboardingAccountTemplate {
     pub error: String,
     pub has_error: bool,
@@ -63,6 +74,7 @@ pub struct OnboardingAccountTemplate {
 
 #[derive(Template)]
 #[template(path = "onboarding/forms/onboarding_personal.html")]
+// Data carrier for the OnboardingPersonalTemplate workflow.
 pub struct OnboardingPersonalTemplate {
     pub error: String,
     pub has_error: bool,
@@ -80,6 +92,7 @@ pub struct OnboardingPersonalTemplate {
 
 #[derive(Template)]
 #[template(path = "onboarding/forms/onboarding_contact.html")]
+// Data carrier for the OnboardingContactTemplate workflow.
 pub struct OnboardingContactTemplate {
     pub error: String,
     pub has_error: bool,
@@ -92,6 +105,7 @@ pub struct OnboardingContactTemplate {
 
 #[derive(Template)]
 #[template(path = "onboarding/forms/onboarding_employment.html")]
+// Data carrier for the OnboardingEmploymentTemplate workflow.
 pub struct OnboardingEmploymentTemplate {
     pub error: String,
     pub has_error: bool,
@@ -107,6 +121,7 @@ pub struct OnboardingEmploymentTemplate {
 
 #[derive(Template)]
 #[template(path = "onboarding/forms/onboarding_review.html")]
+// Data carrier for the OnboardingReviewTemplate workflow.
 pub struct OnboardingReviewTemplate {
     pub error: String,
     pub has_error: bool,
@@ -135,6 +150,7 @@ pub struct OnboardingReviewTemplate {
 
 #[derive(Template)]
 #[template(path = "onboarding/account_creation.html")]
+// Data carrier for the AccountCreationSetupTemplate workflow.
 pub struct AccountCreationSetupTemplate {
     pub email: String,
     pub error: String,
@@ -143,6 +159,7 @@ pub struct AccountCreationSetupTemplate {
 
 #[derive(Template)]
 #[template(path = "onboarding/account_creation_success.html")]
+// Data carrier for the AccountCreationSuccessTemplate workflow.
 pub struct AccountCreationSuccessTemplate {
     pub username: String,
     pub email: String,
@@ -150,17 +167,20 @@ pub struct AccountCreationSuccessTemplate {
 
 #[derive(Template)]
 #[template(path = "email/account_creation_email.html")]
+// Data carrier for the AccountCreationEmailTemplate workflow.
 pub struct AccountCreationEmailTemplate {
     pub account_creation_link: String,
 }
 
 #[derive(Template)]
 #[template(path = "email/application_received_email.html")]
+// Data carrier for the ApplicationReceivedEmailTemplate workflow.
 pub struct ApplicationReceivedEmailTemplate;
 
 
 #[derive(Template)]
 #[template(path = "admin/login.html")]
+// Data carrier for the AdminLoginTemplate workflow.
 pub struct AdminLoginTemplate {
     pub error: String,
     pub has_error: bool,
@@ -168,6 +188,7 @@ pub struct AdminLoginTemplate {
 
 #[derive(Template)]
 #[template(path = "auth/login.html")]
+// Data carrier for the LoginTemplate workflow.
 pub struct LoginTemplate {
     pub error: String,
     pub has_error: bool,
@@ -175,6 +196,7 @@ pub struct LoginTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/dashboard.html")]
+// Data carrier for the DashboardTemplate workflow.
 pub struct DashboardTemplate {
     pub full_name: String,
     pub accounts: Vec<Product>,
@@ -192,6 +214,7 @@ pub struct DashboardTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/deposit.html")]
+// Data carrier for the DepositTemplate workflow.
 pub struct DepositTemplate {
     pub accounts: Vec<Product>,
     pub selected_account_number: String,
@@ -204,6 +227,7 @@ pub struct DepositTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/transfer.html")]
+// Data carrier for the TransferTemplate workflow.
 pub struct TransferTemplate {
     pub accounts: Vec<Product>,
     pub selected_account_number: String,
@@ -215,6 +239,7 @@ pub struct TransferTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/statements.html")]
+// Data carrier for the StatementTemplate workflow.
 pub struct StatementTemplate {
     pub accounts: Vec<Product>,
     pub has_accounts: bool,
@@ -229,6 +254,7 @@ pub struct StatementTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/transactions.html")]
+// Data carrier for the TransactionsTemplate workflow.
 pub struct TransactionsTemplate {
     pub transactions: Vec<Transaction>,
     pub has_transactions: bool,
@@ -236,6 +262,7 @@ pub struct TransactionsTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/activity_log.html")]
+// Data carrier for the CustomerActivityLogTemplate workflow.
 pub struct CustomerActivityLogTemplate {
     pub eyebrow: &'static str,
     pub title: &'static str,
@@ -250,6 +277,7 @@ pub struct CustomerActivityLogTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/cards.html")]
+// Data carrier for the CardDashboardTemplate workflow.
 pub struct CardDashboardTemplate {
     pub cards: Vec<Card>,
     pub has_cards: bool,
@@ -264,6 +292,7 @@ pub struct CardDashboardTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/transaction_controls.html")]
+// Data carrier for the TransactionControlsTemplate workflow.
 pub struct TransactionControlsTemplate {
     pub controls: TransactionControl,
     pub alerts: Vec<FraudAlert>,
@@ -276,6 +305,7 @@ pub struct TransactionControlsTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/giro.html")]
+// Data carrier for the GiroTemplate workflow.
 pub struct GiroTemplate {
     pub accounts: Vec<Product>,
     pub has_accounts: bool,
@@ -289,6 +319,7 @@ pub struct GiroTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/paynow.html")]
+// Data carrier for the PayNowTemplate workflow.
 pub struct PayNowTemplate {
     pub accounts: Vec<Product>,
     pub has_accounts: bool,
@@ -302,6 +333,7 @@ pub struct PayNowTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/profile.html")]
+// Data carrier for the ProfileTemplate workflow.
 pub struct ProfileTemplate {
     pub full_name: String,
     pub email: String,
@@ -315,32 +347,25 @@ pub struct ProfileTemplate {
     pub has_paynow: bool,
 }
 
-#[derive(Template)]
-#[template(path = "customer/placeholder.html")]
-pub struct CustomerPageTemplate {
-    pub title: &'static str,
-    pub active_nav: &'static str,
-    pub heading: &'static str,
-    pub description: &'static str,
-    pub message: &'static str,
-    pub primary_label: &'static str,
-    pub primary_href: &'static str,
-}
 
 #[derive(Template)]
 #[template(path = "errors/403.html")]
+// Data carrier for the ForbiddenTemplate workflow.
 pub struct ForbiddenTemplate;
 
 #[derive(Template)]
 #[template(path = "errors/404.html")]
+// Data carrier for the NotFoundTemplate workflow.
 pub struct NotFoundTemplate;
 
 #[derive(Template)]
 #[template(path = "errors/error.html")]
+// Data carrier for the ErrorTemplate workflow.
 pub struct ErrorTemplate;
 
 #[derive(Template)]
 #[template(path = "customer/loans.html")]
+// Data carrier for the LoanDashboardTemplate workflow.
 pub struct LoanDashboardTemplate {
     pub account: Product,
     pub accounts: Vec<Product>,
@@ -352,6 +377,7 @@ pub struct LoanDashboardTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/loan_apply.html")]
+// Data carrier for the LoanApplyTemplate workflow.
 pub struct LoanApplyTemplate {
     pub accounts: Vec<Product>,
     pub has_accounts: bool,
@@ -361,6 +387,7 @@ pub struct LoanApplyTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/home_loans.html")]
+// Data carrier for the HomeLoanDashboardTemplate workflow.
 pub struct HomeLoanDashboardTemplate {
     pub account: Product,
     pub accounts: Vec<Product>,
@@ -373,6 +400,7 @@ pub struct HomeLoanDashboardTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/home_loan_apply.html")]
+// Data carrier for the HomeLoanApplyTemplate workflow.
 pub struct HomeLoanApplyTemplate {
     pub accounts: Vec<Product>,
     pub has_accounts: bool,
@@ -382,12 +410,14 @@ pub struct HomeLoanApplyTemplate {
 
 #[derive(Template)]
 #[template(path = "admin/dashboard.html")]
+// Data carrier for the AdminDashboardTemplate workflow.
 pub struct AdminDashboardTemplate {
     pub summary: AdminDashboardSummary,
 }
 
 #[derive(Template)]
 #[template(path = "admin/signups.html")]
+// Data carrier for the AdminCustomerApplicationsTemplate workflow.
 pub struct AdminCustomerApplicationsTemplate {
     pub applications: Vec<AdminCustomerApplication>,
     pub has_applications: bool,
@@ -399,6 +429,7 @@ pub struct AdminCustomerApplicationsTemplate {
 
 #[derive(Template)]
 #[template(path = "admin/high_value_monitoring.html")]
+// Data carrier for the AdminHighValueMonitoringTemplate workflow.
 pub struct AdminHighValueMonitoringTemplate {
     pub alerts: Vec<HighValueAlertRecord>,
     pub has_alerts: bool,
@@ -411,6 +442,7 @@ pub struct AdminHighValueMonitoringTemplate {
 
 #[derive(Template)]
 #[template(path = "admin/staff.html")]
+// Data carrier for the AdminStaffTemplate workflow.
 pub struct AdminStaffTemplate {
     pub staff_users: Vec<AdminStaffUser>,
     pub current_admin_id: Uuid,
@@ -422,6 +454,7 @@ pub struct AdminStaffTemplate {
 
 #[derive(Template)]
 #[template(path = "admin/accounts.html")]
+// Data carrier for the AdminCustomerAccountsTemplate workflow.
 pub struct AdminCustomerAccountsTemplate {
     pub accounts: Vec<AdminCustomerAccountRecord>,
     pub has_accounts: bool,
@@ -431,6 +464,7 @@ pub struct AdminCustomerAccountsTemplate {
 
 #[derive(Template)]
 #[template(path = "admin/audit_log.html")]
+// Data carrier for the AdminAuditLogTemplate workflow.
 pub struct AdminAuditLogTemplate {
     pub logs: Vec<AdminAuditLogRecord>,
     pub has_logs: bool,
@@ -440,6 +474,7 @@ pub struct AdminAuditLogTemplate {
 
 #[derive(Template)]
 #[template(path = "admin/personal_loans.html")]
+// Data carrier for the AdminPersonalLoansTemplate workflow.
 pub struct AdminPersonalLoansTemplate {
     pub loans: Vec<AdminPersonalLoanRecord>,
     pub has_loans: bool,
@@ -449,6 +484,7 @@ pub struct AdminPersonalLoansTemplate {
 
 #[derive(Template)]
 #[template(path = "admin/home_loans.html")]
+// Data carrier for the AdminHomeLoansTemplate workflow.
 pub struct AdminHomeLoansTemplate {
     pub records: Vec<AdminHomeLoanRecord>,
     pub has_records: bool,
@@ -458,6 +494,7 @@ pub struct AdminHomeLoansTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/fixed_deposits.html")]
+// Data carrier for the FixedDepositDashboardTemplate workflow.
 pub struct FixedDepositDashboardTemplate {
     pub account_number: String,
     pub balance: String,
@@ -473,6 +510,7 @@ pub struct FixedDepositDashboardTemplate {
 
 #[derive(Template)]
 #[template(path = "customer/fixed_deposit_new.html")]
+// Data carrier for the FixedDepositCreateTemplate workflow.
 pub struct FixedDepositCreateTemplate {
     pub account_number: String,
     pub balance: String,
@@ -485,6 +523,7 @@ pub struct FixedDepositCreateTemplate {
 
 #[derive(Template)]
 #[template(path = "admin/fixed_deposits.html")]
+// Data carrier for the AdminFixedDepositsTemplate workflow.
 pub struct AdminFixedDepositsTemplate {
     pub records: Vec<FixedDepositAdminRecord>,
     pub has_records: bool,
@@ -492,6 +531,7 @@ pub struct AdminFixedDepositsTemplate {
 
 #[derive(Template)]
 #[template(path = "admin/fixed_deposit_plans.html")]
+// Data carrier for the AdminFixedDepositPlansTemplate workflow.
 pub struct AdminFixedDepositPlansTemplate {
     pub plans: Vec<FixedDepositPlan>,
     pub error: String,

@@ -1,3 +1,5 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::{PayNowRegisterForm, PayNowTransferForm};
 use crate::models::{Money, PayNowRegistration, Product};
 use crate::repositories::{paynow_repository, product_repository};
@@ -5,11 +7,13 @@ use crate::services::support::clean_optional_text;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Data carrier for the PayNowDashboard workflow.
 pub struct PayNowDashboard {
     pub accounts: Vec<Product>,
     pub registrations: Vec<PayNowRegistration>,
 }
 
+// Loads paynow dashboard data and applies page-level business rules.
 pub async fn load_paynow_dashboard(
     db: &PgPool,
     customer_id: Uuid,
@@ -28,6 +32,7 @@ pub async fn load_paynow_dashboard(
     })
 }
 
+// Validates and coordinates the register paynow workflow.
 pub async fn register_paynow(
     db: &PgPool,
     customer_id: Uuid,
@@ -78,6 +83,7 @@ pub async fn register_paynow(
     Ok(())
 }
 
+// Validates and coordinates the transfer paynow workflow.
 pub async fn transfer_paynow(
     db: &PgPool,
     customer_id: Uuid,
@@ -128,6 +134,7 @@ pub async fn transfer_paynow(
     }
 }
 
+// Normalises paynow type before validation or storage.
 fn normalise_paynow_type(input: &str) -> Result<String, String> {
     match input.trim() {
         "phone_number" => Ok("phone_number".to_string()),
@@ -136,6 +143,7 @@ fn normalise_paynow_type(input: &str) -> Result<String, String> {
     }
 }
 
+// Normalises paynow identifier before validation or storage.
 fn normalise_paynow_identifier(paynow_type: &str, input: &str) -> Result<String, String> {
     match paynow_type {
         "phone_number" => normalise_phone_number(input),
@@ -144,6 +152,7 @@ fn normalise_paynow_identifier(paynow_type: &str, input: &str) -> Result<String,
     }
 }
 
+// Normalises phone number before validation or storage.
 fn normalise_phone_number(input: &str) -> Result<String, String> {
     let mut value = input
         .trim()
@@ -170,6 +179,7 @@ fn normalise_phone_number(input: &str) -> Result<String, String> {
     Ok(value)
 }
 
+// Normalises nric before validation or storage.
 fn normalise_nric(input: &str) -> Result<String, String> {
     let value = input.trim().replace(' ', "").replace('-', "").to_uppercase();
     let characters: Vec<char> = value.chars().collect();

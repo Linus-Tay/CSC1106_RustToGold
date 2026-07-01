@@ -1,3 +1,5 @@
+// Controller layer: handles HTTP/session flow and delegates business rules to services.
+
 use crate::models::User;
 use crate::repositories::user_repository;
 use crate::AppState;
@@ -10,6 +12,7 @@ const CUSTOMER_ROLE_KEY: &str = "customer_role";
 const ADMIN_USER_ID_KEY: &str = "admin_user_id";
 const ADMIN_ROLE_KEY: &str = "admin_role";
 
+// Handles the require customer request.
 pub async fn require_customer(
     data: &web::Data<AppState>,
     session: &Session,
@@ -24,6 +27,7 @@ pub async fn require_customer(
     Ok(user)
 }
 
+// Handles the require admin request.
 pub async fn require_admin(
     data: &web::Data<AppState>,
     session: &Session,
@@ -38,6 +42,7 @@ pub async fn require_admin(
     Ok(user)
 }
 
+// Handles the require active user request.
 async fn require_active_user(
     data: &web::Data<AppState>,
     session: &Session,
@@ -65,36 +70,43 @@ async fn require_active_user(
     Ok(user)
 }
 
+// Handles customer session user id session flow.
 pub fn customer_session_user_id(session: &Session) -> Option<Uuid> {
     session_uuid(session, CUSTOMER_USER_ID_KEY)
 }
 
+// Handles admin session user id session flow.
 pub fn admin_session_user_id(session: &Session) -> Option<Uuid> {
     session_uuid(session, ADMIN_USER_ID_KEY)
 }
 
+// Handles store customer session session flow.
 pub fn store_customer_session(session: &Session, user: &User) -> Result<()> {
     session.insert(CUSTOMER_USER_ID_KEY, user.id.to_string())?;
     session.insert(CUSTOMER_ROLE_KEY, user.role.clone())?;
     Ok(())
 }
 
+// Handles store admin session session flow.
 pub fn store_admin_session(session: &Session, user: &User) -> Result<()> {
     session.insert(ADMIN_USER_ID_KEY, user.id.to_string())?;
     session.insert(ADMIN_ROLE_KEY, user.role.clone())?;
     Ok(())
 }
 
+// Handles clear customer session session flow.
 pub fn clear_customer_session(session: &Session) {
     session.remove(CUSTOMER_USER_ID_KEY);
     session.remove(CUSTOMER_ROLE_KEY);
 }
 
+// Handles clear admin session session flow.
 pub fn clear_admin_session(session: &Session) {
     session.remove(ADMIN_USER_ID_KEY);
     session.remove(ADMIN_ROLE_KEY);
 }
 
+// Handles session uuid session flow.
 fn session_uuid(session: &Session, key: &str) -> Option<Uuid> {
     session
         .get::<String>(key)
@@ -103,6 +115,7 @@ fn session_uuid(session: &Session, key: &str) -> Option<Uuid> {
         .and_then(|value| Uuid::parse_str(&value).ok())
 }
 
+// Handles clear session key session flow.
 fn clear_session_key(session: &Session, key: &str) {
     if key == CUSTOMER_USER_ID_KEY {
         clear_customer_session(session);
@@ -113,12 +126,8 @@ fn clear_session_key(session: &Session, key: &str) {
     }
 }
 
-// Kept for older code that still imports session_user_id.
-// Customer routes should use customer_session_user_id and admin routes should use admin_session_user_id.
-pub fn session_user_id(session: &Session) -> Option<Uuid> {
-    customer_session_user_id(session).or_else(|| admin_session_user_id(session))
-}
 
+// Handles the redirect request.
 pub fn redirect(path: &str) -> HttpResponse {
     HttpResponse::SeeOther()
         .append_header((header::LOCATION, path))

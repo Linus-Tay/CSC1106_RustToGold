@@ -1,3 +1,5 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::GiroArrangement;
 use chrono::NaiveDate;
 use sqlx::PgPool;
@@ -14,6 +16,7 @@ const GIRO_SELECT: &str = r#"
     JOIN customer_products recipient_cp ON recipient_cp.id = ga.recipient_product_id
 "#;
 
+// Reads list by customer data from the database.
 pub async fn list_by_customer(
     db: &PgPool,
     customer_id: Uuid,
@@ -29,6 +32,7 @@ pub async fn list_by_customer(
         .await
 }
 
+// Persists the insert arrangement database change.
 pub async fn insert_arrangement(
     db: &PgPool,
     customer_id: Uuid,
@@ -69,6 +73,7 @@ pub async fn insert_arrangement(
         .await
 }
 
+// Persists the cancel arrangement database change.
 pub async fn cancel_arrangement(
     db: &PgPool,
     customer_id: Uuid,

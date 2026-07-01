@@ -1,13 +1,17 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::models::{Product, Transaction};
 use crate::repositories::{product_repository, transaction_repository};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Data carrier for the CustomerDashboardData workflow.
 pub struct CustomerDashboardData {
     pub primary_account: Product,
     pub accounts: Vec<Product>,
 }
 
+// Loads customer dashboard data and applies page-level business rules.
 pub async fn load_customer_dashboard(
     db: &PgPool,
     customer_id: Uuid,
@@ -28,18 +32,21 @@ pub async fn load_customer_dashboard(
     })
 }
 
+// Returns transactions records in the shape needed by the UI.
 pub async fn list_transactions(db: &PgPool, customer_id: Uuid) -> Result<Vec<Transaction>, String> {
     transaction_repository::find_customer_cash_transactions(db, customer_id, 50)
         .await
         .map_err(|_| "Could not load deposit and transfer history.".to_string())
 }
 
+// Returns loan activity records in the shape needed by the UI.
 pub async fn list_loan_activity(db: &PgPool, customer_id: Uuid) -> Result<Vec<Transaction>, String> {
     transaction_repository::find_customer_loan_transactions(db, customer_id, 50)
         .await
         .map_err(|_| "Could not load loan activity.".to_string())
 }
 
+// Returns fixed deposit activity records in the shape needed by the UI.
 pub async fn list_fixed_deposit_activity(
     db: &PgPool,
     customer_id: Uuid,

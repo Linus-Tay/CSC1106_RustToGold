@@ -1,3 +1,5 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::{MoneyLockForm, TransactionLimitForm};
 use crate::models::{FraudAlert, Money, TransactionControl};
 use chrono::Utc;
@@ -13,6 +15,7 @@ const RAPID_TRANSFER_COUNT_LIMIT: i64 = 5;
 const RAPID_TRANSFER_WINDOW_MINUTES: i64 = 10;
 const RAPID_TRANSFER_AMOUNT_CENTS: i64 = 20_000_00;
 
+// Data carrier for the TransactionControlsPageData workflow.
 pub struct TransactionControlsPageData {
     pub controls: TransactionControl,
     pub outgoing_today_cents: i64,
@@ -21,6 +24,7 @@ pub struct TransactionControlsPageData {
     pub alerts: Vec<FraudAlert>,
 }
 
+// Loads transaction controls page data and applies page-level business rules.
 pub async fn load_transaction_controls_page(
     db: &PgPool,
     customer_id: Uuid,
@@ -43,6 +47,7 @@ pub async fn load_transaction_controls_page(
     })
 }
 
+/// Updates the active daily limit and starts a 24-hour change cooldown.
 pub async fn update_daily_transaction_limit(
     db: &PgPool,
     customer_id: Uuid,
@@ -75,6 +80,7 @@ pub async fn update_daily_transaction_limit(
         .map_err(|_| "Could not update the daily transaction limit.".to_string())
 }
 
+/// Toggles Money Lock immediately after the customer confirms the action.
 pub async fn update_money_lock(
     db: &PgPool,
     customer_id: Uuid,
@@ -100,6 +106,7 @@ pub async fn update_money_lock(
     }
 }
 
+/// Central validation used before external money leaves a customer account.
 pub async fn validate_outgoing_transaction(
     db: &PgPool,
     customer_id: Uuid,
@@ -202,6 +209,7 @@ pub async fn validate_outgoing_transaction(
     Ok(())
 }
 
+// Loads effective controls data and applies page-level business rules.
 async fn load_effective_controls(db: &PgPool, customer_id: Uuid) -> Result<TransactionControl, String> {
     transaction_control_repository::get_or_create_controls(db, customer_id)
         .await
@@ -214,6 +222,7 @@ async fn load_effective_controls(db: &PgPool, customer_id: Uuid) -> Result<Trans
         .map_err(|_| "Could not load transaction controls.".to_string())
 }
 
+// Runs business logic for record alert.
 async fn record_alert(
     db: &PgPool,
     customer_id: Uuid,
@@ -237,6 +246,7 @@ async fn record_alert(
     .await;
 }
 
+// Runs business logic for record alert with status.
 async fn record_alert_with_status(
     db: &PgPool,
     customer_id: Uuid,

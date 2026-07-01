@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RustToGold | Home Loans</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css" />
+  {% include "partials/customer_assets.html" %}
 </head>
 <body class="customer-body">
   {% include "partials/customer_nav.html" %}
@@ -44,7 +42,7 @@
           {% endfor %}
         </div>
         {% else %}
-        <div class="empty-state"><div class="empty-state__icon"><i data-lucide="home"></i></div><h3>No home loan applications yet</h3><p>Create one to demonstrate application submission, admin review and repayment.</p></div>
+        <div class="empty-state"><div class="empty-state__icon"><i data-lucide="home"></i></div><h3>No home loan applications yet</h3><p>Create one to track application submission, admin review and repayment.</p></div>
         {% endif %}
       </div></section>
     </div>

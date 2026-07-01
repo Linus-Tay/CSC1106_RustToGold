@@ -1,3 +1,5 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::{LoanApplicationForm, LoanPaymentForm};
 use crate::models::{Money, PersonalLoan, Product};
 use crate::repositories::{loan_repository, product_repository};
@@ -5,12 +7,14 @@ use crate::services::support::clean_optional_text;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Data carrier for the LoanDashboard workflow.
 pub struct LoanDashboard {
     pub account: Product,
     pub accounts: Vec<Product>,
     pub loans: Vec<PersonalLoan>,
 }
 
+// Loads loan dashboard data and applies page-level business rules.
 pub async fn load_loan_dashboard(db: &PgPool, customer_id: Uuid) -> Result<LoanDashboard, String> {
     let accounts = product_repository::list_active_products_by_customer(db, &customer_id)
         .await
@@ -28,6 +32,7 @@ pub async fn load_loan_dashboard(db: &PgPool, customer_id: Uuid) -> Result<LoanD
     Ok(LoanDashboard { account, accounts, loans })
 }
 
+// Validates and coordinates the apply personal loan workflow.
 pub async fn apply_personal_loan(
     db: &PgPool,
     customer_id: Uuid,
@@ -76,6 +81,7 @@ pub async fn apply_personal_loan(
     })
 }
 
+// Validates and coordinates the pay personal loan workflow.
 pub async fn pay_personal_loan(
     db: &PgPool,
     customer_id: Uuid,
@@ -121,6 +127,7 @@ pub async fn pay_personal_loan(
         })
 }
 
+// Returns the stored money amount in cents.
 fn estimated_monthly_payment_cents(
     principal_cents: i64,
     annual_rate_bps: i32,

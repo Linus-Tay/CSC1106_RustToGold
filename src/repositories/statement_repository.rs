@@ -1,8 +1,11 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::StatementTransaction;
 use chrono::NaiveDateTime;
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Reads find transactions for product in range data from the database.
 pub async fn find_transactions_for_product_in_range(
     db: &PgPool,
     product_id: Uuid,
@@ -26,6 +29,7 @@ pub async fn find_transactions_for_product_in_range(
     .await
 }
 
+// Reads find latest balance before data from the database.
 pub async fn find_latest_balance_before(
     db: &PgPool,
     product_id: Uuid,

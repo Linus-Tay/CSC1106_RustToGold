@@ -1,3 +1,4 @@
+// Model layer: structs and small domain helpers shared by services, repositories and templates.
 pub mod account_creation_link;
 pub mod admin;
 pub mod card;

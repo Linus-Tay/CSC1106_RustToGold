@@ -1,3 +1,5 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::account_forms::TransferForm;
 use crate::forms::DepositForm;
 use crate::models::product::ProductWorkflow;
@@ -9,6 +11,7 @@ use rand::{rng, RngExt};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+// Validates and coordinates the create product workflow.
 pub async fn create_product(
     db: &PgPool,
     customer_id: Uuid,
@@ -35,6 +38,7 @@ pub async fn create_product(
 }
 
 
+// Returns customer products records in the shape needed by the UI.
 pub async fn list_customer_products(
     db: &PgPool,
     customer_id: Uuid,
@@ -44,6 +48,7 @@ pub async fn list_customer_products(
         .map_err(|_| "Could not load your bank accounts.".to_string())
 }
 
+// Returns active customer products records in the shape needed by the UI.
 pub async fn list_active_customer_products(
     db: &PgPool,
     customer_id: Uuid,
@@ -53,6 +58,7 @@ pub async fn list_active_customer_products(
         .map_err(|_| "Could not load your active bank accounts.".to_string())
 }
 
+/// Submits a new account product as pending so admin approval remains part of the flow.
 pub async fn create_bank_account(
     db: &PgPool,
     customer_id: Uuid,
@@ -101,6 +107,7 @@ pub async fn create_bank_account(
     })
 }
 
+// Loads active product by account number data and applies page-level business rules.
 pub async fn load_active_product_by_account_number(
     db: &PgPool,
     customer_id: Uuid,
@@ -111,6 +118,7 @@ pub async fn load_active_product_by_account_number(
         .map_err(|_| "Selected account is not active or does not belong to you.".to_string())
 }
 
+// Runs business logic for deposit.
 pub async fn deposit(
     app_state: &AppState,
     customer_id: Uuid,
@@ -154,6 +162,7 @@ pub async fn deposit(
     Ok(updated_product)
 }
 
+/// Handles account-to-account transfers and skips limit counting for own-account movement.
 pub async fn transfer(
     app_state: &AppState,
     customer_id: Uuid,
@@ -224,6 +233,7 @@ pub async fn transfer(
     }
 }
 
+// Runs business logic for luhn check digit.
 fn luhn_check_digit(number: &str) -> u32 {
     let sum: u32 = number
         .chars()
@@ -246,6 +256,7 @@ fn luhn_check_digit(number: &str) -> u32 {
     (10 - (sum % 10)) % 10
 }
 
+// Runs business logic for generate account number.
 pub async fn generate_account_number(db: &PgPool) -> String {
     let mut rng = rng();
     let prefix = "7282";

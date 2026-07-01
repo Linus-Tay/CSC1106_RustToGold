@@ -1,3 +1,5 @@
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
 use crate::forms::StatementRequest;
 use crate::models::{BankStatement, Product, StatementTransaction};
 use crate::repositories::{customer_repository, product_repository, statement_repository};
@@ -7,6 +9,7 @@ use uuid::Uuid;
 
 const MAX_STATEMENT_DAYS: i64 = 92;
 
+// Data carrier for the StatementPageData workflow.
 pub struct StatementPageData {
     pub accounts: Vec<Product>,
     pub selected_account_id: String,
@@ -22,6 +25,7 @@ struct StatementDateRange {
 }
 
 impl StatementDateRange {
+    // Runs business logic for from request.
     fn from_request(request: &StatementRequest) -> Result<Self, String> {
         let today = Utc::now().date_naive();
         let end = parse_date_option(&request.end_date)?.unwrap_or(today);
@@ -42,23 +46,28 @@ impl StatementDateRange {
         Ok(Self { start, end })
     }
 
+    // Runs business logic for start at.
     fn start_at(&self) -> chrono::NaiveDateTime {
         self.start.and_time(midnight())
     }
 
+    // Runs business logic for end exclusive.
     fn end_exclusive(&self) -> chrono::NaiveDateTime {
         (self.end + Duration::days(1)).and_time(midnight())
     }
 
+    // Runs business logic for start input.
     fn start_input(&self) -> String {
         self.start.format("%Y-%m-%d").to_string()
     }
 
+    // Runs business logic for end input.
     fn end_input(&self) -> String {
         self.end.format("%Y-%m-%d").to_string()
     }
 }
 
+// Loads statement page data and applies page-level business rules.
 pub async fn load_statement_page(
     db: &PgPool,
     customer_id: Uuid,
@@ -118,6 +127,7 @@ pub async fn load_statement_page(
     })
 }
 
+/// Builds the statement data after validating ownership and date range.
 pub async fn build_bank_statement(
     db: &PgPool,
     customer_id: Uuid,
@@ -178,6 +188,7 @@ pub async fn build_bank_statement(
     })
 }
 
+// Runs business logic for statement pdf filename.
 pub fn statement_pdf_filename(statement: &BankStatement) -> String {
     let account = statement.account_number().replace('-', "");
     format!(
@@ -188,10 +199,12 @@ pub fn statement_pdf_filename(statement: &BankStatement) -> String {
     )
 }
 
+/// Renders a lightweight PDF so the statement can be downloaded without extra services.
 pub fn render_statement_pdf(statement: &BankStatement) -> Vec<u8> {
     StatementPdfBuilder::new(statement).build()
 }
 
+// Runs business logic for pick account.
 async fn pick_account(
     db: &PgPool,
     customer_id: Uuid,
@@ -213,10 +226,12 @@ async fn pick_account(
         .map_err(|_| "Choose an active account that belongs to you.".to_string())
 }
 
+// Runs business logic for midnight.
 fn midnight() -> NaiveTime {
     NaiveTime::from_hms_opt(0, 0, 0).expect("midnight should always be valid")
 }
 
+// Parses date option from form input into a safer internal value.
 fn parse_date_option(value: &Option<String>) -> Result<Option<NaiveDate>, String> {
     let Some(value) = value.as_deref().map(str::trim).filter(|value| !value.is_empty()) else {
         return Ok(None);
@@ -232,10 +247,12 @@ struct StatementPdfBuilder<'a> {
 }
 
 impl<'a> StatementPdfBuilder<'a> {
+    // Runs business logic for new.
     fn new(statement: &'a BankStatement) -> Self {
         Self { statement }
     }
 
+    // Runs business logic for build.
     fn build(&self) -> Vec<u8> {
         let mut pages: Vec<String> = Vec::new();
         let mut current = String::new();
@@ -267,6 +284,7 @@ impl<'a> StatementPdfBuilder<'a> {
         build_pdf_document(pages)
     }
 
+    // Runs business logic for draw header.
     fn draw_header(&self, page: &mut String, y: &mut f32) {
         draw_text(page, 50.0, *y, 20, "RustToGold Bank Statement");
         draw_text(page, 50.0, *y - 24.0, 10, "Generated from the RustToGold customer banking portal.");
@@ -274,12 +292,14 @@ impl<'a> StatementPdfBuilder<'a> {
         *y -= 58.0;
     }
 
+    // Runs business logic for draw page title.
     fn draw_page_title(&self, page: &mut String, y: &mut f32) {
         draw_text(page, 50.0, *y, 14, "RustToGold Bank Statement continued");
         draw_text(page, 50.0, *y - 18.0, 9, &format!("Account: {}", self.statement.account_number()));
         *y -= 42.0;
     }
 
+    // Runs business logic for draw summary.
     fn draw_summary(&self, page: &mut String, y: &mut f32) {
         let rows = [
             format!("Customer: {}", self.statement.customer_name),
@@ -299,6 +319,7 @@ impl<'a> StatementPdfBuilder<'a> {
         *y -= 12.0;
     }
 
+    // Runs business logic for draw table header.
     fn draw_table_header(&self, page: &mut String, y: &mut f32) {
         draw_text(page, 50.0, *y, 9, "Date");
         draw_text(page, 120.0, *y, 9, "Description");
@@ -310,6 +331,7 @@ impl<'a> StatementPdfBuilder<'a> {
         *y -= 16.0;
     }
 
+    // Runs business logic for draw transaction row.
     fn draw_transaction_row(&self, page: &mut String, y: &mut f32, transaction: &StatementTransaction) {
         let description = format!("{} - {}", transaction.transaction_type_display(), transaction.description_display());
         draw_text(page, 50.0, *y, 8, &transaction.date_display());
@@ -320,12 +342,14 @@ impl<'a> StatementPdfBuilder<'a> {
         *y -= 16.0;
     }
 
+    // Runs business logic for draw footer.
     fn draw_footer(&self, page: &mut String) {
         draw_line(page, 50.0, 58.0, 545.0, 58.0);
-        draw_text(page, 50.0, 42.0, 8, "This PDF is generated for the RustToGold project demo and is not an official bank statement.");
+        draw_text(page, 50.0, 42.0, 8, "This PDF is generated by RustToGold and is not an official bank statement.");
     }
 }
 
+// Runs business logic for draw text.
 fn draw_text(page: &mut String, x: f32, y: f32, size: i32, text: &str) {
     page.push_str(&format!(
         "BT /F1 {} Tf {:.2} {:.2} Td ({}) Tj ET\n",
@@ -336,10 +360,12 @@ fn draw_text(page: &mut String, x: f32, y: f32, size: i32, text: &str) {
     ));
 }
 
+// Runs business logic for draw line.
 fn draw_line(page: &mut String, x1: f32, y1: f32, x2: f32, y2: f32) {
     page.push_str(&format!("{:.2} {:.2} m {:.2} {:.2} l S\n", x1, y1, x2, y2));
 }
 
+// Runs business logic for truncate.
 fn truncate(value: &str, limit: usize) -> String {
     let mut output = String::new();
     for character in value.chars().take(limit) {
@@ -351,6 +377,7 @@ fn truncate(value: &str, limit: usize) -> String {
     output
 }
 
+// Runs business logic for escape pdf text.
 fn escape_pdf_text(value: &str) -> String {
     value
         .replace('\\', "\\\\")
@@ -358,6 +385,7 @@ fn escape_pdf_text(value: &str) -> String {
         .replace(')', "\\)")
 }
 
+// Runs business logic for build pdf document.
 fn build_pdf_document(pages: Vec<String>) -> Vec<u8> {
     let mut objects: Vec<String> = Vec::new();
     let font_id = 3;

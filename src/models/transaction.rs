@@ -1,3 +1,5 @@
+// Model layer: domain structs plus small display helpers used by services and templates.
+
 use super::formatting::title_case_code;
 use super::Money;
 use chrono::NaiveDateTime;
@@ -5,6 +7,7 @@ use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
+// Domain record used by services, repositories and templates.
 pub struct Transaction {
     pub id: Uuid,
     pub product_id: Option<Uuid>,
@@ -16,6 +19,7 @@ pub struct Transaction {
 }
 
 impl Transaction {
+    // Formats the value for display in templates.
     pub fn transaction_type_display(&self) -> String {
         match self.transaction_type.as_str() {
             "DEPOSIT" | "deposit" => "Deposit".to_string(),
@@ -38,18 +42,22 @@ impl Transaction {
         }
     }
 
+    // Formats the value for display in templates.
     pub fn amount_display(&self) -> String {
         Money::from_cents(self.amount_cents).display()
     }
 
+    // Formats the value for display in templates.
     pub fn balance_after_display(&self) -> String {
         Money::from_cents(self.balance_after_cents).display()
     }
 
+    // Formats the value for display in templates.
     pub fn description_display(&self) -> &str {
         self.description.as_deref().unwrap_or("No description")
     }
 
+    // Formats the value for display in templates.
     pub fn created_at_display(&self) -> String {
         self.created_at.format("%d %b %Y, %I:%M %p").to_string()
     }

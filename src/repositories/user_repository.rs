@@ -1,3 +1,5 @@
+// Repository layer: isolates SQLx queries so services do not depend on raw database code.
+
 use crate::models::User;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -7,6 +9,7 @@ const USER_SELECT: &str = r#"
     FROM users
 "#;
 
+// Reads find user by email data from the database.
 pub async fn find_user_by_email(db: &PgPool, email: &str) -> Result<Option<User>, sqlx::Error> {
     let query = format!("{} WHERE lower(email) = lower($1)", USER_SELECT);
     sqlx::query_as::<_, User>(&query)
@@ -15,6 +18,7 @@ pub async fn find_user_by_email(db: &PgPool, email: &str) -> Result<Option<User>
         .await
 }
 
+// Reads find user by username data from the database.
 pub async fn find_user_by_username(db: &PgPool, username: &str) -> Result<Option<User>, sqlx::Error> {
     let query = format!("{} WHERE lower(username) = lower($1)", USER_SELECT);
     sqlx::query_as::<_, User>(&query)
@@ -23,6 +27,7 @@ pub async fn find_user_by_username(db: &PgPool, username: &str) -> Result<Option
         .await
 }
 
+// Reads find user by login data from the database.
 pub async fn find_user_by_login(db: &PgPool, login: &str) -> Result<Option<User>, sqlx::Error> {
     let query = format!("{} WHERE lower(username) = lower($1) OR lower(email) = lower($1)", USER_SELECT);
     sqlx::query_as::<_, User>(&query)
@@ -31,6 +36,7 @@ pub async fn find_user_by_login(db: &PgPool, login: &str) -> Result<Option<User>
         .await
 }
 
+// Reads find user by id data from the database.
 pub async fn find_user_by_id(db: &PgPool, user_id: Uuid) -> Result<Option<User>, sqlx::Error> {
     let query = format!("{} WHERE id = $1", USER_SELECT);
     sqlx::query_as::<_, User>(&query)
@@ -39,6 +45,7 @@ pub async fn find_user_by_id(db: &PgPool, user_id: Uuid) -> Result<Option<User>,
         .await
 }
 
+// Persists the create customer user database change.
 pub async fn create_customer_user(
     db: &PgPool,
     customer_id: Uuid,
@@ -75,6 +82,7 @@ pub async fn create_customer(
     create_customer_user(db, customer_id, &fallback_username, email, password_hash).await
 }
 
+// Persists the update last login database change.
 pub async fn update_last_login(db: &PgPool, user_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1")
         .bind(user_id)
@@ -84,6 +92,7 @@ pub async fn update_last_login(db: &PgPool, user_id: Uuid) -> Result<(), sqlx::E
     Ok(())
 }
 
+// Persists the update password database change.
 pub async fn update_password(
     db: &PgPool,
     user_id: Uuid,

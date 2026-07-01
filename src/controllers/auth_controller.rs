@@ -1,3 +1,5 @@
+// Controller layer: handles HTTP/session flow and delegates business rules to services.
+
 use crate::controllers::session_guard::{
     admin_session_user_id, clear_admin_session, clear_customer_session, customer_session_user_id,
     redirect, store_admin_session, store_customer_session,
@@ -8,6 +10,7 @@ use crate::views::{render, AdminLoginTemplate, LoginTemplate};
 use crate::AppState;
 use actix_session::Session;
 use actix_web::{web, HttpResponse, Result};
+// Renders the login page screen with data prepared by the service layer.
 pub async fn login_page(session: Session) -> Result<HttpResponse> {
     if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
@@ -19,6 +22,7 @@ pub async fn login_page(session: Session) -> Result<HttpResponse> {
     })
 }
 
+// Renders the admin login page screen with data prepared by the service layer.
 pub async fn admin_login_page(session: Session) -> Result<HttpResponse> {
     if admin_session_user_id(&session).is_some() {
         return Ok(redirect("/admin/dashboard"));
@@ -30,6 +34,7 @@ pub async fn admin_login_page(session: Session) -> Result<HttpResponse> {
     })
 }
 
+// Handles login session flow.
 pub async fn login(
     data: web::Data<AppState>,
     session: Session,
@@ -51,6 +56,7 @@ pub async fn login(
     }
 }
 
+// Handles admin login session flow.
 pub async fn admin_login(
     data: web::Data<AppState>,
     session: Session,
@@ -72,11 +78,13 @@ pub async fn admin_login(
     }
 }
 
+// Handles logout session flow.
 pub async fn logout(session: Session) -> Result<HttpResponse> {
     clear_customer_session(&session);
     Ok(redirect("/"))
 }
 
+// Handles admin logout session flow.
 pub async fn admin_logout(session: Session) -> Result<HttpResponse> {
     clear_admin_session(&session);
     Ok(redirect("/admin/login"))
