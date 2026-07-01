@@ -1,176 +1,147 @@
-# RustToGold — Phase 1 MVC Foundation
+# RustToGold
 
-RustToGold is a server-side rendered academic banking simulation built with Rust, Actix Web, Askama, SQLx, PostgreSQL, Argon2 password hashing, and cookie-based sessions.
+RustToGold is a server-side rendered banking web application built with Rust, Actix Web, Askama, SQLx and PostgreSQL. The system covers customer onboarding, account opening, dashboard banking, deposits, transfers, PayNow-style payments, cards, fixed deposits, personal loans, home loans, transaction controls, GIRO arrangements, statements, audit logs and admin review workflows.
 
-This version uses a folder-based Rust module layout with `mod.rs` inside each major MVC folder. This keeps the code easier to navigate for a team project because each layer owns its own folder and exposes its public API through that folder's `mod.rs` file.
+The project follows a layered MVC structure. Controllers handle requests and sessions, services hold banking business rules, repositories isolate SQL queries, models represent domain records, forms receive validated user input, and Askama templates render the UI.
 
-## What Phase 1 includes
+---
 
-- Original RustToGold landing, login, signup, dashboard, profile, and error page styling.
-- Customer signup and login.
-- Session-based authentication.
-- Customer-only route protection.
-- Default bank account created with `$0.00`.
-- Deposit workflow.
-- Transaction history generated from successful deposits.
-- Connected placeholder routes for transfer, loans, loan application, fixed deposits, and new fixed deposit.
-- PostgreSQL schema and setup script.
-- Askama SSR template integration.
-- Restored static asset paths:
-  - `/static/assets/css/style.css`
-  - `/static/assets/images/rusttogold-logo.png`
-  - `/static/assets/js/app.js`
+## 1. Quick Start
 
-## Architecture
+### Requirements
+
+Install the following before running the project:
+
+- Rust toolchain with Cargo
+- PostgreSQL with `psql`
+- Git or a ZIP extraction tool
+- A browser such as Chrome, Edge, Safari or Firefox
+
+This project uses PostgreSQL through SQLx. The schema is in:
 
 ```text
-src/
-├── main.rs
-├── config.rs
-├── routes.rs
-├── controllers/
-│   ├── mod.rs
-│   ├── auth_controller.rs
-│   ├── customer_controller.rs
-│   ├── error_controller.rs
-│   ├── public_controller.rs
-│   └── session_guard.rs
-├── services/
-│   ├── mod.rs
-│   ├── auth_service.rs
-│   ├── account_service.rs
-│   ├── profile_service.rs
-│   └── support.rs
-├── repositories/
-│   ├── mod.rs
-│   ├── user_repository.rs
-│   ├── account_repository.rs
-│   └── transaction_repository.rs
-├── models/
-│   ├── mod.rs
-│   ├── user.rs
-│   ├── account.rs
-│   ├── transaction.rs
-│   ├── money.rs
-│   └── formatting.rs
-├── forms/
-│   ├── mod.rs
-│   ├── auth_forms.rs
-│   ├── account_forms.rs
-│   └── profile_forms.rs
-└── views/
-    ├── mod.rs
-    ├── renderer.rs
-    └── templates.rs
-
-templates/
-├── index.html
-├── auth/
-│   ├── login.html
-│   └── signup.html
-├── customer/
-│   ├── dashboard.html
-│   ├── deposit.html
-│   ├── transactions.html
-│   ├── profile.html
-│   └── placeholder.html
-└── errors/
-    ├── 403.html
-    ├── 404.html
-    └── error.html
-
-static/assets/
-├── css/style.css
-├── images/rusttogold-logo.png
-└── js/app.js
+migrations/001_init.sql
 ```
 
-## Rust module layout
-
-The root module declarations remain in `src/main.rs`:
-
-```rust
-mod config;
-mod controllers;
-mod forms;
-mod models;
-mod repositories;
-mod routes;
-mod services;
-mod views;
-```
-
-Because the project now uses folder modules, Rust will load these files:
+Default local server:
 
 ```text
-src/controllers/mod.rs
-src/forms/mod.rs
-src/models/mod.rs
-src/repositories/mod.rs
-src/services/mod.rs
-src/views/mod.rs
+http://127.0.0.1:3000
 ```
 
-Do not keep both of these at the same time:
+Default admin login after running the migration:
 
 ```text
-src/controllers.rs
-src/controllers/mod.rs
+Username: admin
+Password: Admin@12345
+Admin URL: http://127.0.0.1:3000/admin/login
 ```
 
-That creates a duplicate module source conflict. The same rule applies to `forms`, `models`, `repositories`, `services`, and `views`.
+---
 
-## MVC mapping
+## 2. Run on Windows
 
-- Model: `src/models/`
-  - `User`, `BankAccount`, `Transaction`, `Money`
-  - Rust `impl` blocks are used for model behavior such as display formatting and account rules.
-  - `AccountWorkflow` trait demonstrates abstraction.
+### 2.1 Install tools
 
-- View: `templates/` + `src/views/`
-  - Askama templates render server-side HTML.
-  - `src/views/templates.rs` defines the Askama template structs.
-  - `src/views/renderer.rs` centralizes HTML rendering.
+Install:
 
-- Controller: `src/controllers/`
-  - Receives requests, checks session state, calls services, and renders views.
+- Rust from rustup
+- PostgreSQL for Windows
 
-- Service: `src/services/`
-  - Contains business rules such as signup validation, login validation, deposit validation, and profile update validation.
+During PostgreSQL installation, remember the password for the `postgres` database user.
 
-- Repository: `src/repositories/`
-  - Contains SQLx queries only.
+If PowerShell cannot find `psql`, use the full PostgreSQL path. Adjust the version number if your installation folder is different:
 
-- Forms: `src/forms/`
-  - Contains request form structs for login, signup, deposit, and profile updates.
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" --version
+```
 
-## OOP explanation for presentation
+### 2.2 Create the database
 
-Rust is not class-based like Java, but this project still demonstrates OOP concepts:
+From the project root, open PowerShell and run:
 
-- Encapsulation: structs group data, and `impl` blocks group behavior with the data.
-- Abstraction: traits such as `AccountWorkflow` define account behavior without exposing implementation details.
-- Separation of concerns: controllers do not directly talk to SQL; they call services and repositories.
-- Maintainability: each module has one responsibility.
-- Team collaboration: different members can work on separate controllers, services, repositories, models, or templates without constantly editing the same file.
+```powershell
+psql -U postgres
+```
 
-## Setup instructions
+Inside the PostgreSQL prompt:
 
-### 1. Install requirements
+```sql
+CREATE DATABASE rusttogold;
+\q
+```
 
-You need:
-
-- Rust toolchain
-- PostgreSQL
-- `psql` available in your terminal
-
-On Windows, if `psql` is not recognized, either add PostgreSQL's `bin` folder to PATH or run it directly:
+If `psql` is not in PATH:
 
 ```powershell
 & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres
 ```
 
-### 2. Create the database
+### 2.3 Create the `.env` file
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Open `.env` and set your own PostgreSQL password:
+
+```env
+DATABASE_URL=postgres://postgres:yourActualPassword@localhost:5432/rusttogold
+SESSION_SECRET=0123456789012345678901234567891201234567890123456789012345678912
+SERVER_HOST=127.0.0.1
+SERVER_PORT=3000
+```
+
+### 2.4 Run the database schema
+
+```powershell
+psql -U postgres -d rusttogold -f migrations/001_init.sql
+```
+
+If `psql` is not in PATH:
+
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d rusttogold -f migrations/001_init.sql
+```
+
+### 2.5 Start the app
+
+```powershell
+cargo run
+```
+
+Open:
+
+```text
+http://127.0.0.1:3000
+```
+
+---
+
+## 3. Run on macOS
+
+### 3.1 Install tools
+
+Using Homebrew:
+
+```bash
+brew install rustup-init
+rustup-init
+brew install postgresql@16
+brew services start postgresql@16
+```
+
+Restart your terminal after installing Rust if `cargo` is not found.
+
+### 3.2 Create the database
+
+For a normal Homebrew PostgreSQL setup:
+
+```bash
+createdb rusttogold
+```
+
+If your PostgreSQL uses the `postgres` user instead:
 
 ```bash
 psql -U postgres
@@ -183,25 +154,22 @@ CREATE DATABASE rusttogold;
 \q
 ```
 
-### 3. Create `.env`
-
-Copy `.env.example` to `.env`.
-
-Windows PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-macOS/Linux:
+### 3.3 Create the `.env` file
 
 ```bash
 cp .env.example .env
 ```
 
-Then edit `.env` and replace `YOUR_PASSWORD` with your PostgreSQL password.
+For Homebrew PostgreSQL using your macOS username, `.env` can be:
 
-Example:
+```env
+DATABASE_URL=postgres://YOUR_MAC_USERNAME@localhost:5432/rusttogold
+SESSION_SECRET=0123456789012345678901234567891201234567890123456789012345678912
+SERVER_HOST=127.0.0.1
+SERVER_PORT=3000
+```
+
+For PostgreSQL using the `postgres` user and password:
 
 ```env
 DATABASE_URL=postgres://postgres:yourActualPassword@localhost:5432/rusttogold
@@ -210,21 +178,19 @@ SERVER_HOST=127.0.0.1
 SERVER_PORT=3000
 ```
 
-### 4. Run the migration
+### 3.4 Run the database schema
 
-From the project root:
+```bash
+psql -d rusttogold -f migrations/001_init.sql
+```
+
+If using the `postgres` user:
 
 ```bash
 psql -U postgres -d rusttogold -f migrations/001_init.sql
 ```
 
-If Windows still cannot find `psql`, use the full path:
-
-```powershell
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d rusttogold -f migrations/001_init.sql
-```
-
-### 5. Run the app
+### 3.5 Start the app
 
 ```bash
 cargo run
@@ -236,44 +202,492 @@ Open:
 http://127.0.0.1:3000
 ```
 
-## Demo flow
+---
 
-1. Open `/` and show the landing page.
-2. Create a new customer account.
-3. Dashboard starts at `$0.00`.
-4. Click Deposit Money.
-5. Deposit `$50.00`.
-6. Open Transaction History.
-7. Use the navbar to confirm all customer links resolve.
-8. Logout and login again.
+## 4. Reset the database
 
-## Connected routes
+`001_init.sql` is a reset script. It drops and recreates the local tables.
 
-```text
-GET  /                              Landing page
-GET  /signup                        Signup page
-POST /signup                        Create customer + default $0 account
-GET  /login                         Login page
-POST /login                         Authenticate user
-GET  /logout                        Logout
-GET  /403                           Access denied page
-GET  /customer/dashboard            Customer dashboard
-GET  /customer/deposit              Deposit page
-POST /customer/deposit              Create deposit transaction and update balance
-GET  /customer/transfer             Phase 1 connected placeholder
-GET  /customer/transactions         Transaction history
-GET  /customer/loans                Phase 1 connected placeholder
-GET  /customer/loans/apply          Phase 1 connected placeholder
-GET  /customer/fixed-deposits       Phase 1 connected placeholder
-GET  /customer/fixed-deposits/new   Phase 1 connected placeholder
-GET  /customer/profile              Profile page
-POST /customer/profile              Update profile handler
+Windows:
+
+```powershell
+psql -U postgres -d rusttogold -f migrations/001_init.sql
 ```
 
-## Database tables
+macOS:
 
-- `users`
-- `bank_accounts`
-- `transactions`
+```bash
+psql -d rusttogold -f migrations/001_init.sql
+```
 
-Phase 2 can add real transfer processing, loan application persistence, fixed deposit persistence, OTP simulation, concurrency-safe transfers, audit logging, staff dashboard, admin dashboard, and fraud rules.
+Use this when you want a clean demonstration database.
+
+---
+
+## 5. Main Demo Accounts and URLs
+
+Admin:
+
+```text
+http://127.0.0.1:3000/admin/login
+username: admin
+password: Admin@12345
+```
+
+Customer accounts are created through onboarding and admin approval:
+
+1. Open `/onboarding/account`.
+2. Submit customer onboarding.
+3. Login as admin.
+4. Approve the onboarding record.
+5. Use the generated account-creation link.
+6. Create the customer username and password.
+7. Login through `/login`.
+
+Optional host-based URLs are also supported by the router:
+
+```text
+admin.localhost:3000
+onboarding.localhost:3000
+```
+
+The normal `/admin/...` and `/onboarding/...` paths work without host-file changes.
+
+---
+
+## 6. Architecture and Folder Structure
+
+```text
+RustToGold/
+├── Cargo.toml
+├── Cargo.lock
+├── README.md
+├── .env.example
+├── migrations/
+│   └── 001_init.sql
+├── src/
+│   ├── main.rs
+│   ├── config.rs
+│   ├── routes.rs
+│   ├── controllers/
+│   ├── forms/
+│   ├── models/
+│   ├── repositories/
+│   ├── services/
+│   └── views/
+├── templates/
+│   ├── admin/
+│   ├── auth/
+│   ├── customer/
+│   ├── email/
+│   ├── errors/
+│   ├── layouts/
+│   ├── onboarding/
+│   └── partials/
+└── static/
+    ├── css/
+    ├── images/
+    └── js/
+```
+
+### MVC and layered mapping
+
+| Layer | Location | Responsibility |
+|---|---|---|
+| Routes | `src/routes.rs` | Maps URLs to controller functions. |
+| Controllers | `src/controllers/` | Handles HTTP requests, sessions, redirects and template rendering. |
+| Services | `src/services/` | Contains banking rules, validation, workflow decisions and transaction logic. |
+| Repositories | `src/repositories/` | Contains SQLx database queries and persistence functions. |
+| Models | `src/models/` | Defines domain structs and display/helper methods. |
+| Forms | `src/forms/` | Defines request payloads from HTML forms. |
+| Views | `src/views/` and `templates/` | Connects Askama template structs to SSR HTML files. |
+| Static assets | `static/` | Stores CSS, JavaScript and images. |
+
+Request flow example:
+
+```text
+POST /customer/transfer
+→ customer_controller::transfer
+→ product_service::transfer
+→ transaction_control_service::validate_outgoing_transaction
+→ product_repository / transaction_repository
+→ PostgreSQL transaction
+→ Askama-rendered response
+```
+
+---
+
+## 7. OOP Concepts Used in the Rust Code
+
+Rust is not class-based, but the project applies OOP-style design through Rust features:
+
+| OOP concept | Rust implementation in this project |
+|---|---|
+| Encapsulation | Domain data is grouped into structs such as `User`, `Customer`, `CustomerProduct`, `Transaction`, `PersonalLoan`, `FixedDeposit`, `Card`, `GiroArrangement` and `TransactionControls`. |
+| Behaviour with data | `impl` blocks provide formatting and state helpers such as display labels, status checks and amount formatting. |
+| Abstraction | Controllers depend on service functions instead of direct SQL. Services depend on repositories instead of embedding queries in page handlers. |
+| Modular design | Each feature has its own form, model, repository, service and template where needed. |
+| Controlled state | Status fields such as active, pending, frozen, rejected, cleared and blocked are enforced through validation and database checks. |
+| Reuse | Shared helpers such as `Money`, session guards, renderer functions and template partials avoid repeating logic. |
+
+---
+
+## 8. Core Features
+
+Customer features:
+
+- Public banking pages and onboarding flow
+- Login and logout
+- Account dashboard
+- Savings account applications
+- Deposits
+- Bank account transfers
+- PayNow registration and transfers
+- Card applications, freeze and reactivation
+- Personal loan application and repayment
+- Home loan application and repayment
+- Fixed deposit placement and withdrawal
+- Transaction history and activity logs
+- Bank statement PDF export with date range
+- Daily transaction limit management
+- Money Lock
+- GIRO recurring payment arrangements
+- Profile update, PayNow update and password change
+
+Admin features:
+
+- Admin login and logout
+- Customer onboarding approval and rejection
+- Account product review, activation, freeze and closure
+- Staff account management
+- Personal loan review
+- Home loan review
+- Fixed deposit plan management
+- High-value transaction monitoring
+- Audit log review
+
+Advanced logic:
+
+- Role-based access control
+- Password hashing with Argon2
+- Cookie-based sessions
+- SQL-backed workflows
+- Money stored as cents using integers
+- Daily transfer limits
+- Money Lock validation
+- High-value transaction monitoring
+- Velocity-style fraud rules
+- Own-account transfer handling
+- PDF statement generation
+- Audit logging for key admin actions
+
+---
+
+## 9. Routes
+
+### Public routes
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/` | Landing page |
+| GET | `/banking` | Banking products page |
+| GET | `/security` | Security page |
+| GET | `/about` | About page |
+| GET | `/faq` | FAQ page |
+| GET | `/contact` | Contact page |
+| GET | `/login` | Customer login page |
+| POST | `/login` | Customer login submission |
+| GET | `/logout` | Logout |
+| GET | `/403` | Access denied page |
+
+### Onboarding and account creation routes
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/onboarding` | Redirects to onboarding entry |
+| GET | `/onboarding/{path}` | Onboarding step page |
+| POST | `/onboarding/{path}` | Onboarding step submission |
+| POST | `/api/onboarding/actions/submit-step1` | Submit account step |
+| POST | `/api/onboarding/actions/submit-step2` | Submit personal step |
+| POST | `/api/onboarding/actions/submit-step3` | Submit contact step |
+| POST | `/api/onboarding/actions/submit-step4` | Submit employment step |
+| POST | `/api/onboarding/actions/submit` | Submit full onboarding |
+| POST | `/api/onboarding/account` | Alternate account step API |
+| POST | `/api/onboarding/personal` | Alternate personal step API |
+| POST | `/api/onboarding/contact` | Alternate contact step API |
+| POST | `/api/onboarding/employment` | Alternate employment step API |
+| POST | `/api/onboarding/submit` | Alternate full submit API |
+| GET | `/account-creation/init` | Starts account creation from approval link |
+| GET | `/account-creation` | Account credential setup page |
+| POST | `/account-creation` | Create customer login credentials |
+| POST | `/api/account-creation/submit` | Account creation API submission |
+| GET | `/signup` | Legacy redirect to onboarding |
+| GET | `/signup/{path}` | Legacy signup step redirect |
+
+### Customer routes
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/customer/dashboard` | Customer dashboard |
+| POST | `/customer/accounts/create` | Apply for another savings account product |
+| GET | `/customer/deposit` | Deposit page |
+| POST | `/customer/deposit` | Deposit money |
+| GET | `/customer/transfer` | Bank transfer page |
+| POST | `/customer/transfer` | Transfer to bank account |
+| GET | `/customer/paynow` | PayNow page |
+| POST | `/customer/paynow/register` | Register PayNow mobile number |
+| POST | `/customer/paynow/transfer` | Transfer by PayNow number |
+| GET | `/customer/giro` | GIRO recurring payment page |
+| POST | `/customer/giro` | Create GIRO arrangement |
+| POST | `/customer/giro/{id}/cancel` | Cancel GIRO arrangement |
+| GET | `/customer/transaction-controls` | Daily limit and Money Lock page |
+| POST | `/customer/transaction-controls/limit` | Update daily transaction limit |
+| POST | `/customer/transaction-controls/money-lock` | Lock or unlock outgoing transfers |
+| GET | `/customer/cards` | Card application and card list page |
+| POST | `/customer/cards` | Apply for card |
+| POST | `/customer/cards/{id}/freeze` | Freeze card |
+| POST | `/customer/cards/{id}/activate` | Reactivate card |
+| GET | `/customer/transactions` | Deposit, transfer and PayNow activity log |
+| GET | `/customer/statements` | Statement download page |
+| GET | `/customer/statements/download` | Download statement PDF |
+| GET | `/customer/loan-activity` | Loan activity log |
+| GET | `/customer/loan-log` | Alternate loan activity route |
+| GET | `/customer/fixed-deposit-activity` | Fixed deposit activity log |
+| GET | `/customer/fixed-deposit-log` | Alternate fixed deposit activity route |
+| GET | `/customer/loans` | Personal loan dashboard |
+| GET | `/customer/loans/apply` | Personal loan application page |
+| POST | `/customer/loans/apply` | Submit personal loan application |
+| POST | `/customer/loans/{id}/pay` | Repay personal loan |
+| GET | `/customer/home-loans` | Home loan dashboard |
+| GET | `/customer/home-loans/apply` | Home loan application page |
+| POST | `/customer/home-loans/apply` | Submit home loan application |
+| POST | `/customer/home-loans/{id}/pay` | Repay home loan |
+| GET | `/customer/fixed-deposits` | Fixed deposit dashboard |
+| GET | `/customer/fixed-deposits/new` | New fixed deposit page |
+| POST | `/customer/fixed-deposits` | Create fixed deposit placement |
+| POST | `/customer/fixed-deposits/{id}/withdraw` | Withdraw fixed deposit |
+| GET | `/customer/profile` | Profile page |
+| POST | `/customer/profile` | Update profile, PayNow or password details |
+
+### Admin routes
+
+| Method | Route | Purpose |
+|---|---|---|
+| GET | `/admin/login` | Admin login page |
+| POST | `/admin/login` | Admin login submission |
+| GET | `/admin/logout` | Admin logout |
+| GET | `/admin` | Admin dashboard |
+| GET | `/admin/dashboard` | Admin dashboard |
+| GET | `/admin/signups` | Customer onboarding review |
+| GET | `/admin/onboardings` | Customer onboarding review |
+| POST | `/admin/onboardings/{id}/approve` | Approve onboarding |
+| POST | `/admin/onboardings/{id}/reject` | Reject onboarding |
+| POST | `/admin/signups/{id}/approve` | Approve signup route alias |
+| POST | `/admin/signups/{id}/reject` | Reject signup route alias |
+| GET | `/admin/staff` | Staff management page |
+| POST | `/admin/staff` | Create staff/admin user |
+| POST | `/admin/staff/{id}/update` | Update staff/admin user |
+| POST | `/admin/staff/{id}/delete` | Delete staff/admin user |
+| GET | `/admin/accounts` | Customer and product account review |
+| POST | `/admin/accounts/users/{id}/suspend` | Suspend customer login |
+| POST | `/admin/accounts/users/{id}/activate` | Activate customer login |
+| POST | `/admin/accounts/products/{id}/activate` | Activate customer product |
+| POST | `/admin/accounts/products/{id}/freeze` | Freeze customer product |
+| POST | `/admin/accounts/products/{id}/close` | Close customer product |
+| GET | `/admin/high-value-monitoring` | High-value transaction monitoring |
+| POST | `/admin/high-value-monitoring/{id}/status` | Clear monitoring record with review notes |
+| GET | `/admin/audit-log` | Audit log page |
+| GET | `/admin/personal-loans` | Personal loan review page |
+| POST | `/admin/personal-loans/{id}/approve` | Approve personal loan |
+| POST | `/admin/personal-loans/{id}/reject` | Reject personal loan |
+| GET | `/admin/home-loans` | Home loan review page |
+| POST | `/admin/home-loans/{id}/approve` | Approve home loan |
+| POST | `/admin/home-loans/{id}/reject` | Reject home loan |
+| GET | `/admin/fixed-deposits` | Fixed deposit records |
+| GET | `/admin/fixed-deposit-plans` | Fixed deposit plan setup page |
+| POST | `/admin/fixed-deposit-plans` | Create fixed deposit plan |
+| POST | `/admin/fixed-deposit-plans/{id}` | Update fixed deposit plan |
+
+---
+
+## 10. Database Tables
+
+| Table | Purpose |
+|---|---|
+| `customers` | Stores KYC/customer profile data collected during onboarding. |
+| `users` | Stores login credentials, role, status and optional link to a customer. |
+| `customer_products` | Stores customer-held products such as everyday savings and high-yield savings accounts, including account number, status and balance. |
+| `transactions` | Stores deposits, transfers, PayNow movements, GIRO transactions, loan payments and fixed deposit movements. |
+| `personal_loans` | Stores personal loan applications, approvals, repayment amounts and outstanding balance. |
+| `home_loan_applications` | Stores home loan applications, property values, down payment checks, approvals and repayments. |
+| `fixed_deposit_plans` | Stores admin-created fixed deposit plan definitions such as tenure, interest rate and minimum amount. |
+| `fixed_deposits` | Stores customer fixed deposit placements, maturity dates, principal and interest. |
+| `cards` | Stores card products linked to active customer accounts and their freeze/active status. |
+| `account_creation_links` | Stores one-time account creation links issued after admin approval. |
+| `audit_logs` | Stores important admin and system actions for traceability. |
+| `registered_paynow` | Stores customer PayNow mobile number registration and linked receiving account. |
+| `transaction_controls` | Stores daily transaction limit, limit change cooldown and Money Lock status. |
+| `fraud_alerts` | Stores high-value monitoring records, blocked transfer records and review notes. |
+| `giro_arrangements` | Stores recurring payment arrangements, frequency, amount, recipient and status. |
+
+Main database design choices:
+
+- UUID primary keys for core entities.
+- Money values stored as cents using `BIGINT`.
+- Status fields constrained with `CHECK` rules.
+- Foreign keys connect customers, users, products, transactions and applications.
+- Indexes support account lookup, transaction history, monitoring queues and admin dashboards.
+
+---
+
+## 11. Main Business Workflows
+
+### Customer onboarding
+
+```text
+Customer submits onboarding
+→ Admin reviews application
+→ Admin approves or rejects
+→ Approved customer receives account creation link
+→ Customer creates login credentials
+→ Customer accesses dashboard
+```
+
+### Deposit
+
+```text
+Customer selects account
+→ Enters amount and description
+→ Service validates amount/account state
+→ Balance increases
+→ Transaction record is inserted
+```
+
+### Bank transfer
+
+```text
+Customer selects source account
+→ Enters recipient account and amount
+→ Service checks active account, balance, Money Lock, daily limit and high-value rules
+→ Database transaction debits sender and credits receiver
+→ Transaction records are inserted for both sides
+```
+
+### PayNow transfer
+
+```text
+Customer registers mobile number
+→ Customer enters recipient mobile number
+→ Service resolves linked account
+→ Transfer validation runs
+→ Sender and receiver account balances are updated
+```
+
+### Loan review
+
+```text
+Customer submits loan application
+→ Admin reviews pending loan
+→ Admin approves or rejects
+→ Approved loan can be repaid by customer
+→ Loan transactions are logged
+```
+
+### Fixed deposit
+
+```text
+Admin maintains plans
+→ Customer selects plan and funding account
+→ Service validates minimum amount and balance
+→ Principal is deducted
+→ Fixed deposit record and transaction record are created
+```
+
+### High-value monitoring
+
+```text
+Customer attempts high-value transfer
+→ Service applies high-value and velocity rules
+→ High-value records are flagged or blocked
+→ Admin reviews monitoring queue
+→ Admin clears record with review notes
+```
+
+---
+
+## 12. Dependencies
+
+Main Rust crates:
+
+| Crate | Use |
+|---|---|
+| `actix-web` | HTTP server, routing and request handling. |
+| `actix-files` | Static file serving. |
+| `actix-session` | Cookie-based sessions. |
+| `askama` | Server-side HTML rendering. |
+| `sqlx` | PostgreSQL database integration. |
+| `uuid` | UUID identifiers. |
+| `chrono` | Dates and timestamps. |
+| `serde` | Form and request deserialization. |
+| `argon2` | Password hashing. |
+| `dotenvy` | Environment variable loading. |
+| `lettre` | Email sending support. |
+| `tokio` | Async runtime. |
+| `rand` | Secure token and number generation support. |
+
+---
+
+## 13. Useful Test Flow
+
+Use this flow for a complete walkthrough:
+
+1. Open `/` and review public pages.
+2. Submit onboarding through `/onboarding/account`.
+3. Login to `/admin/login`.
+4. Approve the onboarding application.
+5. Open the account creation link and create customer login credentials.
+6. Login as customer.
+7. Apply for savings account product if needed.
+8. Make a deposit.
+9. Register PayNow.
+10. Perform bank transfer and PayNow transfer.
+11. Create card and test freeze/reactivate.
+12. Create fixed deposit.
+13. Submit personal loan and home loan applications.
+14. Approve applications from admin side.
+15. Download a bank statement PDF.
+16. Change daily transaction limit.
+17. Enable and disable Money Lock.
+18. Create and cancel a GIRO arrangement.
+19. Trigger high-value monitoring and clear the record with notes.
+20. Review audit logs.
+
+---
+
+## 14. Submission Notes
+
+Do not include these in the final source ZIP:
+
+```text
+target/
+.env
+*.log
+.DS_Store
+src.zip
+templates.zip
+```
+
+Recommended source archive contents:
+
+```text
+Cargo.toml
+Cargo.lock
+README.md
+.env.example
+migrations/001_init.sql
+src/
+templates/
+static/
+```
+
+Required project materials depend on the course submission instructions, but the normal package includes source code, README, database schema, slides, report and recording.

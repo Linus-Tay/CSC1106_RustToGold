@@ -23,6 +23,7 @@
 
     <div class="nav-actions hidden items-center gap-2 lg:flex">
       <a href="/login" class="btn-nav-ghost">Login</a>
+      <a href="/signup" class="btn-nav-open"><i data-lucide="user-plus" class="h-4 w-4"></i> Open Account</a>
     </div>
 
     <button type="button" class="mobile-menu-button" data-mobile-menu-open aria-controls="mobile-drawer" aria-expanded="false" aria-label="Open navigation">
@@ -35,28 +36,30 @@
       <div class="section-shell mega-layout">
         <div class="mega-intro-clean">
           <p class="mega-kicker">Banking</p>
-          <h2>Explore products for everyday banking, growth, and travel.</h2>
-          <p>Choose an account, card, fixed deposit, or loan product based on what you need today. Debit card access is bundled with eligible savings accounts.</p>
+          <h2>Choose what you want to manage.</h2>
+          <p>Accounts and cards are grouped as product families. Transfers, fixed deposits, loans, and dashboard lead straight to their working sections.</p>
         </div>
 
         <div class="mega-content-grid">
           <div class="mega-section-card">
             <div class="mega-card-title"><i data-lucide="wallet-cards" class="h-5 w-5"></i> Accounts</div>
-            <a href="/banking#everyday-savings" class="mega-item"><span>Everyday Savings</span><small>Main account for salary, bills, transfers, and debit card spending.</small></a>
-            <a href="/banking#high-yield-savings" class="mega-item"><span>High-Yield Savings</span><small>Unlock bonus interest through salary crediting, card spend, and bill payments.</small></a>
+            <a href="/banking#everyday-savings" class="mega-item"><span>Everyday Savings</span><small>Balances, transfers, cards, deposits, and daily banking.</small></a>
+            <a href="/banking#fixed-deposit-account" class="mega-item"><span>Fixed Deposit Account</span><small>Term savings with maturity and payout handling.</small></a>
+            <a href="/banking#investment-account" class="mega-item"><span>Investment Account</span><small>Future product area for holdings and suitability.</small></a>
           </div>
 
           <div class="mega-section-card">
             <div class="mega-card-title"><i data-lucide="credit-card" class="h-5 w-5"></i> Cards</div>
-            <a href="/banking#flex-credit-card" class="mega-item"><span>Flex Credit Card</span><small>Credit application, limit review, billing, and repayment flow.</small></a>
-            <a href="/banking#foreign-exchange-card" class="mega-item"><span>Foreign Exchange Card</span><small>Travel-focused card for supported currency balances and overseas payments.</small></a>
+            <a href="/banking#everyday-debit-card" class="mega-item"><span>Everyday Debit Card</span><small>Linked to savings for spending and ATM access.</small></a>
+            <a href="/banking#campus-card" class="mega-item"><span>Campus Card</span><small>Student-friendly card with simple limits and controls.</small></a>
           </div>
 
           <div class="mega-section-card compact-card">
             <div class="mega-card-title"><i data-lucide="landmark" class="h-5 w-5"></i> Services</div>
+            <a href="/banking#money-transfers" class="mega-service-link"><i data-lucide="send" class="h-4 w-4"></i> Money Transfers</a>
             <a href="/banking#fixed-deposits" class="mega-service-link"><i data-lucide="piggy-bank" class="h-4 w-4"></i> Fixed Deposits</a>
-            <a href="/banking#loans" class="mega-service-link"><i data-lucide="file-signature" class="h-4 w-4"></i> Personal Loans</a>
-            <a href="/security" class="mega-service-link"><i data-lucide="shield-check" class="h-4 w-4"></i> Security Controls</a>
+            <a href="/banking#loans" class="mega-service-link"><i data-lucide="file-signature" class="h-4 w-4"></i> Loans</a>
+            <a href="/banking#dashboard" class="mega-service-link"><i data-lucide="layout-dashboard" class="h-4 w-4"></i> Customer Dashboard</a>
           </div>
         </div>
       </div>
@@ -76,7 +79,7 @@
           <a href="/faq" class="mega-section-card mega-help-card-clean">
             <i data-lucide="circle-help" class="h-6 w-6"></i>
             <span>FAQ</span>
-            <small>Answers for account, card, deposit, loan, and security questions.</small>
+            <small>Accounts, cards, transfers, deposits, loans, dashboard, and security questions.</small>
           </a>
           <a href="/contact" class="mega-section-card mega-help-card-clean">
             <i data-lucide="messages-square" class="h-6 w-6"></i>
@@ -87,85 +90,92 @@
       </div>
     </div>
   </div>
-
-  <div class="mobile-drawer-overlay" data-mobile-menu-close aria-hidden="true"></div>
-
-  <aside id="mobile-drawer" class="mobile-drawer" data-mobile-drawer aria-label="Mobile navigation" aria-hidden="true">
-    <div class="mobile-drawer-header">
-      <a href="/" class="mobile-drawer-brand" aria-label="RustToGold home">
-        <span class="mobile-drawer-logo" aria-hidden="true">
-          <img src="/static/images/rusttogold-logo.png" alt="" />
-        </span>
-        <span>
-          <strong>RustToGold</strong>
-          <small>Secure digital banking</small>
-        </span>
-      </a>
-
-      <button type="button" class="mobile-drawer-close" data-mobile-menu-close aria-label="Close navigation">
-        <i data-lucide="x" class="h-5 w-5"></i>
-      </button>
-    </div>
-
-    <div class="mobile-drawer-actions">
-      <a href="/login" class="mobile-action-secondary">Login</a>
-    </div>
-
-    <div class="mobile-drawer-content">
-      <details class="mobile-accordion" open>
-        <summary>
-          <span><i data-lucide="landmark" class="h-4 w-4"></i> Banking</span>
-          <i data-lucide="chevron-down" class="mobile-accordion-chevron h-4 w-4"></i>
-        </summary>
-
-        <div class="mobile-link-list">
-          <p class="mobile-group-label">Accounts</p>
-          <a href="/banking#everyday-savings" class="mobile-nav-item">
-            <i data-lucide="wallet" class="h-4 w-4"></i>
-            <span><strong>Everyday Savings</strong><small>Main account for salary, bills, transfers, and debit card spending.</small></span>
-          </a>
-          <a href="/banking#high-yield-savings" class="mobile-nav-item">
-            <i data-lucide="trending-up" class="h-4 w-4"></i>
-            <span><strong>High-Yield Savings</strong><small>Bonus interest through monthly banking milestones.</small></span>
-          </a>
-          <p class="mobile-group-label">Cards</p>
-          <a href="/banking#flex-credit-card" class="mobile-nav-item">
-            <i data-lucide="badge-dollar-sign" class="h-4 w-4"></i>
-            <span><strong>Flex Credit Card</strong><small>Credit application, billing, and repayment flow.</small></span>
-          </a>
-          <a href="/banking#foreign-exchange-card" class="mobile-nav-item">
-            <i data-lucide="plane" class="h-4 w-4"></i>
-            <span><strong>Foreign Exchange Card</strong><small>Travel-focused card for overseas payments.</small></span>
-          </a>
-
-          <p class="mobile-group-label">Products</p>
-          <a href="/banking#fixed-deposits" class="mobile-nav-row"><i data-lucide="piggy-bank" class="h-4 w-4"></i> Fixed Deposits</a>
-          <a href="/banking#loans" class="mobile-nav-row"><i data-lucide="file-signature" class="h-4 w-4"></i> Personal Loans</a>
-          <a href="/security" class="mobile-nav-row"><i data-lucide="shield-check" class="h-4 w-4"></i> Security Controls</a>
-        </div>
-      </details>
-
-      <div class="mobile-drawer-section">
-        <a href="/security" class="mobile-nav-row"><i data-lucide="shield-check" class="h-4 w-4"></i> Security</a>
-        <a href="/about" class="mobile-nav-row"><i data-lucide="building-2" class="h-4 w-4"></i> About</a>
-      </div>
-
-      <details class="mobile-accordion">
-        <summary>
-          <span><i data-lucide="circle-help" class="h-4 w-4"></i> Help</span>
-          <i data-lucide="chevron-down" class="mobile-accordion-chevron h-4 w-4"></i>
-        </summary>
-        <div class="mobile-link-list">
-          <a href="/faq" class="mobile-nav-item">
-            <i data-lucide="circle-help" class="h-4 w-4"></i>
-            <span><strong>FAQ</strong><small>Answers for account, card, deposit, loan, and security questions.</small></span>
-          </a>
-          <a href="/contact" class="mobile-nav-item">
-            <i data-lucide="messages-square" class="h-4 w-4"></i>
-            <span><strong>Contact us</strong><small>Support entry point for enquiries and service requests.</small></span>
-          </a>
-        </div>
-      </details>
-    </div>
-  </aside>
 </nav>
+
+<div class="mobile-drawer-overlay" data-mobile-menu-close aria-hidden="true"></div>
+
+<aside id="mobile-drawer" class="mobile-drawer" data-mobile-drawer aria-label="Mobile navigation" aria-hidden="true">
+  <div class="mobile-drawer-header">
+    <a href="/" class="mobile-drawer-brand" aria-label="RustToGold home">
+      <span class="mobile-drawer-logo" aria-hidden="true">
+        <img src="/static/images/rusttogold-logo.png" alt="" />
+      </span>
+      <span>
+        <strong>RustToGold</strong>
+        <small>Secure digital banking</small>
+      </span>
+    </a>
+
+    <button type="button" class="mobile-drawer-close" data-mobile-menu-close aria-label="Close navigation">
+      <i data-lucide="x" class="h-5 w-5"></i>
+    </button>
+  </div>
+
+  <div class="mobile-drawer-actions">
+    <a href="/login" class="mobile-action-secondary">Login</a>
+    <a href="/signup" class="mobile-action-primary"><i data-lucide="user-plus" class="h-4 w-4"></i> Open Account</a>
+  </div>
+
+  <div class="mobile-drawer-content">
+    <details class="mobile-accordion" open>
+      <summary>
+        <span><i data-lucide="landmark" class="h-4 w-4"></i> Banking</span>
+        <i data-lucide="chevron-down" class="mobile-accordion-chevron h-4 w-4"></i>
+      </summary>
+
+      <div class="mobile-link-list">
+        <p class="mobile-group-label">Accounts</p>
+        <a href="/banking#everyday-savings" class="mobile-nav-item">
+          <i data-lucide="wallet" class="h-4 w-4"></i>
+          <span><strong>Everyday Savings</strong><small>Main account for balance, deposits, transfers, and cards.</small></span>
+        </a>
+        <a href="/banking#fixed-deposit-account" class="mobile-nav-item">
+          <i data-lucide="timer" class="h-4 w-4"></i>
+          <span><strong>Fixed Deposit Account</strong><small>Term savings with maturity and payout handling.</small></span>
+        </a>
+        <a href="/banking#investment-account" class="mobile-nav-item">
+          <i data-lucide="trending-up" class="h-4 w-4"></i>
+          <span><strong>Investment Account</strong><small>Future-ready investment profile and holdings area.</small></span>
+        </a>
+
+        <p class="mobile-group-label">Cards</p>
+        <a href="/banking#everyday-debit-card" class="mobile-nav-item">
+          <i data-lucide="credit-card" class="h-4 w-4"></i>
+          <span><strong>Everyday Debit Card</strong><small>Daily card spending linked to savings.</small></span>
+        </a>
+        <a href="/banking#campus-card" class="mobile-nav-item">
+          <i data-lucide="graduation-cap" class="h-4 w-4"></i>
+          <span><strong>Campus Card</strong><small>Student-friendly card with simple limits.</small></span>
+        </a>
+
+        <p class="mobile-group-label">Services</p>
+        <a href="/banking#money-transfers" class="mobile-nav-row"><i data-lucide="send" class="h-4 w-4"></i> Money Transfers</a>
+        <a href="/banking#fixed-deposits" class="mobile-nav-row"><i data-lucide="piggy-bank" class="h-4 w-4"></i> Fixed Deposits</a>
+        <a href="/banking#loans" class="mobile-nav-row"><i data-lucide="file-signature" class="h-4 w-4"></i> Loans</a>
+        <a href="/banking#dashboard" class="mobile-nav-row"><i data-lucide="layout-dashboard" class="h-4 w-4"></i> Customer Dashboard</a>
+      </div>
+    </details>
+
+    <div class="mobile-drawer-section">
+      <a href="/security" class="mobile-nav-row"><i data-lucide="shield-check" class="h-4 w-4"></i> Security</a>
+      <a href="/about" class="mobile-nav-row"><i data-lucide="building-2" class="h-4 w-4"></i> About</a>
+    </div>
+
+    <details class="mobile-accordion">
+      <summary>
+        <span><i data-lucide="circle-help" class="h-4 w-4"></i> Help</span>
+        <i data-lucide="chevron-down" class="mobile-accordion-chevron h-4 w-4"></i>
+      </summary>
+      <div class="mobile-link-list">
+        <a href="/faq" class="mobile-nav-item">
+          <i data-lucide="circle-help" class="h-4 w-4"></i>
+          <span><strong>FAQ</strong><small>Answers for account, card, transfer, and security questions.</small></span>
+        </a>
+        <a href="/contact" class="mobile-nav-item">
+          <i data-lucide="messages-square" class="h-4 w-4"></i>
+          <span><strong>Contact us</strong><small>Support entry point for enquiries and service requests.</small></span>
+        </a>
+      </div>
+    </details>
+  </div>
+</aside>

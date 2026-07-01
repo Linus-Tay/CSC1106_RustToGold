@@ -1,100 +1,71 @@
 {% extends "layouts/public.html" %}
 
 {% block title %}FAQ | RustToGold{% endblock %}
-{% block meta_description %}Find answers to common RustToGold questions about accounts, cards, transfers, fixed deposits, loans, login access, and account security.{% endblock %}
+{% block meta_description %}RustToGold FAQs for accounts, cards, transfers, fixed deposits, loans, dashboard, and security controls.{% endblock %}
 
 {% block content %}
-<main id="top">
-  <section class="faq-hero section-shell py-16 lg:py-24">
-    <div class="max-w-3xl" data-reveal>
-      <p class="c-kicker">Help centre</p>
-      <h1 class="page-title mt-5">Questions about banking with RustToGold?</h1>
-      <p class="lead-copy mt-7">
-        Find simple answers about account opening, cards, transfers, fixed deposits, loans, and keeping your banking access secure.
-      </p>
+<main>
+  <section class="section-shell py-16 lg:py-20">
+    <div class="max-w-3xl">
+      <p class="eyebrow text-blueBank">FAQ</p>
+      <h1 class="page-title mt-5">Clear answers for common banking questions.</h1>
+      <p class="lead-copy mt-7">This page keeps support separate from the homepage and gives customers a natural place to understand how RustToGold works.</p>
     </div>
   </section>
 
-  <section class="section-shell pb-20">
-    <div class="faq-clean-shell" data-reveal>
-      <div class="faq-clean-intro">
-        <p class="c-kicker">Common questions</p>
-        <h2>Everything important, explained clearly.</h2>
-        <p>
-          These answers cover the most common things customers may want to know before opening an account, applying for a product, or managing their banking online.
-        </p>
-      </div>
+  <section class="section-shell pb-16">
+    <div class="grid gap-8 lg:grid-cols-[260px_1fr] lg:items-start">
+      <aside class="soft-card sticky top-[calc(var(--nav-height)+1rem)] hidden p-5 lg:block">
+        <p class="text-xs font-black uppercase tracking-[0.14em] text-muted">Categories</p>
+        <div class="mt-4 grid gap-2 text-sm font-black">
+          <a href="#account-faq" class="rounded-xl px-3 py-2 text-primary hover:bg-surface2">Accounts</a>
+          <a href="#card-faq" class="rounded-xl px-3 py-2 text-primary hover:bg-surface2">Cards</a>
+          <a href="#transfer-faq" class="rounded-xl px-3 py-2 text-primary hover:bg-surface2">Transfers</a>
+          <a href="#deposit-loan-faq" class="rounded-xl px-3 py-2 text-primary hover:bg-surface2">Deposits & Loans</a>
+          <a href="#security-faq" class="rounded-xl px-3 py-2 text-primary hover:bg-surface2">Security</a>
+        </div>
+      </aside>
 
-      <div class="faq-clean-list">
-        <details class="faq-item" open>
-          <summary>What can I do with a RustToGold account?</summary>
-          <p>
-            You can view account balances, manage everyday banking activity, make transfers, review card access, explore fixed deposits, and keep track of product applications from one digital banking experience.
-          </p>
-        </details>
+      <div class="grid gap-10">
+        <section id="account-faq">
+          <h2 class="font-heading text-3xl font-black tracking-[-0.04em] text-primary">Accounts</h2>
+          <div class="mt-5 grid gap-3">
+            <details class="faq-item" open><summary>What account types does RustToGold show?</summary><p>RustToGold separates accounts into Everyday Savings, Fixed Deposit Account, and Investment Account. Everyday Savings is the main operating account. Fixed Deposit Account is for term deposits. Investment Account is a future-ready product area.</p></details>
+            <details class="faq-item"><summary>Can a customer hold more than one account?</summary><p>Yes. A realistic banking system should allow one customer to hold multiple accounts, such as one savings account and one or more fixed deposit records linked to it.</p></details>
+          </div>
+        </section>
 
-        <details class="faq-item">
-          <summary>How do I open an account?</summary>
-          <p>
-            Start by choosing the account that fits your needs, then complete the online application with your personal details. Once submitted, you can follow the application status and next steps clearly.
-          </p>
-        </details>
+        <section id="card-faq">
+          <h2 class="font-heading text-3xl font-black tracking-[-0.04em] text-primary">Cards</h2>
+          <div class="mt-5 grid gap-3">
+            <details class="faq-item"><summary>Why are cards separated from features?</summary><p>Cards are better treated as product lines because debit, credit, and student cards have different eligibility, limits, and account linkage rules.</p></details>
+            <details class="faq-item"><summary>Can cards be frozen?</summary><p>Yes. The security page includes card freeze and unfreeze as customer-visible controls. The dashboard can show card status clearly.</p></details>
+          </div>
+        </section>
 
-        <details class="faq-item">
-          <summary>Can I apply for cards through RustToGold?</summary>
-          <p>
-            Yes. You can apply for supported card products, view card status, and manage card-related actions such as freezing a card when you need to protect it quickly.
-          </p>
-        </details>
+        <section id="transfer-faq">
+          <h2 class="font-heading text-3xl font-black tracking-[-0.04em] text-primary">Money Transfers</h2>
+          <div class="mt-5 grid gap-3">
+            <details class="faq-item"><summary>What should the transfer flow include?</summary><p>A strong transfer flow includes source account, recipient, amount, remarks, confirmation, OTP for risky actions, and a receipt saved into transaction history.</p></details>
+            <details class="faq-item"><summary>When should OTP be required?</summary><p>OTP can be required for high-value transfers, new recipients, repeated unusual transfers, or other actions your business rules mark as sensitive.</p></details>
+          </div>
+        </section>
 
-        <details class="faq-item">
-          <summary>When is OTP verification used?</summary>
-          <p>
-            OTP verification may be required for higher-risk actions such as large transfers, new payee setup, sensitive profile changes, or actions that need extra confirmation before they are completed.
-          </p>
-        </details>
+        <section id="deposit-loan-faq">
+          <h2 class="font-heading text-3xl font-black tracking-[-0.04em] text-primary">Fixed Deposits & Loans</h2>
+          <div class="mt-5 grid gap-3">
+            <details class="faq-item"><summary>What is the difference between Fixed Deposit Account and Fixed Deposits?</summary><p>The Fixed Deposit Account is the product category. The Fixed Deposits section explains the actual workflow: placement amount, tenure, interest, maturity date, and payout instruction.</p></details>
+            <details class="faq-item"><summary>What should loan management show?</summary><p>Loan management should show application details, status, approval decision, disbursement account, repayment summary, and loan history.</p></details>
+          </div>
+        </section>
 
-        <details class="faq-item">
-          <summary>What should I do if my card is lost or something looks suspicious?</summary>
-          <p>
-            Freeze your card as soon as possible from your banking dashboard. This helps reduce further card activity while you review the issue or contact support.
-          </p>
-        </details>
-
-        <details class="faq-item">
-          <summary>How do activity alerts help?</summary>
-          <p>
-            Activity alerts keep you updated when important actions happen, such as transfers, login activity, account changes, card status updates, or security checks.
-          </p>
-        </details>
-
-        <details class="faq-item">
-          <summary>Can I place a fixed deposit online?</summary>
-          <p>
-            Yes. You can review fixed deposit options, choose a placement amount and tenure, and view maturity details before confirming your placement.
-          </p>
-        </details>
-
-        <details class="faq-item">
-          <summary>How are loan applications managed?</summary>
-          <p>
-            Loan applications can be submitted and tracked online. You can review your application details, status updates, approval outcome, and repayment information when available.
-          </p>
-        </details>
-
-        <details class="faq-item">
-          <summary>Is my account activity recorded?</summary>
-          <p>
-            Important account actions are recorded to help keep your banking history clear and traceable. This supports better support handling, account review, and security checks.
-          </p>
-        </details>
-
-        <details class="faq-item">
-          <summary>How do I contact RustToGold support?</summary>
-          <p>
-            Use the contact form to send your enquiry. For security reasons, never share your password, full card number, or OTP in a support message.
-          </p>
-        </details>
+        <section id="security-faq">
+          <h2 class="font-heading text-3xl font-black tracking-[-0.04em] text-primary">Security</h2>
+          <div class="mt-5 grid gap-3">
+            <details class="faq-item"><summary>Is RustToGold a real bank?</summary><p>RustToGold is an online banking application built for controlled use and is not a licensed banking service.</p></details>
+            <details class="faq-item"><summary>What security features should be shown?</summary><p>Show login protection, OTP verification, card freeze controls, activity alerts, suspicious activity review, role-based access, and audit logging.</p></details>
+          </div>
+        </section>
       </div>
     </div>
   </section>

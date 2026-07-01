@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Apply for Personal Loan</title>
+  {% include "partials/customer_assets.html" %}
+</head>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+  <main class="customer-main">
+    <div class="customer-container customer-narrow">
+      <a class="back-link" href="/customer/loans"><i data-lucide="arrow-left"></i> Back to loans</a>
+      <section class="customer-card form-card">
+        <div class="customer-card__header">
+          <div>
+            <p class="customer-kicker">Personal Loan</p>
+            <h1>Apply for Personal Loan</h1>
+            <p>Choose which active account should receive the disbursement if admin approves the application.</p>
+          </div>
+        </div>
+        <div class="customer-card__body">
+          {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+          {% if has_accounts %}
+          <form class="form clean-form" action="/customer/loans/apply" method="post">
+            <div class="form-field">
+              <label class="form-label" for="account_number">Disbursement Account</label>
+              <select class="form-select" id="account_number" name="account_number" required>
+                {% for account in accounts %}
+                <option value="{{ account.account_number }}">{{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}</option>
+                {% endfor %}
+              </select>
+              <p class="form-help">Approved funds will be credited into this account.</p>
+            </div>
+            <div class="form-field"><label class="form-label" for="amount">Loan Amount</label><input class="form-input" id="amount" name="amount" placeholder="e.g. 8000.00" required /></div>
+            <div class="form-field"><label class="form-label" for="purpose">Purpose</label><input class="form-input" id="purpose" name="purpose" placeholder="Education, renovation, emergency funds..." required /></div>
+            <div class="form-field"><label class="form-label" for="term_months">Term</label><select class="form-select" id="term_months" name="term_months" required><option value="12">12 months</option><option value="24">24 months</option><option value="36">36 months</option><option value="48">48 months</option><option value="60">60 months</option></select></div>
+            <button class="c-button c-button--primary" type="submit"><i data-lucide="file-plus"></i> Submit Application</button>
+          </form>
+          {% else %}
+          <div class="empty-state"><div class="empty-state__icon"><i data-lucide="landmark"></i></div><h3>No active account available</h3><p>You need an active account before applying for a personal loan.</p></div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
+</body>
+</html>

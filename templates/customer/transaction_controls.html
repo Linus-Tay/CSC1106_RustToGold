@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Transaction Controls</title>
+  {% include "partials/customer_assets.html" %}
+</head>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+
+  <main class="customer-main">
+    <div class="customer-container">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+
+      <section class="module-hero module-hero--navy controls-hero controls-hero--simple">
+        <div>
+          <p class="customer-kicker">Security Controls</p>
+          <h1>Daily limit, fraud rules and Money Lock.</h1>
+          <p>Set your outgoing transfer limit and switch Money Lock on or off. Limit changes take effect immediately, then a 24-hour cooldown prevents repeated limit changes.</p>
+        </div>
+      </section>
+
+      {% if has_success %}<div class="alert alert--success"><i data-lucide="check-circle"></i> {{ success }}</div>{% endif %}
+      {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+
+      <div class="controls-grid">
+        <section class="customer-card controls-panel">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="gauge"></i></span>
+            <div>
+              <p class="customer-kicker">Daily Transaction Limit</p>
+              <h2>{{ controls.daily_limit_display() }}</h2>
+              <p>Applies across outgoing transfers, PayNow and GIRO setup. Own-account transfers do not use the daily limit.</p>
+            </div>
+          </div>
+          <div class="customer-card__body">
+            {% if controls.has_limit_cooldown() %}
+            <div class="cooldown-note">
+              <i data-lucide="timer"></i>
+              <div>
+                <strong>Limit change cooldown active</strong>
+                <span>Your current limit is already active. You can change it again after {{ controls.limit_change_effective_display() }}.</span>
+              </div>
+            </div>
+            {% endif %}
+            <form class="form clean-form controls-form" action="/customer/transaction-controls/limit" method="post" data-confirm-limit-change="true">
+              <div class="form-field">
+                <label class="form-label" for="daily_limit">New daily limit</label>
+                <input class="form-input" id="daily_limit" name="daily_limit" inputmode="decimal" placeholder="5000.00" required />
+                <p class="form-help">The new limit applies immediately. After saving, limit editing is locked for 24 hours.</p>
+              </div>
+              <button class="c-button c-button--primary" type="submit"><i data-lucide="save"></i> Update Limit</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="customer-card controls-panel controls-panel--lock">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="shield-check"></i></span>
+            <div>
+              <p class="customer-kicker">Money Lock</p>
+              <h2>{{ controls.money_lock_status_display() }}</h2>
+              <p>When locked, outgoing transfers, PayNow transfers and GIRO setup are blocked. You can unlock it whenever you confirm the action.</p>
+            </div>
+          </div>
+          <div class="customer-card__body controls-lock-body">
+            <div class="controls-action-row">
+              {% if controls.money_lock_enabled %}
+              <form action="/customer/transaction-controls/money-lock" method="post" data-confirm-money-unlock="true">
+                <input type="hidden" name="action" value="request_unlock" />
+                <button class="c-button c-button--primary" type="submit"><i data-lucide="unlock-keyhole"></i> Unlock Money Lock</button>
+              </form>
+              {% else %}
+              <form action="/customer/transaction-controls/money-lock" method="post" data-confirm-money-lock="true">
+                <input type="hidden" name="action" value="enable" />
+                <button class="c-button c-button--secondary" type="submit"><i data-lucide="lock-keyhole"></i> Enable Money Lock</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="customer-section">
+        <div class="section-heading">
+          <div>
+            <p class="customer-kicker">Security Validation</p>
+            <h2>Recent blocked or flagged activity</h2>
+            <p class="section-subtext">Only security and high-risk validation events are shown here. Normal daily-limit form errors are not sent to admin monitoring.</p>
+          </div>
+        </div>
+        {% if has_alerts %}
+        <div class="fraud-alert-list">
+          {% for alert in alerts %}
+          <article class="fraud-alert-row">
+            <span class="fraud-alert-row__icon"><i data-lucide="shield-alert"></i></span>
+            <div class="fraud-alert-row__main">
+              <strong>{{ alert.message }}</strong>
+              <small>{{ alert.channel }} · {{ alert.rule_code }} · {{ alert.amount_display() }} · {{ alert.created_at_display() }}</small>
+            </div>
+            <span class="badge badge--warning">{{ alert.severity_display() }}</span>
+          </article>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state empty-state--small">
+          <div class="empty-state__icon"><i data-lucide="shield-check"></i></div>
+          <h3>No security alerts yet</h3>
+          <p>Velocity blocks and high-value review holds will appear here when triggered.</p>
+        </div>
+        {% endif %}
+      </section>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+  <script>
+    document.querySelector('[data-confirm-limit-change="true"]')?.addEventListener('submit', (event) => {
+      const confirmed = window.confirm('This daily limit will take effect immediately. You cannot change it again for 24 hours. Continue?');
+      if (!confirmed) event.preventDefault();
+    });
+
+    document.querySelector('[data-confirm-money-lock="true"]')?.addEventListener('submit', (event) => {
+      const confirmed = window.confirm('Money Lock will block outgoing transfers, PayNow and GIRO setup. Continue?');
+      if (!confirmed) event.preventDefault();
+    });
+
+    document.querySelector('[data-confirm-money-unlock="true"]')?.addEventListener('submit', (event) => {
+      const confirmed = window.confirm('Unlock Money Lock now and allow outgoing transfers again?');
+      if (!confirmed) event.preventDefault();
+    });
+  </script>
+</body>
+</html>

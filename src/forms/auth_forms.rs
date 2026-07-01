@@ -1,19 +1,21 @@
+// Form layer: request payload structs received from HTML forms.
+
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct SignupForm {
-    pub full_name: String,
-    pub email: String,
-    pub phone_number: String,
-    pub date_of_birth: String,
+// Form payload for the LoginForm request.
+pub struct LoginForm {
+    pub username: String,
     pub password: String,
-    pub confirm_password: String,
-    pub product_id: Option<String>,
-    pub simulation_confirmed: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct LoginForm {
-    pub email: String,
+// Form payload for the AccountCreationForm request.
+pub struct AccountCreationForm {
+    pub username: String,
     pub password: String,
+    pub confirm_password: String,
+    pub notify_transactions: Option<String>,
+    pub notify_login: Option<String>,
+    pub notify_promotions: Option<String>,
 }

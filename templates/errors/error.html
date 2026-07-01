@@ -1,29 +1,36 @@
-{% extends "layouts/public.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Askama template: templates/errors/error.html -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Something Went Wrong</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="error-body">
+  <main class="clean-error-shell">
+    <section class="clean-error-card">
+      <a class="clean-error-brand" href="/">
+        <span><img src="/static/images/rusttogold-logo.png" alt="RustToGold logo" /></span>
+        RustToGold
+      </a>
 
-{% block title %}RustToGold | Something Went Wrong{% endblock %}
-{% block meta_description %}RustToGold could not complete your request.{% endblock %}
+      <div class="clean-error-icon clean-error-icon--danger"><i data-lucide="circle-alert"></i></div>
+      <p class="customer-kicker">Request Failed</p>
+      <h1>Something went wrong.</h1>
+      <p>We could not complete the request. Go back to a safe page and try the action again.</p>
 
-{% block content %}
-<main class="error-shell error-shell--generic">
-  <a class="error-brand" href="/">
-    <span class="marketing-brand__logo" aria-hidden="true">
-      <img src="/static/images/rusttogold-logo.png" alt="" />
-    </span>
-    <span>RustToGold</span>
-  </a>
+      <div class="clean-error-actions">
+        <a class="c-button c-button--primary" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i> Customer Dashboard</a>
+        <a class="c-button c-button--secondary" href="/"><i data-lucide="home"></i> Back Home</a>
+      </div>
+    </section>
+  </main>
 
-  <section class="error-card">
-    <div class="error-card__icon"><i data-lucide="circle-alert"></i></div>
-    <p class="marketing-kicker">Request Failed</p>
-    <h1>Something went wrong.</h1>
-    <p>
-      We could not complete your request. Please return to a safe page and try the action again.
-    </p>
-
-    <div class="error-card__actions">
-      <a class="marketing-button marketing-button--primary" href="/customer/dashboard">Return to Dashboard</a>
-      <a class="marketing-button marketing-button--secondary" href="/">Return Home</a>
-    </div>
-  </section>
-</main>
-{% endblock %}
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Askama template: templates/onboarding.html -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Open an Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="script" href="/static/js/" />
+</head>
+<body>
+
+    <nav class="c-navbar" aria-label="Primary navigation">
+    <div class="u-container c-navbar__inner">
+      <a class="c-navbar__brand" href="" data-route="/">
+        <span class="c-navbar__logo-wrap" aria-hidden="true">
+          <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
+        </span>
+        <span>RustToGold</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="c-section c-section--compact">
+    <div class="u-container" style="max-width: 760px; margin-inline: auto;">
+      <section class="landing-hero" id="hero">
+        <div class="landing-hero__content" style="text-align: left;">
+          {% if product_available %}
+          <div class="c-kicker">Onboarding</div>
+          <h1 class="landing-hero__title"><span>{{ product_name }}</span></h1>
+          <p class="landing-hero__description">Review the selected product below and continue to apply.</p>
+          {% else %}
+          <div class="skeleton skeleton--line" style="width: 32%; height: 1rem; margin-bottom: 1.3rem;"></div>
+          <div class="skeleton skeleton--title"></div>
+          <div class="skeleton skeleton--line" style="width: 68%;"></div>
+          <div class="skeleton skeleton--line" style="width: 48%;"></div>
+          {% endif %}
+        </div>
+      </section>
+
+      <div class="c-card" style="margin-top: 2rem;">
+        <div class="c-card__body">
+          {% if product_available %}
+          <div class="u-stack" style="gap: 1.5rem;">
+            <div>
+              <div class="c-kicker">Product details</div>
+              <h2 class="c-card__title">{{ product_name }}</h2>
+              <p class="c-section-description">{{ product_summary }}</p>
+            </div>
+
+            <div class="detail-list">
+              <div class="detail-row">
+                <div class="detail-row__label">Interest rate</div>
+                <div class="detail-row__value">{{ product_rate }} p.a.</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-row__label">Minimum deposit</div>
+                <div class="detail-row__value">SGD {{ product_minimum }}</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-row__label">Product code</div>
+                <div class="detail-row__value">{{ product_id }}</div>
+              </div>
+              <div class="detail-row">
+                <div class="detail-row__label">Product type</div>
+                <div class="detail-row__value">{{ product_type }}</div>
+              </div>
+            </div>
+
+            <div>
+              <div class="c-kicker">Features</div>
+              <ul style="padding-left: 1.15rem; color: var(--color-muted); line-height: var(--leading-relaxed);">
+                {% for feature in product_features %}
+                <li>{{ feature }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+
+            <div>
+              <a class="c-button c-button--gold" href="/onboarding/primary-contact-details">Apply now</a>
+            </div>
+          </div>
+          {% else %}
+          <div class="skeleton-card">
+            <div class="skeleton skeleton--title"></div>
+            <div class="skeleton skeleton--line"></div>
+            <div class="skeleton skeleton--line"></div>
+            <div class="skeleton skeleton--line" style="width: 64%;"></div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </main>
+  
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

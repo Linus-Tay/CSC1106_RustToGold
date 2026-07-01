@@ -1,119 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Askama template: templates/customer/profile.html -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RustToGold | My Profile</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <title>RustToGold | Profile</title>
+  {% include "partials/customer_assets.html" %}
 </head>
-<body>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
 
-  <nav class="c-navbar" aria-label="Customer navigation">
-    <div class="u-container c-navbar__inner">
-      <a class="c-navbar__brand" href="/customer/dashboard" data-route="/customer/dashboard">
-        <span class="c-navbar__logo-wrap" aria-hidden="true">
-          <img class="c-navbar__logo-img" src="/static/images/rusttogold-logo.png" alt="" />
-        </span>
-        <span>RustToGold</span>
-      </a>
-      <ul class="c-navbar__links">
-        <li><a class="c-navbar__link " href="/customer/dashboard" data-route="/customer/dashboard"><i data-lucide="layout-dashboard"></i>Dashboard</a></li>
-        <li><a class="c-navbar__link " href="/customer/deposit" data-route="/customer/deposit"><i data-lucide="circle-dollar-sign"></i>Deposit</a></li>
-        <li><a class="c-navbar__link " href="/customer/transfer" data-route="/customer/transfer"><i data-lucide="send"></i>Transfer</a></li>
-        <li><a class="c-navbar__link " href="/customer/transactions" data-route="/customer/transactions"><i data-lucide="receipt-text"></i>Transactions</a></li>
-        <li><a class="c-navbar__link " href="/customer/loans" data-route="/customer/loans"><i data-lucide="file-signature"></i>Loans</a></li>
-        <li><a class="c-navbar__link " href="/customer/fixed-deposits" data-route="/customer/fixed-deposits"><i data-lucide="piggy-bank"></i>Fixed Deposits</a></li>
-        <li><a class="c-navbar__link is-active" href="/customer/profile" data-route="/customer/profile"><i data-lucide="user-round"></i>Profile</a></li>
-      </ul>
-      <div class="c-navbar__actions">
-        <a class="c-navbar__login" href="/logout" data-route="/logout"><i data-lucide="log-out"></i> Logout</a>
-      </div>
-    </div>
-  </nav>
+  <main class="customer-main">
+    <div class="customer-container customer-narrow">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
 
+      <section class="plain-page-heading profile-page-heading-clean">
+        <p class="customer-kicker">Profile</p>
+        <h1>Profile settings</h1>
+        <p>Update your customer details, PayNow mobile number and online banking password from one place.</p>
+      </section>
 
-
-  <!--
-    Route: GET /customer/profile
-    Askama context: full_name, email, phone, date_of_birth, account_number, created_at, last_login
-    Integration note: Replace preview links with Actix route paths if needed. Form actions already use server routes.
-  -->
-
-  <main class="app-main">
-    <div class="u-container">
-      
-      <header class="app-page-header">
-        <div>
-          <h1 class="app-page-title">My Profile</h1>
-          <p class="app-page-description">View your personal details, bank account information, and security information.</p>
-        </div>
-        
-      </header>
-
-      <div class="app-grid app-grid--2">
-        
-      <section class="c-card">
-        <div class="c-card__header">
-          <div>
-            <h2 class="c-card__title">Personal Information</h2>
-            
+      <form class="profile-settings-stack" action="/customer/profile" method="post">
+        <section class="customer-card profile-settings-card profile-personal-card">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="user-round"></i></span>
+            <div>
+              <p class="customer-kicker">Personal</p>
+              <h2>Personal information</h2>
+              <p>These fields update your customer record.</p>
+            </div>
           </div>
-        </div>
-        <div class="c-card__body">
-          <div class="detail-list"><div class="detail-row"><div class="detail-row__label">Full Name</div><div class="detail-row__value">{{ full_name }}</div></div><div class="detail-row"><div class="detail-row__label">Email</div><div class="detail-row__value">{{ email }}</div></div><div class="detail-row"><div class="detail-row__label">Phone Number</div><div class="detail-row__value">{{ phone }}</div></div><div class="detail-row"><div class="detail-row__label">Date of Birth</div><div class="detail-row__value">{{ date_of_birth }}</div></div></div>
-        </div>
-      </section>
-
-        
-      <section class="c-card">
-        <div class="c-card__header">
-          <div>
-            <h2 class="c-card__title">Bank Account</h2>
-            
+          <div class="customer-card__body">
+            <div class="profile-form-grid profile-form-grid--two">
+              <div class="form-field form-field--full">
+                <label class="form-label" for="full_name">Full Name</label>
+                <input class="form-input" id="full_name" name="full_name" value="{{ full_name }}" required />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="phone_number">Phone Number</label>
+                <input class="form-input" id="phone_number" name="phone_number" value="{{ phone }}" required />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Email</label>
+                <div class="readonly-field">{{ email }}</div>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Date of Birth</label>
+                <div class="readonly-field">{{ date_of_birth }}</div>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Last Login</label>
+                <div class="readonly-field">{{ last_login }}</div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="c-card__body">
-          <div class="detail-list"><div class="detail-row"><div class="detail-row__label">Account Number</div><div class="detail-row__value">{{ account_number }}</div></div><div class="detail-row"><div class="detail-row__label">Account Type</div><div class="detail-row__value">Savings</div></div><div class="detail-row"><div class="detail-row__label">Account Status</div><div class="detail-row__value"><span class="badge badge--success">Active</span></div></div><div class="detail-row"><div class="detail-row__label">Created On</div><div class="detail-row__value">{{ created_at }}</div></div></div>
-        </div>
-      </section>
+        </section>
 
-      </div>
-      <section class="c-section c-section--compact">
-        
-      <section class="c-card">
-        <div class="c-card__header">
-          <div>
-            <h2 class="c-card__title">Security</h2>
-            <p class="c-card__subtitle">For the MVP, this page can remain read-only except password change.</p>
+        <section class="customer-card profile-settings-card profile-paynow-card">
+          <div class="customer-card__header customer-card__header--with-icon profile-card-header--split">
+            <span class="panel-icon"><i data-lucide="scan-line"></i></span>
+            <div>
+              <p class="customer-kicker">PayNow</p>
+              <h2>Edit PayNow mobile number</h2>
+              <p>This is the mobile number other people use to send PayNow transfers to you.</p>
+            </div>
+            <span class="profile-status-chip {% if has_paynow %}profile-status-chip--active{% endif %}">
+              {% if has_paynow %}Registered{% else %}Not registered{% endif %}
+            </span>
           </div>
-        </div>
-        <div class="c-card__body">
-          <div class="detail-list"><div class="detail-row"><div class="detail-row__label">Password</div><div class="detail-row__value">********</div></div><div class="detail-row"><div class="detail-row__label">Last Login</div><div class="detail-row__value">{{ last_login }}</div></div></div><br><a class="c-button c-button--secondary" href="#" data-route="/customer/profile/change-password"><i data-lucide="key-round"></i> Change Password</a>
-        </div>
-      </section>
+          <div class="customer-card__body">
+            {% if has_accounts %}
+            <div class="profile-paynow-current">
+              <span>Current PayNow number</span>
+              <strong>{% if has_paynow %}{{ paynow_id }}{% else %}No number registered{% endif %}</strong>
+            </div>
+            <div class="profile-form-grid profile-paynow-editor">
+              <div class="form-field">
+                <label class="form-label" for="paynow_id">New PayNow Mobile Number</label>
+                <input class="form-input form-input--large" id="paynow_id" name="paynow_id" inputmode="numeric" value="{{ paynow_id }}" placeholder="91234567" />
+                <p class="form-help">Use an 8-digit Singapore mobile number starting with 8 or 9.</p>
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="linked_product_id">Receive PayNow into</label>
+                <select class="form-input form-input--large" id="linked_product_id" name="linked_product_id">
+                  {% for account in accounts %}
+                  <option value="{{ account.id }}" {% if account.id_display() == paynow_linked_product_id %}selected{% endif %}>{{ account.product_id_display() }} · {{ account.account_number }}</option>
+                  {% endfor %}
+                </select>
+                <p class="form-help">Changing this only affects incoming PayNow transfers.</p>
+              </div>
+            </div>
+            {% else %}
+            <div class="empty-state empty-state--small">
+              <div class="empty-state__icon"><i data-lucide="wallet"></i></div>
+              <h3>No active account</h3>
+              <p>You need an active account before registering PayNow.</p>
+            </div>
+            <input type="hidden" name="paynow_id" value="" />
+            <input type="hidden" name="linked_product_id" value="" />
+            {% endif %}
+          </div>
+        </section>
 
-      </section>
+        <section class="customer-card profile-settings-card profile-password-card">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="lock-keyhole"></i></span>
+            <div>
+              <p class="customer-kicker">Security</p>
+              <h2>Edit password</h2>
+              <p>Leave these fields blank if you only want to update profile or PayNow details.</p>
+            </div>
+          </div>
+          <div class="customer-card__body">
+            <div class="profile-form-grid profile-password-grid">
+              <div class="form-field">
+                <label class="form-label" for="current_password">Current Password</label>
+                <input class="form-input" id="current_password" name="current_password" type="password" autocomplete="current-password" />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="new_password">New Password</label>
+                <input class="form-input" id="new_password" name="new_password" type="password" autocomplete="new-password" />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="confirm_password">Confirm New Password</label>
+                <input class="form-input" id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="profile-save-bar profile-save-bar--sticky-safe">
+          <button class="c-button c-button--primary" type="submit"><i data-lucide="save"></i> Save Profile Changes</button>
+        </div>
+      </form>
     </div>
   </main>
 
-
-  <footer class="c-footer">
-    <div class="u-container c-footer__inner">
-      <div>
-        <div class="c-footer__brand"><span class="c-footer__dot"></span> RustToGold</div>
-        <p class="c-footer__note">Secure digital banking for accounts, transfers, savings, loans, and customer support.</p>
-      </div>
-      <div class="c-footer__links">
-        <a href="/customer/dashboard">Dashboard</a>
-        <a href="/customer/transactions">Transactions</a>
-        <a href="/logout">Logout</a>
-      </div>
-    </div>
-  </footer>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/static/js/app.js"></script>
 </body>

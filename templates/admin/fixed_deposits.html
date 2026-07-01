@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold Admin | Fixed Deposits</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#F8FAFC] text-slate-900">
+  {% include "partials/admin_nav.html" %}
+
+  <main class="mx-auto max-w-7xl px-6 py-10">
+    <section class="rounded-[2rem] bg-[#0B1F3A] p-8 text-white shadow-xl shadow-[#0B1F3A]/20">
+      <p class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.24em] text-[#D6A54A]"><i data-lucide="piggy-bank" class="h-4 w-4"></i> Admin Records</p>
+      <h1 class="text-4xl font-black tracking-tight">Fixed Deposit Placements</h1>
+      <p class="mt-4 max-w-3xl text-white/70">Monitor customer placements, funding accounts, maturity dates, expected interest and payout amounts.</p>
+    </section>
+
+    <section class="mt-8 grid gap-5">
+      {% if has_records %}
+      {% for row in records %}
+      <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div>
+            <div class="mb-3 flex flex-wrap items-center gap-2">
+              <span class="rounded-full bg-[#1D4ED8]/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-[#1D4ED8]">{{ row.status_display() }}</span>
+              <span class="rounded-full bg-[#D6A54A]/15 px-3 py-1 text-xs font-bold text-[#0B1F3A]">{{ row.tenure_months }} months · {{ row.rate_display() }}</span>
+            </div>
+            <h2 class="text-2xl font-black text-[#0B1F3A]">{{ row.customer_name }}</h2>
+            <p class="mt-1 text-sm font-semibold text-slate-500">{{ row.customer_email }} · {{ row.customer_phone }}</p>
+          </div>
+          <a href="/admin/fixed-deposit-plans" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[#0B1F3A] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#0B1F3A]/15 transition hover:-translate-y-0.5"><i data-lucide="settings-2" class="h-4 w-4"></i> Manage Plans</a>
+        </div>
+
+        <div class="mt-6 grid gap-4 lg:grid-cols-3">
+          <div class="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+            <h3 class="mb-4 flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#0B1F3A]"><i data-lucide="receipt-text" class="h-4 w-4 text-[#1D4ED8]"></i> Placement</h3>
+            <dl class="space-y-3 text-sm">
+              <div><dt class="font-bold text-slate-400">Plan</dt><dd class="font-semibold text-slate-800">{{ row.plan_name }}</dd></div>
+              <div><dt class="font-bold text-slate-400">Principal</dt><dd class="font-semibold text-slate-800">{{ row.principal_display() }}</dd></div>
+              <div><dt class="font-bold text-slate-400">Expected interest</dt><dd class="font-semibold text-slate-800">{{ row.interest_display() }}</dd></div>
+              <div><dt class="font-bold text-slate-400">Expected payout</dt><dd class="font-semibold text-slate-800">{{ row.payout_display() }}</dd></div>
+            </dl>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+            <h3 class="mb-4 flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#0B1F3A]"><i data-lucide="calendar-clock" class="h-4 w-4 text-[#1D4ED8]"></i> Timing</h3>
+            <dl class="space-y-3 text-sm">
+              <div><dt class="font-bold text-slate-400">Tenure</dt><dd class="font-semibold text-slate-800">{{ row.tenure_months }} months</dd></div>
+              <div><dt class="font-bold text-slate-400">Rate</dt><dd class="font-semibold text-slate-800">{{ row.rate_display() }}</dd></div>
+              <div><dt class="font-bold text-slate-400">Maturity</dt><dd class="font-semibold text-slate-800">{{ row.maturity_date_display() }}</dd></div>
+              <div><dt class="font-bold text-slate-400">Created</dt><dd class="font-semibold text-slate-800">{{ row.created_at_display() }}</dd></div>
+            </dl>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+            <h3 class="mb-4 flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#0B1F3A]"><i data-lucide="wallet" class="h-4 w-4 text-[#1D4ED8]"></i> Customer Account</h3>
+            <dl class="space-y-3 text-sm">
+              <div><dt class="font-bold text-slate-400">NRIC/FIN</dt><dd class="font-semibold text-slate-800">{{ row.customer_nric }}</dd></div>
+              <div><dt class="font-bold text-slate-400">Funding account</dt><dd class="font-semibold text-slate-800">{{ row.account_number }}</dd></div>
+              <div><dt class="font-bold text-slate-400">Account balance after placement</dt><dd class="font-semibold text-slate-800">{{ row.account_balance_display() }}</dd></div>
+              <div><dt class="font-bold text-slate-400">Admin use</dt><dd class="font-semibold text-slate-800">View-only record; plan settings are handled under FD Plans.</dd></div>
+            </dl>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+      {% else %}
+      <div class="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
+        <div class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-slate-500"><i data-lucide="piggy-bank" class="h-7 w-7"></i></div>
+        <h2 class="text-2xl font-black text-[#0B1F3A]">No fixed deposits</h2>
+        <p class="mt-2 text-sm text-slate-500">Customer fixed deposit placements will appear here.</p>
+      </div>
+      {% endif %}
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

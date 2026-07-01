@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}RustToGold | Secure Digital Banking{% endblock %}</title>
-  <meta name="description" content="{% block meta_description %}RustToGold is a secure academic banking simulation for product-first account, fixed deposit, personal loan, credit card, FX card, security, and role-based access workflows.{% endblock %}" />
+  <meta name="description" content="{% block meta_description %}RustToGold is a secure digital banking platform for accounts, cards, transfers, fixed deposits, loans, dashboards, security controls, and role-based access control.{% endblock %}" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -64,31 +64,56 @@
 
       const DESKTOP_MIN = 1121;
       const nav = document.querySelector('[data-public-nav]');
+      const mobileOpenButton = document.querySelector('[data-mobile-menu-open]');
+      const mobileCloseButtons = Array.from(document.querySelectorAll('[data-mobile-menu-close]'));
+      const mobileDrawer = document.querySelector('[data-mobile-drawer]');
+      const drawerLinks = mobileDrawer ? Array.from(mobileDrawer.querySelectorAll('a')) : [];
+      let closeTimer = null;
 
       function createIcons() {
         if (window.lucide) window.lucide.createIcons();
       }
 
+      function isDesktopNav() {
+        return window.innerWidth >= DESKTOP_MIN;
+      }
+
+      function closePanels() {
+        if (!nav) return;
+
+        nav.querySelectorAll('[data-mega-panel]').forEach((panel) => {
+          panel.classList.remove('is-open');
+        });
+
+        nav.querySelectorAll('[data-mega-trigger]').forEach((trigger) => {
+          trigger.classList.remove('is-active');
+          trigger.setAttribute('aria-expanded', 'false');
+        });
+      }
+
+      function openMobileMenu() {
+        if (isDesktopNav()) return;
+        closePanels();
+        nav?.classList.add('is-mobile-open');
+        document.body.classList.add('mobile-nav-open');
+        mobileOpenButton?.setAttribute('aria-expanded', 'true');
+        mobileDrawer?.setAttribute('aria-hidden', 'false');
+
+        const closeButton = mobileDrawer?.querySelector('[data-mobile-menu-close]');
+        window.setTimeout(() => closeButton?.focus({ preventScroll: true }), 80);
+      }
+
+      function closeMobileMenu(returnFocus = false) {
+        nav?.classList.remove('is-mobile-open');
+        document.body.classList.remove('mobile-nav-open');
+        mobileOpenButton?.setAttribute('aria-expanded', 'false');
+        mobileDrawer?.setAttribute('aria-hidden', 'true');
+        if (returnFocus) mobileOpenButton?.focus({ preventScroll: true });
+      }
+
       if (nav) {
         const triggers = Array.from(nav.querySelectorAll('[data-mega-trigger]'));
         const panels = Array.from(nav.querySelectorAll('[data-mega-panel]'));
-        const mobileOpenButton = nav.querySelector('[data-mobile-menu-open]');
-        const mobileCloseButtons = Array.from(nav.querySelectorAll('[data-mobile-menu-close]'));
-        const mobileDrawer = nav.querySelector('[data-mobile-drawer]');
-        const drawerLinks = Array.from(nav.querySelectorAll('.mobile-drawer a'));
-        let closeTimer = null;
-
-        function isDesktopNav() {
-          return window.innerWidth >= DESKTOP_MIN;
-        }
-
-        function closePanels() {
-          panels.forEach((panel) => panel.classList.remove('is-open'));
-          triggers.forEach((trigger) => {
-            trigger.classList.remove('is-active');
-            trigger.setAttribute('aria-expanded', 'false');
-          });
-        }
 
         function openPanel(name) {
           if (!isDesktopNav()) return;
@@ -111,25 +136,6 @@
           closeTimer = window.setTimeout(closePanels, 130);
         }
 
-        function openMobileMenu() {
-          closePanels();
-          nav.classList.add('is-mobile-open');
-          document.body.classList.add('mobile-nav-open');
-          mobileOpenButton?.setAttribute('aria-expanded', 'true');
-          mobileDrawer?.setAttribute('aria-hidden', 'false');
-
-          const closeButton = nav.querySelector('[data-mobile-menu-close]:not(.mobile-drawer-overlay)');
-          window.setTimeout(() => closeButton?.focus({ preventScroll: true }), 80);
-        }
-
-        function closeMobileMenu(returnFocus = false) {
-          nav.classList.remove('is-mobile-open');
-          document.body.classList.remove('mobile-nav-open');
-          mobileOpenButton?.setAttribute('aria-expanded', 'false');
-          mobileDrawer?.setAttribute('aria-hidden', 'true');
-          if (returnFocus) mobileOpenButton?.focus({ preventScroll: true });
-        }
-
         triggers.forEach((trigger) => {
           const name = trigger.dataset.megaTrigger;
 
@@ -147,46 +153,50 @@
           panel.addEventListener('mouseleave', queueClosePanels);
         });
 
-        mobileOpenButton?.addEventListener('click', (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          openMobileMenu();
-        });
-
-        mobileCloseButtons.forEach((button) => {
-          button.addEventListener('click', (event) => {
-            event.preventDefault();
-            closeMobileMenu(true);
-          });
-        });
-
-        drawerLinks.forEach((link) => {
-          link.addEventListener('click', () => closeMobileMenu(false));
-        });
-
         nav.addEventListener('mouseleave', () => {
           if (isDesktopNav()) queueClosePanels();
         });
-
-        document.addEventListener('click', (event) => {
-          if (!nav.contains(event.target)) {
-            closePanels();
-            closeMobileMenu(false);
-          }
-        });
-
-        document.addEventListener('keydown', (event) => {
-          if (event.key === 'Escape') {
-            closePanels();
-            closeMobileMenu(true);
-          }
-        });
-
-        window.addEventListener('resize', () => {
-          if (isDesktopNav()) closeMobileMenu(false);
-          else closePanels();
-        });
       }
+
+      mobileOpenButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openMobileMenu();
+      });
+
+      mobileCloseButtons.forEach((button) => {
+        button.addEventListener('click', (event) => {
+          event.preventDefault();
+          closeMobileMenu(true);
+        });
+      });
+
+      drawerLinks.forEach((link) => {
+        link.addEventListener('click', () => closeMobileMenu(false));
+      });
+
+      document.addEventListener('click', (event) => {
+        const target = event.target;
+        const clickedInsideNav = nav ? nav.contains(target) : false;
+        const clickedInsideDrawer = mobileDrawer ? mobileDrawer.contains(target) : false;
+
+        if (!clickedInsideNav && !clickedInsideDrawer) {
+          closePanels();
+          closeMobileMenu(false);
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closePanels();
+          closeMobileMenu(true);
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        if (isDesktopNav()) closeMobileMenu(false);
+        else closePanels();
+      });
 
       const revealItems = Array.from(document.querySelectorAll('[data-reveal]'));
       if ('IntersectionObserver' in window && revealItems.length) {

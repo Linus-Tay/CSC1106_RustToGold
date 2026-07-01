@@ -1,12 +1,35 @@
-pub mod account;
+// Model layer: structs and small domain helpers shared by services, repositories and templates.
+pub mod account_creation_link;
+pub mod admin;
+pub mod card;
+pub mod customer;
+pub mod fixed_deposit;
 pub mod formatting;
+pub mod home_loan;
+pub mod giro;
+pub mod loan;
 pub mod money;
+pub mod monitoring;
+pub mod paynow;
 pub mod product;
+pub mod statement;
 pub mod transaction;
+pub mod transaction_control;
 pub mod user;
 
-pub use self::account::{AccountWorkflow, BankAccount};
+pub use self::account_creation_link::AccountCreationLink;
+pub use self::card::Card;
+pub use self::admin::{AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser};
+pub use self::customer::Customer;
+pub use self::fixed_deposit::{FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary};
+pub use self::giro::GiroArrangement;
+pub use self::home_loan::{HomeLoanApplication, HomeLoanSummary};
+pub use self::loan::PersonalLoan;
 pub use self::money::Money;
-pub use self::product::{find_product, ProductSummary};
+pub use self::monitoring::HighValueAlertRecord;
+pub use self::paynow::PayNowRegistration;
+pub use self::product::Product;
+pub use self::statement::{BankStatement, StatementTransaction};
 pub use self::transaction::Transaction;
+pub use self::transaction_control::{FraudAlert, TransactionControl};
 pub use self::user::User;

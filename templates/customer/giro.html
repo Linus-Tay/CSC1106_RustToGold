@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | GIRO</title>
+  {% include "partials/customer_assets.html" %}
+</head>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+
+  <main class="customer-main">
+    <div class="customer-container">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+
+      <section class="module-hero module-hero--navy giro-hero">
+        <div>
+          <p class="customer-kicker">GIRO</p>
+          <h1>Recurring payments without manual transfers.</h1>
+          <p>Set up a scheduled RustToGold recurring payment arrangement. Money Lock and daily transfer limits are checked before setup.</p>
+        </div>
+      </section>
+
+      {% if has_success %}<div class="alert alert--success"><i data-lucide="check-circle"></i> {{ success }}</div>{% endif %}
+      {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+
+      <div class="giro-layout">
+        <section class="customer-card giro-form-card">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="calendar-plus"></i></span>
+            <div>
+              <p class="customer-kicker">New Arrangement</p>
+              <h2>Create recurring payment</h2>
+              <p>Choose a source account, recipient and schedule.</p>
+            </div>
+          </div>
+          <div class="customer-card__body">
+            {% if has_accounts %}
+            <form class="form-grid giro-form" action="/customer/giro" method="post">
+              <div class="form-field form-field--full">
+                <label class="form-label" for="from_product_id">Pay from account</label>
+                <select class="form-input" id="from_product_id" name="from_product_id" required>
+                  {% for account in accounts %}
+                  <option value="{{ account.id }}">{{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="payee_name">Payee / Billing Organisation</label>
+                <input class="form-input" id="payee_name" name="payee_name" placeholder="e.g. Campus Rent" required />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="recipient_account_number">Recipient account number</label>
+                <input class="form-input" id="recipient_account_number" name="recipient_account_number" placeholder="7282-1234567-8" required />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="amount">Recurring amount</label>
+                <input class="form-input" id="amount" name="amount" inputmode="decimal" placeholder="200.00" required />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="frequency">Frequency</label>
+                <select class="form-input" id="frequency" name="frequency" required>
+                  <option value="monthly">Monthly</option>
+                  <option value="weekly">Weekly</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="start_date">First payment date</label>
+                <input class="form-input" id="start_date" name="start_date" type="date" required />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="end_date">End date</label>
+                <input class="form-input" id="end_date" name="end_date" type="date" />
+              </div>
+              <div class="form-field form-field--full">
+                <label class="form-label" for="note">Reference</label>
+                <input class="form-input" id="note" name="note" placeholder="Invoice, rent, allowance..." />
+              </div>
+              <button class="c-button c-button--primary" type="submit"><i data-lucide="repeat-2"></i> Create GIRO Arrangement</button>
+            </form>
+            {% else %}
+            <div class="empty-state empty-state--small">
+              <div class="empty-state__icon"><i data-lucide="wallet"></i></div>
+              <h3>No active account found</h3>
+              <p>You need an active account before setting up GIRO.</p>
+            </div>
+            {% endif %}
+          </div>
+        </section>
+
+        <section class="customer-card giro-list-card">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="list-checks"></i></span>
+            <div>
+              <p class="customer-kicker">Existing</p>
+              <h2>My GIRO arrangements</h2>
+              <p>Cancel arrangements that should no longer run.</p>
+            </div>
+          </div>
+          <div class="customer-card__body">
+            {% if has_arrangements %}
+            <div class="giro-arrangement-list">
+              {% for giro in arrangements %}
+              <article class="giro-arrangement-row">
+                <div class="giro-arrangement-row__main">
+                  <strong>{{ giro.payee_name }}</strong>
+                  <small>{{ giro.amount_display() }} · {{ giro.frequency_display() }} · Next {{ giro.next_payment_date_display() }}</small>
+                  <small>From {{ giro.account_number }} to {{ giro.recipient_account_number }} · {{ giro.note_display() }}</small>
+                </div>
+                <div class="giro-arrangement-row__side">
+                  <span class="badge {% if giro.is_active() %}badge--success{% else %}badge--warning{% endif %}">{{ giro.status_display() }}</span>
+                  <small>{{ giro.end_date_display() }}</small>
+                  {% if giro.is_active() %}
+                  <form action="/customer/giro/{{ giro.id }}/cancel" method="post">
+                    <button class="c-button c-button--secondary c-button--small" type="submit"><i data-lucide="x-circle"></i> Cancel</button>
+                  </form>
+                  {% endif %}
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state empty-state--small">
+              <div class="empty-state__icon"><i data-lucide="repeat-2"></i></div>
+              <h3>No GIRO arrangements yet</h3>
+              <p>Create a weekly or monthly recurring payment to show recurring banking logic.</p>
+            </div>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

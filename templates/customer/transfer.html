@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Transfer Money</title>
+  {% include "partials/customer_assets.html" %}
+</head>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+
+  <main class="customer-main">
+    <div class="customer-container customer-narrow">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+
+      <section class="customer-card form-card">
+        <div class="customer-card__header">
+          <div>
+            <p class="customer-kicker">Everyday Banking</p>
+            <h1>Transfer Money</h1>
+            <p>Select the source account before sending money to another RustToGold account.</p>
+          </div>
+        </div>
+
+        <div class="customer-card__body">
+          {% if has_error %}
+          <div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>
+          {% endif %}
+
+          <form class="form clean-form" action="/customer/transfer" method="post">
+            <div class="form-field">
+              <label class="form-label" for="account_number">Transfer from account</label>
+              <select class="form-select" id="account_number" name="account_number" required>
+                {% for account in accounts %}
+                <option value="{{ account.account_number }}" {% if account.account_number == selected_account_number %}selected{% endif %}>
+                  {{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <input type="hidden" name="method" value="local" />
+
+            <div class="form-field">
+              <label class="form-label" for="recipient_info">Recipient Account Number</label>
+              <input class="form-input" id="recipient_info" name="recipient_info" placeholder="7282-1234567-8" required />
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="amount">Transfer Amount</label>
+              <input class="form-input" id="amount" name="amount" inputmode="decimal" placeholder="e.g. 250.00" required />
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="note">Note</label>
+              <input class="form-input" id="note" name="note" placeholder="Dinner, rent, savings transfer..." />
+            </div>
+
+            <button class="c-button c-button--primary" type="submit">
+              <i data-lucide="send"></i> Confirm Transfer
+            </button>
+          </form>
+
+        
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

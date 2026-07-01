@@ -1,32 +1,28 @@
-use crate::forms::{LoginForm, SignupForm};
+// Service layer: keeps banking validation and workflow rules away from templates and SQL.
+
+use crate::forms::{AccountCreationForm, LoginForm};
 use crate::models::User;
-use crate::repositories::{account_repository, user_repository};
+use crate::repositories::{customer_repository, user_repository};
+use actix_web::Error;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
-use chrono::NaiveDate;
 use sqlx::PgPool;
+use uuid::Uuid;
 
-pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, String> {
-    let full_name = form.full_name.trim();
-    let email = form.email.trim().to_lowercase();
-    let phone_number = form.phone_number.trim();
+// Validates and coordinates the register user workflow.
+pub async fn register_user(
+    db: &PgPool,
+    customer_id: &Uuid,
+    customer_email: &str,
+    form: AccountCreationForm,
+) -> Result<User, String> {
+    let username = form.username.trim().to_lowercase();
 
-    if full_name.len() < 2 {
-        return Err("Full name must be at least 2 characters.".to_string());
+    if username.len() < 4 {
+        return Err("Username must be at least 4 characters.".to_string());
     }
-
-    if !email.contains('@') || email.len() < 5 {
-        return Err("Enter a valid email address.".to_string());
-    }
-
-    if phone_number.len() < 8 {
-        return Err("Enter a valid phone number.".to_string());
-    }
-
-    let date_of_birth = NaiveDate::parse_from_str(form.date_of_birth.trim(), "%Y-%m-%d")
-        .map_err(|_| "Enter a valid date of birth.".to_string())?;
 
     if form.password.len() < 8 {
         return Err("Password must be at least 8 characters.".to_string());
@@ -36,61 +32,77 @@ pub async fn register_customer(db: &PgPool, form: SignupForm) -> Result<User, St
         return Err("Passwords do not match.".to_string());
     }
 
-    if form.simulation_confirmed.is_none() {
-        return Err("Please confirm this is only an academic banking simulation.".to_string());
+    if user_repository::find_user_by_login(db, &username)
+        .await
+        .map_err(|_| "Could not check username availability.".to_string())?
+        .is_some()
+    {
+        return Err("This username is already in use.".to_string());
     }
 
-    let existing_user = user_repository::find_user_by_email(db, &email)
+    let customer = customer_repository::get_customer_by_id(db, customer_id)
         .await
-        .map_err(|_| "Could not check whether this email already exists.".to_string())?;
+        .map_err(|_| "Could not load the approved customer profile.".to_string())?;
 
-    if existing_user.is_some() {
-        return Err("An account with this email already exists.".to_string());
-    }
+    let password_hash = hash_password(&form.password).map_err(|_| "Cannot create user".to_string())?;
 
-    let password_hash = hash_password(&form.password)?;
-    let user = user_repository::create_customer(db, full_name, &email, phone_number, date_of_birth, &password_hash)
-        .await
-        .map_err(|_| "Could not create your customer account.".to_string())?;
-
-    account_repository::create_primary_account(db, user.id)
-        .await
-        .map_err(|_| "Customer was created, but the bank account could not be created.".to_string())?;
-
-    Ok(user)
+    user_repository::create_customer_user(
+        db,
+        customer.id,
+        &username,
+        customer_email,
+        &password_hash,
+    )
+    .await
+    .map_err(|error| {
+        eprintln!("Error creating online banking user: {error:?}");
+        "Could not create online banking user.".to_string()
+    })
 }
 
+// Runs business logic for authenticate user.
 pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, String> {
-    let email = form.email.trim().to_lowercase();
+    let login = form.username.trim().to_lowercase();
 
-    let user = user_repository::find_user_by_email(db, &email)
+    let user = user_repository::find_user_by_login(db, &login)
         .await
-        .map_err(|_| "Could not load your account.".to_string())?
-        .ok_or_else(|| "Invalid email or password.".to_string())?;
+        .map_err(|error| {
+            eprintln!("LOGIN lookup failed for {login}: {error:?}");
+            "Could not load your account.".to_string()
+        })?
+        .ok_or_else(|| "Invalid username/email or password.".to_string())?;
 
     if !user.is_active() {
         return Err("This account is not active.".to_string());
     }
 
     if !verify_password(&form.password, &user.password_hash) {
-        return Err("Invalid email or password.".to_string());
+        return Err("Invalid username/email or password.".to_string());
     }
 
     user_repository::update_last_login(db, user.id)
         .await
-        .map_err(|_| "Login succeeded, but the last-login timestamp could not be updated.".to_string())?;
+        .map_err(|error| {
+            eprintln!(
+                "LOGIN last-login update failed for user_id {}: {:?}",
+                user.id, error
+            );
+            "Login succeeded, but the last-login timestamp could not be updated.".to_string()
+        })?;
 
     Ok(user)
 }
 
-fn hash_password(password: &str) -> Result<String, String> {
+// Hashes sensitive input before it is stored.
+fn hash_password(password: &str) -> Result<String, Error> {
     let salt = SaltString::generate(&mut OsRng);
-    Argon2::default()
+    let hash = Argon2::default()
         .hash_password(password.as_bytes(), &salt)
-        .map(|hash| hash.to_string())
-        .map_err(|_| "Could not hash password.".to_string())
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+    Ok(hash.to_string())
 }
 
+// Verifies sensitive input against its stored hash.
 fn verify_password(password: &str, password_hash: &str) -> bool {
     PasswordHash::new(password_hash)
         .ok()
@@ -101,3 +113,5 @@ fn verify_password(password: &str, password_hash: &str) -> bool {
         })
         .is_some()
 }
+
+

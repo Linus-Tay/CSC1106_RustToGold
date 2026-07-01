@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Apply for Home Loan</title>
+  {% include "partials/customer_assets.html" %}
+</head>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+  <main class="customer-main">
+    <div class="customer-container customer-narrow">
+      <a class="back-link" href="/customer/home-loans"><i data-lucide="arrow-left"></i> Back to home loans</a>
+      <section class="customer-card form-card">
+        <div class="customer-card__header">
+          <div>
+            <p class="customer-kicker">Home Loan</p>
+            <h1>Apply for Home Loan</h1>
+            <p>RustToGold automatically calculates a 20% down payment and locks it from the selected account while the application is pending.</p>
+          </div>
+        </div>
+        <div class="customer-card__body">
+          {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
+          {% if has_accounts %}
+          <form class="form clean-form" action="/customer/home-loans/apply" method="post">
+            <div class="form-field">
+              <label class="form-label" for="account_number">Down-Payment Account</label>
+              <select class="form-select" id="account_number" name="account_number" required>
+                {% for account in accounts %}
+                <option value="{{ account.account_number }}">{{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}</option>
+                {% endfor %}
+              </select>
+              <p class="form-help">The 20% down payment is deducted and held once you submit. If the application is rejected, it is released back to this account.</p>
+            </div>
+            <div class="form-field"><label class="form-label" for="property_type">Property Type</label><select class="form-select" id="property_type" name="property_type" required><option value="HDB Flat">HDB Flat</option><option value="Executive Condominium">Executive Condominium</option><option value="Condominium">Condominium</option><option value="Landed Property">Landed Property</option></select></div>
+            <div class="form-grid"><div class="form-field"><label class="form-label" for="property_value">Property Value</label><input class="form-input" id="property_value" name="property_value" placeholder="e.g. 650000.00" required /><p class="form-help">Estimated amount to hold: <strong id="estimated-down-payment">$0.00</strong> (20% of property value)</p></div><div class="form-field"><label class="form-label">Down Payment Hold</label><div class="info-callout"><strong>Funds are reserved immediately</strong><span>The held amount will appear in your loan activity log. It stays reserved during review and is released automatically if rejected.</span></div></div></div>
+            <div class="form-field"><label class="form-label" for="term_years">Loan Term</label><select class="form-select" id="term_years" name="term_years" required><option value="10">10 years</option><option value="15">15 years</option><option value="20">20 years</option><option value="25">25 years</option><option value="30">30 years</option></select></div>
+            <button class="c-button c-button--primary" type="submit"><i data-lucide="home"></i> Submit Application</button>
+          </form>
+          {% else %}
+          <div class="empty-state"><div class="empty-state__icon"><i data-lucide="landmark"></i></div><h3>No active account available</h3><p>You need an active account before applying for a home loan.</p></div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="https://unpkg.com/lucide@latest"></script><script src="/static/js/app.js"></script>
+  <script>
+    const propertyValue = document.getElementById('property_value');
+    const estimatedDownPayment = document.getElementById('estimated-down-payment');
+    function formatMoney(value) {
+      return value.toLocaleString(undefined, { style: 'currency', currency: 'SGD' }).replace('SGD', '$');
+    }
+    function updateDownPayment() {
+      const value = Number((propertyValue.value || '0').replace(/,/g, ''));
+      estimatedDownPayment.textContent = Number.isFinite(value) && value > 0 ? formatMoney(value * 0.2) : '$0.00';
+    }
+    if (propertyValue && estimatedDownPayment) {
+      propertyValue.addEventListener('input', updateDownPayment);
+      updateDownPayment();
+    }
+  </script>
+</body>
+</html>

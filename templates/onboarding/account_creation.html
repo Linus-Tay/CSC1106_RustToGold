@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Set Up Online Banking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Manrope:wght@700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Manrope', 'Inter', 'sans-serif'] } } } };</script>
+</head>
+<body class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_32rem),radial-gradient(circle_at_top_right,rgba(214,165,74,0.18),transparent_30rem),linear-gradient(180deg,#F8FBFF_0%,#F7FAFC_55%,#FFFFFF_100%)] font-sans text-slate-900">
+  <main class="min-h-screen p-4 lg:p-6">
+    <header class="mx-auto mb-4 flex max-w-7xl items-center justify-between rounded-3xl border border-white/70 bg-white/80 px-5 py-4 shadow-sm backdrop-blur">
+      <a href="/" class="flex items-center gap-3 font-heading text-lg font-black tracking-tight text-[#071B33]">
+        <span class="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <img class="h-10 w-10 object-contain" src="/static/images/rusttogold-logo.png" alt="RustToGold" />
+        </span>
+        <span>RustToGold</span>
+      </a>
+    </header>
+
+    <div class="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <aside class="rounded-[2rem] bg-[#071B33] p-5 text-white shadow-2xl shadow-[#071B33]/20 lg:sticky lg:top-6 lg:h-[calc(100vh-8rem)]">
+        <p class="text-xs font-black uppercase tracking-[0.24em] text-[#F0CC76]">Online banking</p>
+        <h1 class="mt-3 font-heading text-3xl font-black leading-tight tracking-tight">Set up your account access.</h1>
+        <p class="mt-3 text-sm leading-6 text-white/70">Create your login credentials to access RustToGold's online banking platform.</p>
+
+        <div class="mt-8 space-y-4">
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+            <p class="text-xs font-black uppercase tracking-[0.2em] text-white/40 mb-3">What you'll get</p>
+            <ul class="space-y-3 text-sm text-white/70">
+              <li class="flex items-start gap-2"><span class="mt-0.5 h-4 w-4 rounded-full bg-emerald-400/20 flex-shrink-0 flex items-center justify-center"><svg class="h-2.5 w-2.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span>View balances and transactions</span></li>
+              <li class="flex items-start gap-2"><span class="mt-0.5 h-4 w-4 rounded-full bg-emerald-400/20 flex-shrink-0 flex items-center justify-center"><svg class="h-2.5 w-2.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span>Transfer funds and pay bills</span></li>
+              <li class="flex items-start gap-2"><span class="mt-0.5 h-4 w-4 rounded-full bg-emerald-400/20 flex-shrink-0 flex items-center justify-center"><svg class="h-2.5 w-2.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span>Download e-statements</span></li>
+              <li class="flex items-start gap-2"><span class="mt-0.5 h-4 w-4 rounded-full bg-emerald-400/20 flex-shrink-0 flex items-center justify-center"><svg class="h-2.5 w-2.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span>Manage cards and limits</span></li>
+            </ul>
+          </div>
+
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+            <p class="text-xs font-black uppercase tracking-[0.2em] text-white/40 mb-2">Secured by</p>
+            <p class="text-sm text-white/70">256-bit TLS encryption, 2FA on every login, and session timeout after 10 minutes of inactivity.</p>
+          </div>
+        </div>
+      </aside>
+
+      <section class="rounded-[2rem] border border-slate-200 bg-white/90 p-5 shadow-xl shadow-slate-200/70 backdrop-blur lg:p-8">
+        <div class="space-y-8">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.22em] text-blue-600">Account setup</p>
+            <h2 class="mt-3 font-heading text-4xl font-black tracking-tight text-[#071B33]">Create your login</h2>
+            <p class="mt-3 max-w-2xl text-base leading-7 text-slate-600">Your login is linked to the email address you registered with. Set a strong password to secure your account.</p>
+          </div>
+
+          {% if has_error %}
+          <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+            {{ error }}
+          </div>
+          {% endif %}
+
+          <form id="setup-form" action="/api/account-creation/submit" method="POST" class="space-y-6">
+
+            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
+              <h3 class="font-heading text-lg font-black text-[#071B33]">Login credentials</h3>
+
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1.5">Email address <span class="text-slate-400 font-semibold text-xs">(cannot be changed)</span></label>
+                <div class="relative">
+                  <input
+                    type="email"
+                    name="email"
+                    value="{{ email }}"
+                    readonly
+                    class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500 cursor-not-allowed pr-10"
+                  />
+                  <svg class="absolute right-3 top-3.5 h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
+                <p class="mt-1.5 text-xs text-slate-400 font-medium">To change your email, contact support after your account is set up.</p>
+              </div>
+
+              <div>
+                <label for="username" class="block text-sm font-bold text-slate-700 mb-1.5">Username</label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  placeholder="e.g. john_doe"
+                  autocomplete="username"
+                  required
+                  pattern="[a-zA-Z0-9_]{6,20}"
+                  title="Username must be 6–20 characters using only letters, numbers, and underscores."
+                  class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                />
+                <p class="mt-1.5 text-xs text-slate-400 font-medium">6–20 characters. Letters, numbers, and underscores only. This is what you'll type at login.</p>
+              </div>
+            </div>
+
+            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
+              <h3 class="font-heading text-lg font-black text-[#071B33]">Set a password</h3>
+
+              <div>
+                <label for="password" class="block text-sm font-bold text-slate-700 mb-1.5">Password</label>
+                <div class="relative">
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    autocomplete="new-password"
+                    placeholder="Create a strong password"
+                    required
+                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':&quot;\\|,.<>\/?]).{12,}"
+                    title="Must be at least 12 characters and include one uppercase letter, one lowercase letter, one number, and one special character."
+                    class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm font-semibold text-slate-900 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  />
+                  <button type="button" id="toggle-pw" class="absolute right-3 top-3 p-0.5 text-slate-400 hover:text-slate-600" aria-label="Toggle password visibility">
+                    <svg id="eye-icon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg id="eye-off-icon" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </button>
+                </div>
+
+                <div class="mt-3 space-y-2" id="strength-section">
+                  <div class="flex gap-1.5">
+                    <div class="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden"><div id="bar-1" class="h-full rounded-full transition-all duration-300 w-0"></div></div>
+                    <div class="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden"><div id="bar-2" class="h-full rounded-full transition-all duration-300 w-0"></div></div>
+                    <div class="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden"><div id="bar-3" class="h-full rounded-full transition-all duration-300 w-0"></div></div>
+                    <div class="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden"><div id="bar-4" class="h-full rounded-full transition-all duration-300 w-0"></div></div>
+                  </div>
+                  <p id="strength-label" class="text-xs font-bold text-slate-400"></p>
+                </div>
+
+                <ul class="mt-3 space-y-1.5" id="requirements">
+                  <li class="req flex items-center gap-2 text-xs font-semibold text-slate-400" data-rule="length">
+                    <span class="req-icon h-4 w-4 rounded-full border border-slate-300 flex-shrink-0 flex items-center justify-center"></span>
+                    At least 12 characters
+                  </li>
+                  <li class="req flex items-center gap-2 text-xs font-semibold text-slate-400" data-rule="uppercase">
+                    <span class="req-icon h-4 w-4 rounded-full border border-slate-300 flex-shrink-0 flex items-center justify-center"></span>
+                    At least one uppercase letter
+                  </li>
+                  <li class="req flex items-center gap-2 text-xs font-semibold text-slate-400" data-rule="lowercase">
+                    <span class="req-icon h-4 w-4 rounded-full border border-slate-300 flex-shrink-0 flex items-center justify-center"></span>
+                    At least one lowercase letter
+                  </li>
+                  <li class="req flex items-center gap-2 text-xs font-semibold text-slate-400" data-rule="number">
+                    <span class="req-icon h-4 w-4 rounded-full border border-slate-300 flex-shrink-0 flex items-center justify-center"></span>
+                    At least one number
+                  </li>
+                  <li class="req flex items-center gap-2 text-xs font-semibold text-slate-400" data-rule="special">
+                    <span class="req-icon h-4 w-4 rounded-full border border-slate-300 flex-shrink-0 flex items-center justify-center"></span>
+                    At least one special character (!@#$%^&*)
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <label for="confirm-password" class="block text-sm font-bold text-slate-700 mb-1.5">Confirm password</label>
+                <div class="relative">
+                  <input
+                    type="password"
+                    id="confirm-password"
+                    name="confirm_password"
+                    autocomplete="new-password"
+                    placeholder="Re-enter your password"
+                    required
+                    title="Please re-enter your password to confirm."
+                    class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm font-semibold text-slate-900 transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  />
+                  <svg id="confirm-match-icon" class="absolute right-3 top-3.5 h-4 w-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+              <div>
+                <h3 class="font-heading text-lg font-black text-[#071B33]">Notification preferences</h3>
+                <p class="mt-1 text-sm text-slate-500">Choose what alerts you'd like to receive. You can update these anytime in settings.</p>
+              </div>
+              <div class="space-y-3">
+                <label class="flex items-start gap-3 text-sm font-semibold leading-6 text-slate-700 cursor-pointer">
+                  <input type="checkbox" name="notify_transactions" checked class="mt-1 h-4 w-4 rounded border-slate-300 accent-blue-600" />
+                  <span>Transaction alerts <span class="text-xs font-medium text-slate-400">(email + SMS for every debit/credit)</span></span>
+                </label>
+                <label class="flex items-start gap-3 text-sm font-semibold leading-6 text-slate-700 cursor-pointer">
+                  <input type="checkbox" name="notify_login" checked class="mt-1 h-4 w-4 rounded border-slate-300 accent-blue-600" />
+                  <span>Login notifications <span class="text-xs font-medium text-slate-400">(email alert on every new login)</span></span>
+                </label>
+                <label class="flex items-start gap-3 text-sm font-semibold leading-6 text-slate-700 cursor-pointer">
+                  <input type="checkbox" name="notify_promotions" class="mt-1 h-4 w-4 rounded border-slate-300 accent-blue-600" />
+                  <span>Promotions and offers <span class="text-xs font-medium text-slate-400">(optional marketing communications)</span></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+              <h3 class="font-heading text-lg font-black text-[#071B33]">Before you proceed</h3>
+              <label class="flex gap-3 text-sm font-semibold leading-6 text-slate-700 cursor-pointer">
+                <input type="checkbox" name="terms_online_banking" id="terms-check" class="mt-1 h-4 w-4 rounded border-slate-300 accent-blue-600" required title="You must agree to the terms to continue." />
+                <span>I agree to RustToGold's <a href="#" class="text-blue-600 hover:underline">online banking terms and conditions</a> and <a href="#" class="text-blue-600 hover:underline">privacy policy</a>.</span>
+              </label>
+
+              <div class="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                <button id="submit-btn" type="submit" class="inline-flex justify-center items-center gap-2 rounded-full bg-[#D6A54A] px-7 py-3 text-sm font-black text-[#071B33] shadow-lg shadow-[#D6A54A]/25 transition hover:-translate-y-0.5">
+                  Activate online banking
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+<script>
+const pwInput = document.getElementById('password');
+const confirmInput = document.getElementById('confirm-password');
+const toggleBtn = document.getElementById('toggle-pw');
+const eyeIcon = document.getElementById('eye-icon');
+const eyeOffIcon = document.getElementById('eye-off-icon');
+const confirmMatchIcon = document.getElementById('confirm-match-icon');
+const strengthLabel = document.getElementById('strength-label');
+const bars = [1,2,3,4].map(i => document.getElementById(`bar-${i}`));
+const reqItems = document.querySelectorAll('.req');
+
+const rules = {
+  length:    pw => pw.length >= 12,
+  uppercase: pw => /[A-Z]/.test(pw),
+  lowercase: pw => /[a-z]/.test(pw),
+  number:    pw => /[0-9]/.test(pw),
+  special:   pw => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pw),
+};
+
+const strengthConfig = [
+  { label: '', color: '' },
+  { label: 'Weak', color: 'bg-red-400' },
+  { label: 'Fair', color: 'bg-amber-400' },
+  { label: 'Good', color: 'bg-yellow-400' },
+  { label: 'Strong', color: 'bg-emerald-400'},
+  { label: 'Excellent', color: 'bg-emerald-500' }
+];
+
+function getScore(pw) {
+  return Object.values(rules).filter(fn => fn(pw)).length;
+}
+
+// Visual Strength Meter Logic
+function updateStrength(pw) {
+  if (!pw) {
+    bars.forEach(b => { b.style.width = '0'; b.className = 'h-full rounded-full transition-all duration-300 w-0'; });
+    strengthLabel.textContent = '';
+    return;
+  }
+  const score = getScore(pw);
+  const cfg = strengthConfig[score];
+  const barsToFill = Math.min(Math.ceil((score / 5) * 4), 4);
+
+  bars.forEach((b, i) => {
+    b.style.width = i < barsToFill ? '100%' : '0';
+    b.className = `h-full rounded-full transition-all duration-300 ${i < barsToFill ? cfg.color : ''}`;
+  });
+  
+  strengthLabel.textContent = cfg.label;
+  strengthLabel.className = `text-xs font-bold ${score <= 2 ? 'text-red-500' : score === 3 ? 'text-amber-500' : score === 4 ? 'text-yellow-600' : 'text-emerald-600'}`;
+}
+
+// Visual Checklist Logic
+function updateRequirements(pw) {
+  reqItems.forEach(item => {
+    const rule = item.dataset.rule;
+    const passed = rules[rule] && rules[rule](pw);
+    const icon = item.querySelector('.req-icon');
+    if (passed) {
+      item.classList.remove('text-slate-400');
+      item.classList.add('text-emerald-600');
+      icon.className = 'req-icon h-4 w-4 rounded-full flex-shrink-0 flex items-center justify-center bg-emerald-100 border border-emerald-300';
+      icon.innerHTML = '<svg class="h-2.5 w-2.5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
+    } else {
+      item.classList.remove('text-emerald-600');
+      item.classList.add('text-slate-400');
+      icon.className = 'req-icon h-4 w-4 rounded-full border border-slate-300 flex-shrink-0 flex items-center justify-center';
+      icon.innerHTML = '';
+    }
+  });
+}
+
+// Checking Confirm Password Matches
+function checkPasswordsMatch() {
+  const pw = pwInput.value;
+  const cpw = confirmInput.value;
+  
+  if (!cpw) { 
+    confirmMatchIcon.classList.add('hidden'); 
+    confirmInput.setCustomValidity(""); // Clear custom validity when empty
+    return; 
+  }
+
+  if (pw === cpw) {
+    confirmMatchIcon.classList.remove('hidden');
+    confirmMatchIcon.setAttribute('stroke', '#10b981');
+    confirmInput.setCustomValidity(""); // Passwords match, clear custom error
+  } else {
+    confirmMatchIcon.classList.add('hidden');
+    confirmInput.setCustomValidity("Passwords do not match."); // Force HTML5 validation error
+  }
+}
+
+// Event Listeners for real-time visual updates
+pwInput.addEventListener('input', () => {
+  updateStrength(pwInput.value);
+  updateRequirements(pwInput.value);
+  checkPasswordsMatch();
+});
+
+confirmInput.addEventListener('input', checkPasswordsMatch);
+
+// Password Visibility Toggle
+toggleBtn.addEventListener('click', () => {
+  const isText = pwInput.type === 'text';
+  pwInput.type = isText ? 'password' : 'text';
+  eyeIcon.classList.toggle('hidden', !isText);
+  eyeOffIcon.classList.toggle('hidden', isText);
+});
+
+// Radio 2FA styling logic
+document.querySelectorAll('input[name="two_fa_method"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.querySelectorAll('.2fa-option').forEach(label => {
+      label.classList.remove('border-2', 'border-blue-500', 'bg-blue-50');
+      label.classList.add('border', 'border-slate-200', 'bg-white');
+    });
+    const active = radio.closest('label');
+    active.classList.remove('border', 'border-slate-200', 'bg-white');
+    active.classList.add('border-2', 'border-blue-500', 'bg-blue-50');
+  });
+});
+
+// Since we are using HTML5 validation natively, we DO NOT use e.preventDefault() 
+// unless we specifically need to catch something HTML5 misses. 
+// HTML5 misses the password match, but we solved that using setCustomValidity above!
+// So, the browser will seamlessly intercept the click, pop up the native error 
+// bubbles, or send the POST request to your API if all rules are met.
+</script>
+</body>
+</html>

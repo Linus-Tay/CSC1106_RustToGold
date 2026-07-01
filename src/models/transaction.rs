@@ -1,13 +1,16 @@
+// Model layer: domain structs plus small display helpers used by services and templates.
+
 use super::formatting::title_case_code;
 use super::Money;
 use chrono::NaiveDateTime;
 use sqlx::FromRow;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
+// Domain record used by services, repositories and templates.
 pub struct Transaction {
-    pub id: i64,
-    pub account_id: i64,
-    pub user_id: i64,
+    pub id: Uuid,
+    pub product_id: Option<Uuid>,
     pub transaction_type: String,
     pub amount_cents: i64,
     pub balance_after_cents: i64,
@@ -16,28 +19,47 @@ pub struct Transaction {
 }
 
 impl Transaction {
+    // Formats the value for display in templates.
     pub fn transaction_type_display(&self) -> String {
         match self.transaction_type.as_str() {
-            "deposit" => "Deposit".to_string(),
-            "withdrawal" => "Withdrawal".to_string(),
-            "transfer_in" => "Transfer In".to_string(),
-            "transfer_out" => "Transfer Out".to_string(),
+            "DEPOSIT" | "deposit" => "Deposit".to_string(),
+            "WITHDRAWAL" | "withdrawal" => "Withdrawal".to_string(),
+            "TRANSFER_IN" | "transfer_in" => "Transfer In".to_string(),
+            "TRANSFER_OUT" | "transfer_out" => "Transfer Out".to_string(),
+            "internal_transfer_in" => "Own Account Transfer In".to_string(),
+            "internal_transfer_out" => "Own Account Transfer Out".to_string(),
+            "paynow_transfer_in" => "PayNow In".to_string(),
+            "paynow_transfer_out" => "PayNow Out".to_string(),
+            "loan_disbursement" => "Loan Disbursement".to_string(),
+            "loan_payment" => "Loan Payment".to_string(),
+            "home_loan_down_payment_hold" => "Home Loan Down Payment Hold".to_string(),
+            "home_loan_down_payment_release" => "Home Loan Down Payment Release".to_string(),
+            "home_loan_payment" => "Home Loan Payment".to_string(),
+            "fixed_deposit_open" => "Fixed Deposit Opened".to_string(),
+            "fixed_deposit_withdrawal" => "Fixed Deposit Withdrawal".to_string(),
+            "fixed_deposit_payout" => "Fixed Deposit Payout".to_string(),
+            "giro_payment_out" => "GIRO Payment Out".to_string(),
+            "giro_payment_in" => "GIRO Payment In".to_string(),
             value => title_case_code(value),
         }
     }
 
+    // Formats the value for display in templates.
     pub fn amount_display(&self) -> String {
         Money::from_cents(self.amount_cents).display()
     }
 
+    // Formats the value for display in templates.
     pub fn balance_after_display(&self) -> String {
         Money::from_cents(self.balance_after_cents).display()
     }
 
+    // Formats the value for display in templates.
     pub fn description_display(&self) -> &str {
         self.description.as_deref().unwrap_or("No description")
     }
 
+    // Formats the value for display in templates.
     pub fn created_at_display(&self) -> String {
         self.created_at.format("%d %b %Y, %I:%M %p").to_string()
     }
