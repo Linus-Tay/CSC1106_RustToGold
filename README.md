@@ -16,6 +16,7 @@ Install the following before running the project:
 - PostgreSQL with `psql`
 - Git or a ZIP extraction tool
 - A browser such as Chrome, Edge, Safari or Firefox
+- Optional: Gmail App Password for SMTP email notifications
 
 This project uses PostgreSQL through SQLx. The schema is in:
 
@@ -90,6 +91,13 @@ DATABASE_URL=postgres://postgres:yourActualPassword@localhost:5432/rusttogold
 SESSION_SECRET=0123456789012345678901234567891201234567890123456789012345678912
 SERVER_HOST=127.0.0.1
 SERVER_PORT=3000
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_16_character_gmail_app_password
+SMTP_FROM_EMAIL=your_email@gmail.com
+APP_BASE_URL=http://127.0.0.1:3000
+ONBOARDING_BASE_URL=http://127.0.0.1:3000
 ```
 
 ### 2.4 Run the database schema
@@ -167,6 +175,13 @@ DATABASE_URL=postgres://YOUR_MAC_USERNAME@localhost:5432/rusttogold
 SESSION_SECRET=0123456789012345678901234567891201234567890123456789012345678912
 SERVER_HOST=127.0.0.1
 SERVER_PORT=3000
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_16_character_gmail_app_password
+SMTP_FROM_EMAIL=your_email@gmail.com
+APP_BASE_URL=http://127.0.0.1:3000
+ONBOARDING_BASE_URL=http://127.0.0.1:3000
 ```
 
 For PostgreSQL using the `postgres` user and password:
@@ -176,6 +191,13 @@ DATABASE_URL=postgres://postgres:yourActualPassword@localhost:5432/rusttogold
 SESSION_SECRET=0123456789012345678901234567891201234567890123456789012345678912
 SERVER_HOST=127.0.0.1
 SERVER_PORT=3000
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_16_character_gmail_app_password
+SMTP_FROM_EMAIL=your_email@gmail.com
+APP_BASE_URL=http://127.0.0.1:3000
+ONBOARDING_BASE_URL=http://127.0.0.1:3000
 ```
 
 ### 3.4 Run the database schema
@@ -220,11 +242,47 @@ macOS:
 psql -d rusttogold -f migrations/001_init.sql
 ```
 
-Use this when you want a clean demonstration database.
+Use this when you want a clean local database.
+
 
 ---
 
-## 5. Main Demo Accounts and URLs
+## 5. Email SMTP Setup
+
+RustToGold sends onboarding and application emails through SMTP when the email variables are present in `.env`. If SMTP is not configured, the app still runs, but email sending is skipped and the server prints a setup message.
+
+For Gmail, use an App Password instead of your normal Gmail password:
+
+1. Open your Google Account security settings.
+2. Turn on 2-Step Verification.
+3. Open App Passwords.
+4. Create an app password for this project, for example `RustToGold Local`.
+5. Copy the generated 16-character password into `.env` as `SMTP_PASSWORD`.
+6. Restart `cargo run` after changing `.env`.
+
+Example `.env` email block:
+
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_16_character_gmail_app_password
+SMTP_FROM_EMAIL=your_email@gmail.com
+APP_BASE_URL=http://127.0.0.1:3000
+ONBOARDING_BASE_URL=http://127.0.0.1:3000
+```
+
+Notes:
+
+- Do not commit the real `.env` file.
+- Keep `.env.example` as placeholders only.
+- If an app password is exposed, delete it from Google Account settings and generate a new one.
+- `APP_BASE_URL` and `ONBOARDING_BASE_URL` control the base URL used in account-creation email links.
+
+
+---
+
+## 6. Main Demo Accounts and URLs
 
 Admin:
 
@@ -255,7 +313,7 @@ The normal `/admin/...` and `/onboarding/...` paths work without host-file chang
 
 ---
 
-## 6. Architecture and Folder Structure
+## 7. Architecture and Folder Structure
 
 ```text
 RustToGold/
@@ -615,7 +673,7 @@ Customer attempts high-value transfer
 
 ---
 
-## 12. Dependencies
+## 13. Dependencies
 
 Main Rust crates:
 
@@ -637,7 +695,7 @@ Main Rust crates:
 
 ---
 
-## 13. Useful Test Flow
+## 14. Useful Test Flow
 
 Use this flow for a complete walkthrough:
 
@@ -664,7 +722,7 @@ Use this flow for a complete walkthrough:
 
 ---
 
-## 14. Submission Notes
+## 15. Submission Notes
 
 Do not include these in the final source ZIP:
 
