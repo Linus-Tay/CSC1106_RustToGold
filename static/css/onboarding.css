@@ -217,3 +217,144 @@
       letter-spacing: 0.3px;
     }
     .btn-next:hover { background: #a93226; }
+
+/* =========================================================
+   Mobile + short-height onboarding fix
+   - Keeps the stepper visible on tablet/mobile without trapping content.
+   - Main form becomes single-column and scroll-friendly.
+   ========================================================= */
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.app-body,
+main,
+aside,
+.info-card {
+  min-width: 0;
+}
+
+main {
+  min-height: 0;
+}
+
+.form-input,
+.prefix-select,
+.input-with-prefix {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .app-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  aside {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    width: 100%;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .step-item {
+    flex: 0 0 auto;
+    min-width: 150px;
+    margin-bottom: 0;
+  }
+
+  .step-label {
+    font-size: 0.64rem;
+  }
+
+  .step-name {
+    font-size: 0.8rem;
+    line-height: 1.25;
+  }
+
+  main {
+    width: 100%;
+    padding: 24px 16px 36px;
+    overflow: visible;
+  }
+
+  main h1 {
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+  }
+
+  .info-card {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+
+  .info-header {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+
+  .info-grid,
+  .input-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .btn-next {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  aside {
+    padding: 12px;
+  }
+
+  .step-item {
+    min-width: 132px;
+    gap: 9px;
+  }
+
+  .step-circle {
+    width: 24px;
+    height: 24px;
+    font-size: 0.68rem;
+  }
+
+  main {
+    padding: 20px 12px 32px;
+  }
+
+  .info-card {
+    padding: 18px 14px;
+  }
+}
+
+@media (max-height: 650px) and (max-width: 900px) {
+  aside {
+    position: static;
+    padding-block: 10px;
+  }
+
+  .step-label {
+    display: none;
+  }
+
+  main {
+    padding-top: 16px;
+  }
+}

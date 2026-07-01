@@ -2,7 +2,7 @@ use crate::forms::account_forms::TransferForm;
 use crate::forms::DepositForm;
 use crate::models::product::ProductWorkflow;
 use crate::models::{Money, Product};
-use crate::repositories::{customer_repository, product_repository};
+use crate::repositories::product_repository;
 use crate::services::support::clean_optional_text;
 use crate::AppState;
 use rand::{rng, RngExt};
@@ -58,19 +58,29 @@ pub async fn create_bank_account(
     customer_id: Uuid,
     account_type: &str,
 ) -> Result<Product, String> {
+    let (product_id, product_type) = match account_type {
+        "high_yield_savings" => ("high_yield_savings", "savings"),
+        _ => return Err("Only High-Yield Savings is available as an additional bank account right now.".to_string()),
+    };
+
     let active_accounts = product_repository::list_active_products_by_customer(db, &customer_id)
         .await
         .map_err(|_| "Could not check your existing bank accounts.".to_string())?;
 
     if active_accounts.len() >= 5 {
-        return Err("A customer can hold up to 5 active accounts in this simulation.".to_string());
+        return Err("A customer can hold up to 5 active accounts in this demo environment.".to_string());
     }
 
-    let (product_id, product_type) = match account_type {
-        "high_yield_savings" => ("high_yield_savings", "savings"),
-        "spending_account" => ("spending_account", "spending"),
-        _ => ("everyday_savings", "savings"),
-    };
+    let existing_accounts = product_repository::list_products_by_customer(db, &customer_id)
+        .await
+        .map_err(|_| "Could not check your existing bank account products.".to_string())?;
+
+    if existing_accounts
+        .iter()
+        .any(|account| account.product_id == product_id && account.status != "closed")
+    {
+        return Err("You already have a High-Yield Savings account application or account.".to_string());
+    }
 
     let account_number = generate_account_number(db).await;
 
@@ -84,7 +94,7 @@ pub async fn create_bank_account(
     .await
     .map_err(|error| {
         eprintln!("create bank account failed: {error:?}");
-        "Could not create the new bank account.".to_string()
+        "Could not create the High-Yield Savings account.".to_string()
     })
 }
 
@@ -195,26 +205,6 @@ pub async fn transfer(
         Ok((false, None)) => Err("Transfer failed due to an unknown rule.".to_string()),
         Err(_) => Err("A database error occurred while processing the transfer.".to_string()),
     }
-}
-
-pub async fn approve_product(app_state: &AppState, account_id: Uuid) -> Result<Product, String> {
-    let pending_product = product_repository::get_product_by_account_id(&app_state.db, &account_id)
-        .await
-        .map_err(|_| "An error occurred when retrieving the account.".to_string())?;
-
-    let customer = customer_repository::get_customer_by_id(&app_state.db, &pending_product.customer_id)
-        .await
-        .map_err(|_| "An error occurred when retrieving customer data.".to_string())?;
-
-    if customer.kyc_status != "approved" {
-        customer_repository::approve_customer(&app_state.db, &customer.id)
-            .await
-            .map_err(|_| "KYC approval failed. Please try again later.".to_string())?;
-    }
-
-    product_repository::approve_product(&app_state.db, &account_id)
-        .await
-        .map_err(|_| "Account approval failed. Please try again later.".to_string())
 }
 
 fn luhn_check_digit(number: &str) -> u32 {

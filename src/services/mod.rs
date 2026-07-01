@@ -1,12 +1,14 @@
 pub mod account_service;
 pub mod admin_service;
 pub mod auth_service;
+pub mod card_service;
 pub mod customer_service;
 pub mod email_service;
 pub mod fixed_deposit_service;
 pub mod home_loan_service;
 pub mod loan_service;
 pub mod onboard_service;
+pub mod paynow_service;
 pub mod product_service;
 pub mod profile_service;
 pub mod support;
@@ -21,7 +23,8 @@ pub use self::admin_service::{
     load_admin_dashboard, reject_customer_application, reject_personal_loan, set_customer_product_status,
     set_customer_user_status, update_staff_user,
 };
-pub use self::auth_service::{authenticate_user, register_customer, register_user, submit_customer_application};
+pub use self::auth_service::{authenticate_user, register_user};
+pub use self::card_service::{create_card, load_card_dashboard, set_card_status};
 pub use self::customer_service::{create_customer, create_customer_with_product, approve_customer_with_product, validate_account_creation_link, get_customer_by_account_creation_link, invalidate_account_creation_link};
 pub use self::email_service::{send_html_email, send_template_email};
 pub use self::fixed_deposit_service::{
@@ -34,6 +37,7 @@ pub use self::home_loan_service::{
     reject_home_loan, submit_home_loan_application, HomeLoanDashboard,
 };
 pub use self::loan_service::{apply_personal_loan, load_loan_dashboard, pay_personal_loan, LoanDashboard};
-pub use self::onboard_service::{get_path_template, get_product_details};
-pub use self::product_service::{approve_product, create_bank_account, create_product, deposit, generate_account_number, list_active_customer_products, list_customer_products, transfer};
+pub use self::onboard_service::get_product_details;
+pub use self::paynow_service::{load_paynow_dashboard, register_paynow, transfer_paynow};
+pub use self::product_service::{create_bank_account, create_product, deposit, generate_account_number, list_active_customer_products, list_customer_products, transfer};
 pub use self::profile_service::update_customer_profile;

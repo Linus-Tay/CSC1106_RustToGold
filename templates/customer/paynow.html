@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | PayNow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+  <main class="customer-main">
+    <div class="customer-container">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+      <section class="module-hero module-hero--navy">
+        <div>
+          <p class="customer-kicker">PayNow</p>
+          <h1>Register and transfer with PayNow</h1>
+          <p>Link your phone number or NRIC/FIN to one active RustToGold account, then transfer using a recipient's PayNow ID.</p>
+        </div>
+      </section>
+
+      {% if has_error %}
+      <div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>
+      {% endif %}
+      {% if has_success %}
+      <div class="alert alert--success"><i data-lucide="check-circle"></i> {{ success }}</div>
+      {% endif %}
+
+      <div class="paynow-grid">
+        <section class="customer-card">
+          <div class="customer-card__header">
+            <div>
+              <h2>Register PayNow</h2>
+              <p>Each active PayNow ID can only point to one RustToGold account.</p>
+            </div>
+          </div>
+          <form class="form-grid" action="/customer/paynow/register" method="post">
+            <div class="form-field">
+              <label class="form-label" for="paynow_type">PayNow Type</label>
+              <select class="form-input" id="paynow_type" name="paynow_type" required>
+                <option value="phone_number">Phone Number</option>
+                <option value="nric">NRIC/FIN</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="paynow_id">PayNow ID</label>
+              <input class="form-input" id="paynow_id" name="paynow_id" placeholder="91234567 or S1234567A" required />
+            </div>
+            <div class="form-field form-field--full">
+              <label class="form-label" for="linked_product_id">Linked Account</label>
+              <select class="form-input" id="linked_product_id" name="linked_product_id" required>
+                {% for account in accounts %}
+                <option value="{{ account.id }}">{{ account.account_number }} · {{ account.product_id_display() }} · {{ account.balance_display() }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button class="c-button c-button--primary" type="submit">
+              <i data-lucide="badge-plus"></i> Register PayNow
+            </button>
+          </form>
+        </section>
+
+        <section class="customer-card">
+          <div class="customer-card__header">
+            <div>
+              <h2>Transfer via PayNow</h2>
+              <p>Send money from one active account to a registered PayNow recipient.</p>
+            </div>
+          </div>
+          <form class="form-grid" action="/customer/paynow/transfer" method="post">
+            <div class="form-field form-field--full">
+              <label class="form-label" for="from_product_id">From Account</label>
+              <select class="form-input" id="from_product_id" name="from_product_id" required>
+                {% for account in accounts %}
+                <option value="{{ account.id }}">{{ account.account_number }} · {{ account.product_id_display() }} · {{ account.balance_display() }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="recipient_type">Recipient Type</label>
+              <select class="form-input" id="recipient_type" name="recipient_type" required>
+                <option value="phone_number">Phone Number</option>
+                <option value="nric">NRIC/FIN</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="recipient_id">Recipient PayNow ID</label>
+              <input class="form-input" id="recipient_id" name="recipient_id" placeholder="91234567 or S1234567A" required />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="amount">Amount</label>
+              <input class="form-input" id="amount" name="amount" type="number" min="0.01" max="50000" step="0.01" placeholder="50.00" required />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="note">Reference</label>
+              <input class="form-input" id="note" name="note" maxlength="120" placeholder="Dinner, allowance, invoice" />
+            </div>
+            <button class="c-button c-button--primary" type="submit">
+              <i data-lucide="send"></i> Send PayNow Transfer
+            </button>
+          </form>
+        </section>
+      </div>
+
+      <section class="customer-section">
+        <div class="section-heading">
+          <div>
+            <p class="customer-kicker">Linked IDs</p>
+            <h2>Your PayNow registrations</h2>
+          </div>
+        </div>
+        <div class="paynow-registration-list">
+          {% if has_registrations %}
+          {% for registration in registrations %}
+          <article class="paynow-registration-card">
+            <div class="paynow-registration-card__icon"><i data-lucide="scan-line"></i></div>
+            <div>
+              <span class="badge {% if registration.is_active() %}badge--success{% else %}badge--warning{% endif %}">{{ registration.status_display() }}</span>
+              <h3>{{ registration.paynow_type_display() }} · {{ registration.identifier_display() }}</h3>
+              <p>Linked to {{ registration.account_number }} · {{ registration.linked_product_display() }}</p>
+              <small>Registered {{ registration.registered_at_display() }} · Balance {{ registration.balance_display() }}</small>
+            </div>
+          </article>
+          {% endfor %}
+          {% else %}
+          <div class="empty-state empty-state--small"><div class="empty-state__icon"><i data-lucide="scan-line"></i></div><h3>No PayNow IDs registered</h3><p>Register your phone number or NRIC/FIN before receiving PayNow transfers.</p></div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

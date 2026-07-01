@@ -32,6 +32,10 @@ impl PersonalLoan {
         Money::from_cents(self.outstanding_cents).display()
     }
 
+    pub fn outstanding_plain(&self) -> String {
+        format!("{:.2}", self.outstanding_cents as f64 / 100.0)
+    }
+
     pub fn rate_display(&self) -> String {
         format!("{:.2}%", self.annual_rate_bps as f64 / 100.0)
     }

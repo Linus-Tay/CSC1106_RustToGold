@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Card Products</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+
+  <main class="customer-main">
+    <div class="customer-container">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+      <section class="module-hero module-hero--navy">
+        <div>
+          <p class="customer-kicker">Card Products</p>
+          <h1>Apply for Card Products</h1>
+          <p>Apply instantly for a debit or student card product and link it to one active RustToGold account. Credit cards are intentionally removed from this flow.</p>
+        </div>
+      </section>
+
+      {% if has_error %}
+      <div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>
+      {% endif %}
+
+      <div class="customer-grid customer-grid--two">
+        <section class="customer-card">
+          <div class="customer-card__header">
+            <div>
+              <h2>Apply for a card product</h2>
+              <p>Card products are created immediately, linked to the selected account, and can be frozen from this page.</p>
+            </div>
+          </div>
+          <form class="form-grid" action="/customer/cards" method="post">
+            <div class="form-field">
+              <label class="form-label" for="card_type">Card Type</label>
+              <select class="form-input" id="card_type" name="card_type" required>
+                <option value="debit">Everyday Debit Card</option>
+                <option value="student">Campus Student Card</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="linked_account_id">Link to Account</label>
+              <select class="form-input" id="linked_account_id" name="linked_account_id" required>
+                {% for account in accounts %}
+                <option value="{{ account.id }}">{{ account.account_number }} · {{ account.product_id_display() }} · {{ account.balance_display() }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-field form-field--full">
+              <label class="form-label" for="display_name">Card Display Name</label>
+              <input class="form-input" id="display_name" name="display_name" placeholder="Optional display name" />
+            </div>
+            <button class="c-button c-button--primary" type="submit"><i data-lucide="credit-card"></i> Apply for Card</button>
+          </form>
+        </section>
+
+        <section class="customer-card">
+          <div class="customer-card__header">
+            <div>
+              <h2>My Card Products</h2>
+              <p>Freeze or reactivate cards linked to your active accounts.</p>
+            </div>
+          </div>
+          <div class="card-list">
+            {% if has_cards %}
+            {% for card in cards %}
+            <article class="bank-card-row">
+              <div>
+                <span class="badge {% if card.status == "active" %}badge--success{% else %}badge--warning{% endif %}">{{ card.status_display() }}</span>
+                <h3>{{ card.display_name }}</h3>
+                <p>{{ card.card_type_display() }} · {{ card.masked_number }}</p>
+                <small>Linked account: {{ card.account_number }} · Created {{ card.created_at_display() }}</small>
+              </div>
+              <div class="bank-card-row__actions">
+                {% if card.is_active() %}
+                <form action="/customer/cards/{{ card.id }}/freeze" method="post">
+                  <button class="c-button c-button--secondary" type="submit"><i data-lucide="snowflake"></i> Freeze</button>
+                </form>
+                {% endif %}
+                {% if card.is_frozen() %}
+                <form action="/customer/cards/{{ card.id }}/activate" method="post">
+                  <button class="c-button c-button--primary" type="submit"><i data-lucide="check"></i> Reactivate</button>
+                </form>
+                {% endif %}
+              </div>
+            </article>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state empty-state--small"><div class="empty-state__icon"><i data-lucide="credit-card"></i></div><h3>No cards yet</h3><p>Create a debit or student card linked to one active account.</p></div>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

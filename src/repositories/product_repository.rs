@@ -20,22 +20,6 @@ pub async fn get_product_by_user_id_and_product_id(
     .await
 }
 
-pub async fn get_product_by_account_id(
-    db: &PgPool,
-    account_id: &Uuid,
-) -> Result<Product, sqlx::Error> {
-    sqlx::query_as::<_, Product>(
-        r#"
-        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
-        FROM customer_products
-        WHERE id = $1
-        "#,
-    )
-    .bind(account_id)
-    .fetch_one(db)
-    .await
-}
-
 pub async fn get_product_by_account_number(
     db: &PgPool,
     account_number: &str,
@@ -86,6 +70,25 @@ pub async fn list_active_products_by_customer(
     )
     .bind(customer_id)
     .fetch_all(db)
+    .await
+}
+
+
+pub async fn get_active_product_for_customer_by_id(
+    db: &PgPool,
+    customer_id: Uuid,
+    product_id: Uuid,
+) -> Result<Product, sqlx::Error> {
+    sqlx::query_as::<_, Product>(
+        r#"
+        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE customer_id = $1 AND id = $2 AND status = 'active'
+        "#,
+    )
+    .bind(customer_id)
+    .bind(product_id)
+    .fetch_one(db)
     .await
 }
 
@@ -178,13 +181,12 @@ pub async fn deposit_into_product(
 
     let transaction = sqlx::query_as::<_, Transaction>(
         r#"
-        INSERT INTO transactions (product_id, customer_id, transaction_type, amount_cents, balance_after_cents, description)
-        VALUES ($1, $2, 'deposit', $3, $4, $5)
-        RETURNING id, product_id, customer_id, transaction_type, amount_cents, balance_after_cents, description, created_at
+        INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
+        VALUES ($1, 'deposit', $2, $3, $4)
+        RETURNING id, product_id, transaction_type, amount_cents, balance_after_cents, description, created_at
         "#,
     )
     .bind(product.id)
-    .bind(customer_id)
     .bind(amount_cents)
     .bind(new_balance)
     .bind(description)
@@ -255,13 +257,12 @@ pub async fn transfer(
 
     sqlx::query_as::<_, Transaction>(
         r#"
-        INSERT INTO transactions (product_id, customer_id, transaction_type, amount_cents, balance_after_cents, description)
-        VALUES ($1, $2, 'transfer_out', $3, $4, $5)
-        RETURNING id, product_id, customer_id, transaction_type, amount_cents, balance_after_cents, description, created_at
+        INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
+        VALUES ($1, 'transfer_out', $2, $3, $4)
+        RETURNING id, product_id, transaction_type, amount_cents, balance_after_cents, description, created_at
         "#,
     )
     .bind(sender_product.id)
-    .bind(sender_customer_id)
     .bind(amount_cents)
     .bind(sender_new_balance)
     .bind(note)
@@ -270,13 +271,12 @@ pub async fn transfer(
 
     sqlx::query_as::<_, Transaction>(
         r#"
-        INSERT INTO transactions (product_id, customer_id, transaction_type, amount_cents, balance_after_cents, description)
-        VALUES ($1, $2, 'transfer_in', $3, $4, $5)
-        RETURNING id, product_id, customer_id, transaction_type, amount_cents, balance_after_cents, description, created_at
+        INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
+        VALUES ($1, 'transfer_in', $2, $3, $4)
+        RETURNING id, product_id, transaction_type, amount_cents, balance_after_cents, description, created_at
         "#,
     )
     .bind(recipient_product.id)
-    .bind(recipient_customer_id)
     .bind(amount_cents)
     .bind(recipient_new_balance)
     .bind(note)
@@ -286,21 +286,6 @@ pub async fn transfer(
     tx.commit().await?;
     Ok((true, None))
 }
-
-pub async fn approve_product(db: &PgPool, account_id: &Uuid) -> Result<Product, sqlx::Error> {
-    sqlx::query_as::<_, Product>(
-        r#"
-        UPDATE customer_products
-        SET status = 'active', updated_at = NOW()
-        WHERE id = $1 AND status = 'inactive'
-        RETURNING id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
-        "#,
-    )
-    .bind(account_id)
-    .fetch_one(db)
-    .await
-}
-
 
 pub async fn get_first_product_by_customer_id(
     db: &PgPool,

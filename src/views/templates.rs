@@ -1,9 +1,10 @@
 use crate::models::{
     AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser,
     FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, HomeLoanApplication,
-    HomeLoanSummary, PersonalLoan, Product, Transaction,
+    HomeLoanSummary, PayNowRegistration, PersonalLoan, Product, Transaction, Card,
 };
 use askama::Template;
+use uuid::Uuid;
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -40,18 +41,6 @@ pub struct OnboardingTemplate {
     pub product_rate: String,
     pub product_minimum: String,
     pub product_features: Vec<String>,
-}
-
-#[derive(Template)]
-#[template(path= "onboarding/forms/onboarding_form1.html")]
-pub struct OnboardingFormTemplate {
-    pub test: bool,
-}
-
-#[derive(Template)]
-#[template(path= "onboarding/forms/onboarding_form2.html")]
-pub struct OnboardingFormTemplate1 {
-    pub test: bool,
 }
 
 #[derive(Template)]
@@ -184,89 +173,6 @@ pub struct LoginTemplate {
 }
 
 #[derive(Template)]
-#[template(path = "auth/signup.html")]
-pub struct SignupTemplate {
-    pub error: String,
-    pub has_error: bool,
-}
-
-#[derive(Template)]
-#[template(path = "auth/signup_account.html")]
-pub struct SignupAccountTemplate {
-    pub error: String,
-    pub has_error: bool,
-    pub selected_account_type: String,
-    pub preferred_account_name: String,
-    pub account_purpose: String,
-}
-
-#[derive(Template)]
-#[template(path = "auth/signup_personal.html")]
-pub struct SignupPersonalTemplate {
-    pub error: String,
-    pub has_error: bool,
-    pub full_name: String,
-    pub nric_fin: String,
-    pub date_of_birth: String,
-    pub nationality: String,
-    pub residential_status: String,
-    pub residential_address: String,
-}
-
-#[derive(Template)]
-#[template(path = "auth/signup_contact.html")]
-pub struct SignupContactTemplate {
-    pub error: String,
-    pub has_error: bool,
-    pub email: String,
-    pub phone_number: String,
-    pub mailing_address: String,
-}
-
-#[derive(Template)]
-#[template(path = "auth/signup_employment.html")]
-pub struct SignupEmploymentTemplate {
-    pub error: String,
-    pub has_error: bool,
-    pub employment_status: String,
-    pub occupation: String,
-    pub employer_name: String,
-    pub monthly_income_range: String,
-    pub source_initial_deposit: String,
-}
-
-#[derive(Template)]
-#[template(path = "auth/signup_security.html")]
-pub struct SignupSecurityTemplate {
-    pub error: String,
-    pub has_error: bool,
-}
-
-#[derive(Template)]
-#[template(path = "auth/signup_review.html")]
-pub struct SignupReviewTemplate {
-    pub error: String,
-    pub has_error: bool,
-    pub selected_account_type: String,
-    pub preferred_account_name: String,
-    pub account_purpose: String,
-    pub full_name: String,
-    pub nric_fin: String,
-    pub date_of_birth: String,
-    pub nationality: String,
-    pub residential_status: String,
-    pub residential_address: String,
-    pub email: String,
-    pub phone_number: String,
-    pub mailing_address: String,
-    pub employment_status: String,
-    pub occupation: String,
-    pub employer_name: String,
-    pub monthly_income_range: String,
-    pub source_initial_deposit: String,
-}
-
-#[derive(Template)]
 #[template(path = "customer/dashboard.html")]
 pub struct DashboardTemplate {
     pub full_name: String,
@@ -320,6 +226,33 @@ pub struct CustomerActivityLogTemplate {
     pub has_transactions: bool,
 }
 
+
+#[derive(Template)]
+#[template(path = "customer/cards.html")]
+pub struct CardDashboardTemplate {
+    pub cards: Vec<Card>,
+    pub has_cards: bool,
+    pub accounts: Vec<Product>,
+    pub has_accounts: bool,
+    pub error: String,
+    pub has_error: bool,
+    pub success: String,
+    pub has_success: bool,
+}
+
+#[derive(Template)]
+#[template(path = "customer/paynow.html")]
+pub struct PayNowTemplate {
+    pub accounts: Vec<Product>,
+    pub has_accounts: bool,
+    pub registrations: Vec<PayNowRegistration>,
+    pub has_registrations: bool,
+    pub error: String,
+    pub has_error: bool,
+    pub success: String,
+    pub has_success: bool,
+}
+
 #[derive(Template)]
 #[template(path = "customer/profile.html")]
 pub struct ProfileTemplate {
@@ -358,13 +291,6 @@ pub struct NotFoundTemplate;
 #[derive(Template)]
 #[template(path = "errors/error.html")]
 pub struct ErrorTemplate;
-
-#[derive(Template)]
-#[template(path = "email/account_creation.html")]
-pub struct AccountCreationTemplate {
-    pub account_creation_link: String,
-}
-
 
 #[derive(Template)]
 #[template(path = "customer/loans.html")]
@@ -427,7 +353,7 @@ pub struct AdminCustomerApplicationsTemplate {
 #[template(path = "admin/staff.html")]
 pub struct AdminStaffTemplate {
     pub staff_users: Vec<AdminStaffUser>,
-    pub current_admin_id: i64,
+    pub current_admin_id: Uuid,
     pub error: String,
     pub has_error: bool,
     pub success: String,

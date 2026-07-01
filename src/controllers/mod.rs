@@ -16,15 +16,10 @@ pub use self::admin_controller::{
     create_staff_user, delete_staff_user, freeze_customer_product, reject_customer_application,
     reject_personal_loan, suspend_customer_user, update_staff_user,
 };
-pub use self::auth_controller::{
-    admin_login, admin_login_page, admin_logout, login, login_page, logout, post_signup_account, post_signup_contact, post_signup_employment,
-    post_signup_personal, post_signup_security, post_signup_submit, show_signup_account,
-    show_signup_contact, show_signup_employment, show_signup_personal, show_signup_review,
-    show_signup_security, signup, signup_page,
-};
+pub use self::auth_controller::{admin_login, admin_login_page, admin_logout, login, login_page, logout};
 pub use self::customer_controller::{
-    approve_product, create_bank_account, dashboard, deposit, deposit_page, fixed_deposit_activity, loan_activity,
-    profile_page, transactions, transfer, transfer_page, update_profile,
+    activate_card, cards_page, create_bank_account, create_card, dashboard, deposit, deposit_page, fixed_deposit_activity, freeze_card, loan_activity,
+    paynow_page, profile_page, register_paynow, transactions, transfer, transfer_page, transfer_paynow, update_profile,
 };
 pub use self::error_controller::{forbidden, not_found};
 pub use self::fixed_deposit_controller::{
@@ -37,5 +32,5 @@ pub use self::home_loan_controller::{
     home_loans_page, pay_home_loan, reject_home_loan,
 };
 pub use self::loan_controller::{create_personal_loan, loan_apply_page, loans_page, pay_loan};
-pub use self::onboard_controller::{account_creation, account_creation_init, account_creation_submit, onboarding, step1_post, step2_post, step3_post, step4_post, submit};
+pub use self::onboard_controller::{account_creation, account_creation_init, account_creation_submit, legacy_signup_path_redirect, legacy_signup_redirect, onboarding, onboarding_entry_redirect, step1_post, step2_post, step3_post, step4_post, submit};
 pub use self::public_controller::{about_page, banking_page, contact_page, faq_page, home, security_page};

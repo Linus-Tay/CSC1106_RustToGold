@@ -21,7 +21,57 @@ pub struct AccountCreationQueryParams {
     link: String,
 }
 
+pub async fn onboarding_entry_redirect(session: Session) -> Result<HttpResponse> {
+    if customer_session_user_id(&session).is_some() {
+        return Ok(redirect("/customer/dashboard"));
+    }
+    if admin_session_user_id(&session).is_some() {
+        return Ok(redirect("/admin/dashboard"));
+    }
+
+    Ok(redirect("/onboarding/account"))
+}
+
+pub async fn legacy_signup_redirect(session: Session) -> Result<HttpResponse> {
+    if let Some(response) = logged_in_redirect(&session) {
+        return Ok(response);
+    }
+
+    Ok(redirect("/onboarding/account"))
+}
+
+pub async fn legacy_signup_path_redirect(path: web::Path<String>, session: Session) -> Result<HttpResponse> {
+    if let Some(response) = logged_in_redirect(&session) {
+        return Ok(response);
+    }
+
+    let legacy_path = path.into_inner();
+    let target = match legacy_path.as_str() {
+        "personal" => "/onboarding/personal",
+        "contact" => "/onboarding/contact",
+        "employment" => "/onboarding/employment",
+        "review" | "security" => "/onboarding/review",
+        _ => "/onboarding/account",
+    };
+
+    Ok(redirect(target))
+}
+
+fn logged_in_redirect(session: &Session) -> Option<HttpResponse> {
+    if customer_session_user_id(session).is_some() {
+        Some(redirect("/customer/dashboard"))
+    } else if admin_session_user_id(session).is_some() {
+        Some(redirect("/admin/dashboard"))
+    } else {
+        None
+    }
+}
+
 pub async fn onboarding(path: web::Path<String>, session: Session) -> Result<HttpResponse> {
+    if let Some(response) = logged_in_redirect(&session) {
+        return Ok(response);
+    }
+
     let onboarding_path = path.into_inner();
     let form_data = session
         .get::<OnboardingForm>("onboarding_form_data")?
@@ -120,6 +170,10 @@ pub async fn account_creation_submit(
 }
 
 pub async fn submit(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    if let Some(response) = logged_in_redirect(&session) {
+        return Ok(response);
+    }
+
     let form_data = session
         .get::<OnboardingForm>("onboarding_form_data")?
         .unwrap_or_default();
@@ -145,6 +199,10 @@ pub async fn submit(data: web::Data<AppState>, session: Session) -> Result<HttpR
 }
 
 pub async fn step1_post(session: Session, form: web::Form<Step1Form>) -> Result<HttpResponse> {
+    if let Some(response) = logged_in_redirect(&session) {
+        return Ok(response);
+    }
+
     let mut form_data = session
         .get::<OnboardingForm>("onboarding_form_data")?
         .unwrap_or_default();
@@ -180,6 +238,10 @@ pub async fn step1_post(session: Session, form: web::Form<Step1Form>) -> Result<
 }
 
 pub async fn step2_post(session: Session, form: web::Form<Step2Form>) -> Result<HttpResponse> {
+    if let Some(response) = logged_in_redirect(&session) {
+        return Ok(response);
+    }
+
     let mut form_data = session
         .get::<OnboardingForm>("onboarding_form_data")?
         .unwrap_or_default();
@@ -230,6 +292,10 @@ pub async fn step2_post(session: Session, form: web::Form<Step2Form>) -> Result<
 }
 
 pub async fn step3_post(session: Session, form: web::Form<Step3Form>) -> Result<HttpResponse> {
+    if let Some(response) = logged_in_redirect(&session) {
+        return Ok(response);
+    }
+
     let mut form_data = session
         .get::<OnboardingForm>("onboarding_form_data")?
         .unwrap_or_default();
@@ -254,6 +320,10 @@ pub async fn step3_post(session: Session, form: web::Form<Step3Form>) -> Result<
 }
 
 pub async fn step4_post(session: Session, form: web::Form<Step4Form>) -> Result<HttpResponse> {
+    if let Some(response) = logged_in_redirect(&session) {
+        return Ok(response);
+    }
+
     let mut form_data = session
         .get::<OnboardingForm>("onboarding_form_data")?
         .unwrap_or_default();

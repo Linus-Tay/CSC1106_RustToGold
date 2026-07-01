@@ -10,12 +10,7 @@
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body class="customer-body">
-  <header class="customer-topbar">
-    <div class="customer-container customer-topbar__inner">
-      <a class="customer-brand" href="/customer/dashboard"><span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="RustToGold logo" /></span><span>RustToGold</span></a>
-      <div class="customer-topbar__actions"><a class="customer-pill" href="/customer/deposit"><i data-lucide="circle-dollar-sign"></i> Deposit</a><a class="customer-pill" href="/customer/transfer"><i data-lucide="send"></i> Transfer</a><a class="customer-pill" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</a><a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a></div>
-    </div>
-  </header>
+  {% include "partials/customer_nav.html" %}
 
   <main class="customer-main">
     <div class="customer-container">
@@ -25,7 +20,7 @@
           <div>
             <p class="customer-kicker">Everyday Banking</p>
             <h1>Deposit & Transfer History</h1>
-            <p>This page only shows cash deposits and transfers. Loan and fixed deposit movements are separated into their own logs.</p>
+            <p>This page shows deposits, account transfers and PayNow movements. Loan and fixed deposit movements are separated into their own logs.</p>
           </div>
           <div class="hero-actions">
             <a class="c-button c-button--secondary" href="/customer/loan-activity"><i data-lucide="file-clock"></i> Loan Log</a>
@@ -49,7 +44,7 @@
                 </tr>
                 {% endfor %}
                 {% else %}
-                <tr><td colspan="6">No deposit or transfer records yet. Use Deposit Money or Transfer Money to create your first cash movement record.</td></tr>
+                <tr><td colspan="6">No deposit, transfer or PayNow records yet. Use PayNow, Deposit Money or Transfer Money to create your first cash movement record.</td></tr>
                 {% endif %}
               </tbody>
             </table>

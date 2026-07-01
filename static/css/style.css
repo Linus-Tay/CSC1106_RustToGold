@@ -1718,7 +1718,7 @@ main {
 
 /* =========================================================
    Routed account-opening wizard
-   Used by templates/auth/signup_*.html
+   Used by templates/auth/onboarding_*.html
    ========================================================= */
 
 .rtg-wizard-body {
@@ -3206,4 +3206,274 @@ select:-webkit-autofill {
   background: #fef2f2;
   color: #b91c1c;
   border-color: #fecaca;
+}
+
+.portal-action-grid--auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.card-list,
+.mini-account-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.bank-card-row,
+.mini-account-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 1.25rem;
+  background: #fff;
+}
+
+.bank-card-row h3 {
+  margin: .5rem 0 .25rem;
+  color: #0B1F3A;
+  font-weight: 800;
+}
+
+.bank-card-row p,
+.bank-card-row small,
+.mini-account-row span {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.bank-card-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: flex-end;
+}
+
+/* Phase 6A dashboard and PayNow polish */
+.dashboard-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.dashboard-hero-grid .customer-hero {
+  height: 100%;
+}
+
+.dashboard-log-panel {
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: #fff;
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-log-panel h2 {
+  color: #0B1F3A;
+  font-size: 1.2rem;
+  font-weight: 900;
+  margin: 0.25rem 0 1rem;
+}
+
+.dashboard-log-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.9rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 1.1rem;
+  background: #F8FAFC;
+  color: #0B1F3A;
+  text-decoration: none;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dashboard-log-link + .dashboard-log-link {
+  margin-top: 0.75rem;
+}
+
+.dashboard-log-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(29, 78, 216, 0.28);
+  box-shadow: 0 14px 28px rgba(29, 78, 216, 0.1);
+}
+
+.dashboard-log-link span {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.9rem;
+  display: grid;
+  place-items: center;
+  color: #1D4ED8;
+  background: rgba(29, 78, 216, 0.08);
+  flex: 0 0 auto;
+}
+
+.dashboard-log-link svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.dashboard-log-link strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.dashboard-log-link small {
+  display: block;
+  margin-top: 0.2rem;
+  color: #64748B;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.portal-action-card--featured {
+  border-color: rgba(245, 158, 11, 0.34);
+  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 58%);
+}
+
+.portal-action-card--featured span {
+  color: #B45309;
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.inline-account-form {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.inline-account-form .form-input {
+  min-width: 220px;
+}
+
+.paynow-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.paynow-registration-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.paynow-registration-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.15rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 1.35rem;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.paynow-registration-card__icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1.1rem;
+  color: #1D4ED8;
+  background: rgba(29, 78, 216, 0.08);
+  flex: 0 0 auto;
+}
+
+.paynow-registration-card h3 {
+  margin: 0.55rem 0 0.25rem;
+  color: #0B1F3A;
+  font-weight: 900;
+  font-size: 1rem;
+}
+
+.paynow-registration-card p,
+.paynow-registration-card small {
+  display: block;
+  color: #64748B;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+@media (max-width: 1080px) {
+  .dashboard-hero-grid,
+  .paynow-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .inline-account-form,
+  .inline-account-form .form-input,
+  .inline-account-form .c-button {
+    width: 100%;
+  }
+
+  .paynow-registration-card {
+    flex-direction: column;
+  }
+}
+
+/* Phase 6A.1 dashboard account switcher and stacked repayment forms */
+.balance-card--switchable {
+  gap: 0.55rem;
+}
+
+.balance-card__selector-label {
+  display: block;
+  margin-top: 0.55rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.balance-card__select {
+  margin-top: 0.35rem;
+  width: 100%;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+.balance-card__select option {
+  color: #0b1f3a;
+  background: #fff;
+}
+
+.inline-account-form--single {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.inline-pay-form--stacked {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.5fr) minmax(150px, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+@media (max-width: 820px) {
+  .inline-pay-form--stacked {
+    grid-template-columns: 1fr;
+  }
+
+  .inline-account-form--single {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .inline-account-form--single .c-button {
+    width: 100%;
+  }
 }

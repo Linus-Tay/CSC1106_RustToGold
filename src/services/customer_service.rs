@@ -10,8 +10,8 @@ use sqlx::PgPool;
 use std::env;
 use uuid::Uuid;
 
-fn app_base_url() -> String {
-    env::var("APP_BASE_URL")
+fn onboarding_base_url() -> String {
+    env::var("ONBOARDING_BASE_URL").or_else(|_| env::var("APP_BASE_URL"))
         .ok()
         .map(|value| value.trim().trim_end_matches('/').to_string())
         .filter(|value| !value.is_empty())
@@ -144,7 +144,7 @@ pub async fn approve_customer_with_product(
 
     let activation_url = format!(
         "{}/account-creation/init?link={}",
-        app_base_url(),
+        onboarding_base_url(),
         account_creation_link.get_link()
     );
 

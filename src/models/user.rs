@@ -1,16 +1,13 @@
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDateTime;
 use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
 pub struct User {
-    pub id: i64,
-    pub customer_id: Uuid,
+    pub id: Uuid,
+    pub customer_id: Option<Uuid>,
     pub username: String,
-    pub full_name: String,
     pub email: String,
-    pub phone_number: String,
-    pub date_of_birth: NaiveDate,
     pub password_hash: String,
     pub role: String,
     pub status: String,
@@ -25,7 +22,7 @@ impl User {
     }
 
     pub fn is_customer(&self) -> bool {
-        self.role == "customer"
+        self.role == "customer" && self.customer_id.is_some()
     }
 
     pub fn is_staff_or_admin(&self) -> bool {
@@ -36,8 +33,8 @@ impl User {
         self.role == "admin"
     }
 
-    pub fn date_of_birth_display(&self) -> String {
-        self.date_of_birth.format("%d %b %Y").to_string()
+    pub fn customer_id_or_nil(&self) -> Uuid {
+        self.customer_id.unwrap_or_else(Uuid::nil)
     }
 
     pub fn joined_display(&self) -> String {

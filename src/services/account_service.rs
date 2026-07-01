@@ -28,23 +28,23 @@ pub async fn load_customer_dashboard(
     })
 }
 
-pub async fn list_transactions(db: &PgPool, user_id: i64) -> Result<Vec<Transaction>, String> {
-    transaction_repository::find_customer_cash_transactions_by_user_id(db, user_id, 50)
+pub async fn list_transactions(db: &PgPool, customer_id: Uuid) -> Result<Vec<Transaction>, String> {
+    transaction_repository::find_customer_cash_transactions(db, customer_id, 50)
         .await
         .map_err(|_| "Could not load deposit and transfer history.".to_string())
 }
 
-pub async fn list_loan_activity(db: &PgPool, user_id: i64) -> Result<Vec<Transaction>, String> {
-    transaction_repository::find_customer_loan_transactions_by_user_id(db, user_id, 50)
+pub async fn list_loan_activity(db: &PgPool, customer_id: Uuid) -> Result<Vec<Transaction>, String> {
+    transaction_repository::find_customer_loan_transactions(db, customer_id, 50)
         .await
         .map_err(|_| "Could not load loan activity.".to_string())
 }
 
 pub async fn list_fixed_deposit_activity(
     db: &PgPool,
-    user_id: i64,
+    customer_id: Uuid,
 ) -> Result<Vec<Transaction>, String> {
-    transaction_repository::find_customer_fixed_deposit_transactions_by_user_id(db, user_id, 50)
+    transaction_repository::find_customer_fixed_deposit_transactions(db, customer_id, 50)
         .await
         .map_err(|_| "Could not load fixed deposit activity.".to_string())
 }

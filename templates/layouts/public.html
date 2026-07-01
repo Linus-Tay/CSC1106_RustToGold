@@ -78,25 +78,6 @@
         return window.innerWidth >= DESKTOP_MIN;
       }
 
-      function closeMobileMenu(returnFocus = false) {
-        nav?.classList.remove('is-mobile-open');
-        document.body.classList.remove('mobile-nav-open');
-        mobileOpenButton?.setAttribute('aria-expanded', 'false');
-        mobileDrawer?.setAttribute('aria-hidden', 'true');
-        if (returnFocus) mobileOpenButton?.focus({ preventScroll: true });
-      }
-
-      function openMobileMenu() {
-        closePanels();
-        nav?.classList.add('is-mobile-open');
-        document.body.classList.add('mobile-nav-open');
-        mobileOpenButton?.setAttribute('aria-expanded', 'true');
-        mobileDrawer?.setAttribute('aria-hidden', 'false');
-
-        const closeButton = mobileDrawer?.querySelector('[data-mobile-menu-close]');
-        window.setTimeout(() => closeButton?.focus({ preventScroll: true }), 80);
-      }
-
       function closePanels() {
         if (!nav) return;
 
@@ -108,6 +89,26 @@
           trigger.classList.remove('is-active');
           trigger.setAttribute('aria-expanded', 'false');
         });
+      }
+
+      function openMobileMenu() {
+        if (isDesktopNav()) return;
+        closePanels();
+        nav?.classList.add('is-mobile-open');
+        document.body.classList.add('mobile-nav-open');
+        mobileOpenButton?.setAttribute('aria-expanded', 'true');
+        mobileDrawer?.setAttribute('aria-hidden', 'false');
+
+        const closeButton = mobileDrawer?.querySelector('[data-mobile-menu-close]');
+        window.setTimeout(() => closeButton?.focus({ preventScroll: true }), 80);
+      }
+
+      function closeMobileMenu(returnFocus = false) {
+        nav?.classList.remove('is-mobile-open');
+        document.body.classList.remove('mobile-nav-open');
+        mobileOpenButton?.setAttribute('aria-expanded', 'false');
+        mobileDrawer?.setAttribute('aria-hidden', 'true');
+        if (returnFocus) mobileOpenButton?.focus({ preventScroll: true });
       }
 
       if (nav) {
@@ -175,8 +176,9 @@
       });
 
       document.addEventListener('click', (event) => {
-        const clickedInsideNav = nav?.contains(event.target);
-        const clickedInsideDrawer = mobileDrawer?.contains(event.target);
+        const target = event.target;
+        const clickedInsideNav = nav ? nav.contains(target) : false;
+        const clickedInsideDrawer = mobileDrawer ? mobileDrawer.contains(target) : false;
 
         if (!clickedInsideNav && !clickedInsideDrawer) {
           closePanels();

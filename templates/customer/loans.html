@@ -10,12 +10,7 @@
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body class="customer-body">
-  <header class="customer-topbar">
-    <div class="customer-container customer-topbar__inner">
-      <a class="customer-brand" href="/customer/dashboard"><span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="" /></span><span>RustToGold</span></a>
-      <div class="customer-topbar__actions"><a class="customer-pill" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</a><a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a></div>
-    </div>
-  </header>
+  {% include "partials/customer_nav.html" %}
 
   <main class="customer-main">
     <div class="customer-container">
@@ -24,10 +19,10 @@
         <div>
           <p class="customer-kicker">Borrowing</p>
           <h1>Personal Loans</h1>
-          <p>Apply first, then wait for admin approval before the loan is disbursed into your account.</p>
+          <p>Apply first, then wait for admin approval before the loan is disbursed into the selected account.</p>
           <div class="hero-actions"><a class="c-button c-button--gold" href="/customer/loans/apply"><i data-lucide="file-plus"></i> Apply for Loan</a><a class="c-button c-button--secondary" href="/customer/loan-activity"><i data-lucide="file-clock"></i> Loan Log</a></div>
         </div>
-        <div class="module-stat"><span>Repayment Account</span><strong>{{ account.balance_display() }}</strong><small>{{ account.account_number }}</small></div>
+        <div class="module-stat"><span>Default Repayment Account</span><strong>{{ account.balance_display() }}</strong><small>{{ account.account_number }}</small></div>
       </section>
 
       {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
@@ -41,15 +36,20 @@
             <article class="record-card">
               <div class="record-card__main">
                 <div>
-                  <span class="badge badge--info">{{ loan.status_display() }}</span>
+                  <span class="badge {% if loan.status == "rejected" %}badge--danger{% else %}badge--info{% endif %}">{{ loan.status_display() }}</span>
                   <h3>{{ loan.purpose }}</h3>
                   <p>Principal {{ loan.principal_display() }} · {{ loan.term_months }} months · {{ loan.rate_display() }} p.a.</p>
                 </div>
                 <div class="record-card__amount"><span>Outstanding</span><strong>{{ loan.outstanding_display() }}</strong><small>Monthly {{ loan.monthly_payment_display() }}</small></div>
               </div>
               {% if loan.status == "active" %}
-              <form class="inline-pay-form" action="/customer/loans/{{ loan.id }}/pay" method="post">
-                <input class="form-input" name="amount" placeholder="Payment amount, e.g. 250.00" required />
+              <form class="inline-pay-form inline-pay-form--stacked" action="/customer/loans/{{ loan.id }}/pay" method="post">
+                <select class="form-select" name="account_number" required aria-label="Repayment account">
+                  {% for account in accounts %}
+                  <option value="{{ account.account_number }}">{{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}</option>
+                  {% endfor %}
+                </select>
+                <input class="form-input" name="amount" type="number" step="0.01" min="0.01" max="{{ loan.outstanding_plain() }}" placeholder="Max {{ loan.outstanding_display() }}" required />
                 <button class="c-button c-button--gold" type="submit">Pay Loan</button>
               </form>
               {% endif %}

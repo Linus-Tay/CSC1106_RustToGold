@@ -4,31 +4,39 @@ use actix_web::{guard, web};
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("")
-            .guard(guard::Host("apply.localhost"))
+            .guard(guard::Host("onboarding.localhost"))
+            .route("/", web::get().to(controllers::onboarding_entry_redirect))
+            .route("/onboarding", web::get().to(controllers::onboarding_entry_redirect))
             .route("/onboarding/{path}", web::get().to(controllers::onboarding))
+            .route("/account-creation/init", web::get().to(controllers::account_creation_init))
+            .route("/account-creation", web::get().to(controllers::account_creation))
+            .route("/account-creation", web::post().to(controllers::account_creation_submit))
             .service(
-                web::scope("/api")
-                    .route(
-                        "/onboarding/actions/submit-step1",
-                        web::post().to(controllers::step1_post),
-                    )
-                    .route(
-                        "/onboarding/actions/submit-step2",
-                        web::post().to(controllers::step2_post),
-                    )
-                    .route(
-                        "/onboarding/actions/submit-step3",
-                        web::post().to(controllers::step3_post),
-                    )
-                    .route(
-                        "/onboarding/actions/submit-step4",
-                        web::post().to(controllers::step4_post),
-                    )
-                    .route(
-                        "/onboarding/actions/submit",
-                        web::post().to(controllers::submit),
-                    ),
+                web::scope("/api/onboarding/actions")
+                    .route("/submit-step1", web::post().to(controllers::step1_post))
+                    .route("/submit-step2", web::post().to(controllers::step2_post))
+                    .route("/submit-step3", web::post().to(controllers::step3_post))
+                    .route("/submit-step4", web::post().to(controllers::step4_post))
+                    .route("/submit", web::post().to(controllers::submit)),
             ),
+    )
+    .service(
+        web::scope("")
+            .guard(guard::Host("admin.localhost"))
+            .route("/", web::get().to(controllers::admin_dashboard))
+            .route("/login", web::get().to(controllers::admin_login_page))
+            .route("/login", web::post().to(controllers::admin_login))
+            .route("/logout", web::get().to(controllers::admin_logout))
+            .route("/dashboard", web::get().to(controllers::admin_dashboard))
+            .route("/signups", web::get().to(controllers::admin_signups_page))
+            .route("/onboardings", web::get().to(controllers::admin_signups_page))
+            .route("/staff", web::get().to(controllers::admin_staff_page))
+            .route("/accounts", web::get().to(controllers::admin_customer_accounts_page))
+            .route("/audit-log", web::get().to(controllers::admin_audit_log_page))
+            .route("/personal-loans", web::get().to(controllers::admin_personal_loans_page))
+            .route("/home-loans", web::get().to(controllers::admin_home_loans_page))
+            .route("/fixed-deposits", web::get().to(controllers::admin_fixed_deposits_page))
+            .route("/fixed-deposit-plans", web::get().to(controllers::admin_fixed_deposit_plans_page)),
     )
     .service(
         web::scope("")
@@ -38,31 +46,17 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .route("/about", web::get().to(controllers::about_page))
             .route("/faq", web::get().to(controllers::faq_page))
             .route("/contact", web::get().to(controllers::contact_page))
+            .route("/onboarding", web::get().to(controllers::onboarding_entry_redirect))
             .route("/onboarding/{path}", web::get().to(controllers::onboarding))
             .route("/onboarding/{path}", web::post().to(controllers::onboarding))
+            .route("/signup", web::get().to(controllers::legacy_signup_redirect))
+            .route("/signup/{path}", web::get().to(controllers::legacy_signup_path_redirect))
             .route("/account-creation/init", web::get().to(controllers::account_creation_init))
             .route("/account-creation", web::get().to(controllers::account_creation))
             .route("/account-creation", web::post().to(controllers::account_creation_submit))
             .route("/api/account-creation/submit", web::post().to(controllers::account_creation_submit))
             .route("/login", web::get().to(controllers::login_page))
             .route("/login", web::post().to(controllers::login))
-            .route("/signup", web::get().to(controllers::signup_page))
-            .route("/signup", web::post().to(controllers::signup))
-            .service(
-                web::scope("/signup")
-                    .route("/account", web::get().to(controllers::show_signup_account))
-                    .route("/account", web::post().to(controllers::post_signup_account))
-                    .route("/personal", web::get().to(controllers::show_signup_personal))
-                    .route("/personal", web::post().to(controllers::post_signup_personal))
-                    .route("/contact", web::get().to(controllers::show_signup_contact))
-                    .route("/contact", web::post().to(controllers::post_signup_contact))
-                    .route("/employment", web::get().to(controllers::show_signup_employment))
-                    .route("/employment", web::post().to(controllers::post_signup_employment))
-                    .route("/security", web::get().to(controllers::show_signup_security))
-                    .route("/security", web::post().to(controllers::post_signup_security))
-                    .route("/review", web::get().to(controllers::show_signup_review))
-                    .route("/submit", web::post().to(controllers::post_signup_submit)),
-            )
             .service(
                 web::scope("/api/onboarding/actions")
                     .route("/submit-step1", web::post().to(controllers::step1_post))
@@ -89,6 +83,13 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("/deposit", web::post().to(controllers::deposit))
                     .route("/transfer", web::get().to(controllers::transfer_page))
                     .route("/transfer", web::post().to(controllers::transfer))
+                    .route("/paynow", web::get().to(controllers::paynow_page))
+                    .route("/paynow/register", web::post().to(controllers::register_paynow))
+                    .route("/paynow/transfer", web::post().to(controllers::transfer_paynow))
+                    .route("/cards", web::get().to(controllers::cards_page))
+                    .route("/cards", web::post().to(controllers::create_card))
+                    .route("/cards/{id}/freeze", web::post().to(controllers::freeze_card))
+                    .route("/cards/{id}/activate", web::post().to(controllers::activate_card))
                     .route("/transactions", web::get().to(controllers::transactions))
                     .route("/loan-activity", web::get().to(controllers::loan_activity))
                     .route("/loan-log", web::get().to(controllers::loan_activity))
@@ -107,8 +108,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("/fixed-deposits/new", web::get().to(controllers::fixed_deposit_new_page))
                     .route("/fixed-deposits/{id}/withdraw", web::post().to(controllers::withdraw_fixed_deposit))
                     .route("/profile", web::get().to(controllers::profile_page))
-                    .route("/profile", web::post().to(controllers::update_profile))
-                    .route("/approve/{path}", web::post().to(controllers::approve_product)),
+                    .route("/profile", web::post().to(controllers::update_profile)),
             )
             .service(
                 web::scope("/admin")
@@ -118,6 +118,9 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("", web::get().to(controllers::admin_dashboard))
                     .route("/dashboard", web::get().to(controllers::admin_dashboard))
                     .route("/signups", web::get().to(controllers::admin_signups_page))
+                    .route("/onboardings", web::get().to(controllers::admin_signups_page))
+                    .route("/onboardings/{id}/approve", web::post().to(controllers::approve_customer_application))
+                    .route("/onboardings/{id}/reject", web::post().to(controllers::reject_customer_application))
                     .route("/signups/{id}/approve", web::post().to(controllers::approve_customer_application))
                     .route("/signups/{id}/reject", web::post().to(controllers::reject_customer_application))
                     .route("/staff", web::get().to(controllers::admin_staff_page))

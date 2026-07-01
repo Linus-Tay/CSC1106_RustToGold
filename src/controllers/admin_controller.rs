@@ -15,18 +15,14 @@ use uuid::Uuid;
 #[derive(Debug, Deserialize)]
 pub struct StaffCreateForm {
     pub username: String,
-    pub full_name: String,
     pub email: String,
-    pub phone_number: String,
     pub role: String,
     pub password: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct StaffUpdateForm {
-    pub full_name: String,
     pub email: String,
-    pub phone_number: String,
     pub role: String,
     pub status: String,
     pub password: Option<String>,
@@ -219,9 +215,7 @@ pub async fn create_staff_user(
         &data.db,
         user.id,
         form.username,
-        form.full_name,
         form.email,
-        form.phone_number,
         form.role,
         form.password,
     )
@@ -235,7 +229,7 @@ pub async fn create_staff_user(
 pub async fn update_staff_user(
     data: web::Data<AppState>,
     session: Session,
-    path: web::Path<i64>,
+    path: web::Path<String>,
     form: web::Form<StaffUpdateForm>,
 ) -> Result<HttpResponse> {
     let user = match require_admin(&data, &session).await {
@@ -246,15 +240,16 @@ pub async fn update_staff_user(
         return Ok(redirect("/403"));
     }
 
-    let staff_user_id = path.into_inner();
+    let staff_user_id = match parse_uuid(path.into_inner()) {
+        Ok(value) => value,
+        Err(response) => return Ok(response),
+    };
     let form = form.into_inner();
     match services::update_staff_user(
         &data.db,
         user.id,
         staff_user_id,
-        form.full_name,
         form.email,
-        form.phone_number,
         form.role,
         form.status,
         form.password,
@@ -269,7 +264,7 @@ pub async fn update_staff_user(
 pub async fn delete_staff_user(
     data: web::Data<AppState>,
     session: Session,
-    path: web::Path<i64>,
+    path: web::Path<String>,
 ) -> Result<HttpResponse> {
     let user = match require_admin(&data, &session).await {
         Ok(user) => user,
@@ -279,7 +274,12 @@ pub async fn delete_staff_user(
         return Ok(redirect("/403"));
     }
 
-    match services::delete_staff_user(&data.db, user.id, path.into_inner()).await {
+    let staff_user_id = match parse_uuid(path.into_inner()) {
+        Ok(value) => value,
+        Err(response) => return Ok(response),
+    };
+
+    match services::delete_staff_user(&data.db, user.id, staff_user_id).await {
         Ok(_) => Ok(redirect("/admin/staff")),
         Err(error) => render_staff_with_message(&data, user.id, error, false).await,
     }
@@ -312,23 +312,31 @@ pub async fn admin_customer_accounts_page(
 pub async fn suspend_customer_user(
     data: web::Data<AppState>,
     session: Session,
-    path: web::Path<i64>,
+    path: web::Path<String>,
 ) -> Result<HttpResponse> {
-    set_customer_user_status(data, session, path.into_inner(), "suspended").await
+    let target_user_id = match parse_uuid(path.into_inner()) {
+        Ok(value) => value,
+        Err(response) => return Ok(response),
+    };
+    set_customer_user_status(data, session, target_user_id, "suspended").await
 }
 
 pub async fn activate_customer_user(
     data: web::Data<AppState>,
     session: Session,
-    path: web::Path<i64>,
+    path: web::Path<String>,
 ) -> Result<HttpResponse> {
-    set_customer_user_status(data, session, path.into_inner(), "active").await
+    let target_user_id = match parse_uuid(path.into_inner()) {
+        Ok(value) => value,
+        Err(response) => return Ok(response),
+    };
+    set_customer_user_status(data, session, target_user_id, "active").await
 }
 
 async fn set_customer_user_status(
     data: web::Data<AppState>,
     session: Session,
-    target_user_id: i64,
+    target_user_id: Uuid,
     status: &str,
 ) -> Result<HttpResponse> {
     let staff = match require_admin(&data, &session).await {
@@ -414,7 +422,7 @@ pub async fn admin_audit_log_page(
 
 async fn render_staff_with_message(
     data: &web::Data<AppState>,
-    current_admin_id: i64,
+    current_admin_id: Uuid,
     message: String,
     success: bool,
 ) -> Result<HttpResponse> {

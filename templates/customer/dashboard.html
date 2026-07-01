@@ -11,101 +11,135 @@
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body class="customer-body">
-  <header class="customer-topbar">
-    <div class="customer-container customer-topbar__inner">
-      <a class="customer-brand" href="/customer/dashboard">
-        <span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="RustToGold logo" /></span>
-        <span>RustToGold</span>
-      </a>
-      <div class="customer-topbar__actions">
-        <a class="customer-pill" href="/customer/profile"><i data-lucide="user-round"></i> Profile</a>
-        <a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a>
-      </div>
-    </div>
-  </header>
+  {% include "partials/customer_nav.html" %}
 
   <main class="customer-main">
     <div class="customer-container">
-      <section class="customer-hero customer-hero--dashboard customer-hero--single">
-        <div>
-          <p class="customer-kicker">Customer Portal</p>
-          <h1>Welcome back, {{ full_name }}</h1>
-          <p>Choose a banking function below. Transactions now only covers deposits and transfers, while loan and fixed deposit activity have their own logs.</p>
+      <section class="dashboard-hero-grid">
+        <div class="customer-hero customer-hero--dashboard customer-hero--single">
+          <div>
+            <p class="customer-kicker">Customer Portal</p>
+            <h1>Welcome back, {{ full_name }}</h1>
+            <p>Choose a banking function below. Everyday money movement, borrowing, savings and card products are separated clearly.</p>
+          </div>
+          <div class="balance-card balance-card--switchable">
+            <span>Available Balance</span>
+            <strong id="dashboard-balance">${{ balance }}</strong>
+            <small id="dashboard-bank-id">Bank ID: {{ primary_account_number }}</small>
+
+            {% if has_accounts %}
+            <label class="balance-card__selector-label" for="dashboard-account-select">View another account</label>
+            <select class="form-select balance-card__select" id="dashboard-account-select">
+              {% for account in accounts %}
+              <option value="{{ account.account_number }}" data-balance="{{ account.balance_display() }}" data-bank-id="{{ account.account_number }}">
+                {{ account.product_id_display() }} · {{ account.account_number }}
+              </option>
+              {% endfor %}
+            </select>
+            {% endif %}
+          </div>
         </div>
-        <div class="balance-card">
-          <span>Available Balance</span>
-          <strong>${{ balance }}</strong>
-          <small>Use Profile for account number, account type and status.</small>
-        </div>
+
+        <aside class="dashboard-log-panel">
+          <p class="customer-kicker">Activity Logs</p>
+          <h2>Review records</h2>
+          <a class="dashboard-log-link" href="/customer/transactions">
+            <span><i data-lucide="receipt-text"></i></span>
+            <div><strong>Deposit & Transfer Log</strong><small>Deposits, transfers and PayNow movements.</small></div>
+          </a>
+          <a class="dashboard-log-link" href="/customer/loan-activity">
+            <span><i data-lucide="file-clock"></i></span>
+            <div><strong>Loan Log</strong><small>Loan disbursements and repayments.</small></div>
+          </a>
+          <a class="dashboard-log-link" href="/customer/fixed-deposit-activity">
+            <span><i data-lucide="calendar-clock"></i></span>
+            <div><strong>Fixed Deposit Log</strong><small>FD openings, withdrawals and payouts.</small></div>
+          </a>
+        </aside>
       </section>
 
       <section class="customer-section customer-section--first">
-        <div class="section-heading section-heading--split">
+        <div class="section-heading">
           <div>
             <p class="customer-kicker">Everyday Banking</p>
             <h2>Cash movement</h2>
           </div>
-          <a class="text-link" href="/customer/transactions"><i data-lucide="receipt-text"></i> Deposit & transfer log</a>
         </div>
 
-        <div class="portal-action-grid portal-action-grid--three">
+        <div class="portal-action-grid portal-action-grid--auto">
+          <a class="portal-action-card portal-action-card--featured" href="/customer/paynow">
+            <span><i data-lucide="scan-line"></i></span>
+            <strong>PayNow</strong>
+            <small>Register PayNow or send money using phone/NRIC.</small>
+          </a>
           <a class="portal-action-card" href="/customer/deposit">
             <span><i data-lucide="circle-dollar-sign"></i></span>
             <strong>Deposit Money</strong>
-            <small>Top up your active RustToGold customer account.</small>
+            <small>Top up one of your active RustToGold accounts.</small>
           </a>
           <a class="portal-action-card" href="/customer/transfer">
             <span><i data-lucide="send"></i></span>
             <strong>Transfer Money</strong>
-            <small>Send funds to another RustToGold account number.</small>
-          </a>
-          <a class="portal-action-card" href="/customer/transactions">
-            <span><i data-lucide="receipt-text"></i></span>
-            <strong>Transactions</strong>
-            <small>View deposit and transfer records only.</small>
+            <small>Transfer by RustToGold bank account number.</small>
           </a>
         </div>
       </section>
 
       <section class="customer-section">
-        <div class="section-heading">
+        <div class="section-heading section-heading--split">
           <div>
             <p class="customer-kicker">Products</p>
-            <h2>Borrowing and savings</h2>
+            <h2>Apply for banking products</h2>
           </div>
+          <form action="/customer/accounts/create" method="post" class="inline-account-form inline-account-form--single">
+            <input type="hidden" name="account_type" value="high_yield_savings" />
+            <input type="hidden" name="nickname" value="High-Yield Savings" />
+            <button class="c-button c-button--secondary" type="submit"><i data-lucide="landmark"></i> Apply for High-Yield Savings</button>
+          </form>
         </div>
+
+        {% if has_create_account_error %}
+        <div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ create_account_error }}</div>
+        {% endif %}
 
         <div class="product-grid product-grid--banking">
           <article class="product-card product-card--navy">
-            <a class="product-card__main-link" href="/customer/loans" aria-label="View personal loans"></a>
+            <a class="product-card__main-link" href="/customer/loans/apply" aria-label="Apply for a personal loan"></a>
             <div class="product-card__icon"><i data-lucide="file-signature"></i></div>
             <h3>Personal Loans</h3>
-            <p>Apply for a personal loan and track approval before disbursement.</p>
+            <p>Apply for a personal loan and choose which active account receives the disbursement.</p>
             <div class="product-card__actions">
-              <a href="/customer/loans"><i data-lucide="list-checks"></i> View Loans</a>
               <a href="/customer/loans/apply"><i data-lucide="file-plus"></i> Apply</a>
             </div>
           </article>
 
           <article class="product-card">
-            <a class="product-card__main-link" href="/customer/home-loans" aria-label="View home loans"></a>
+            <a class="product-card__main-link" href="/customer/home-loans/apply" aria-label="Apply for a home loan"></a>
             <div class="product-card__icon"><i data-lucide="home"></i></div>
             <h3>Home Loans</h3>
-            <p>Submit property financing applications and follow review outcomes.</p>
+            <p>Apply for property financing and choose the account used for down-payment checks.</p>
             <div class="product-card__actions">
-              <a href="/customer/home-loans"><i data-lucide="list-checks"></i> View Home Loans</a>
               <a href="/customer/home-loans/apply"><i data-lucide="file-plus"></i> Apply</a>
             </div>
           </article>
 
           <article class="product-card">
-            <a class="product-card__main-link" href="/customer/fixed-deposits" aria-label="View fixed deposits"></a>
+            <a class="product-card__main-link" href="/customer/fixed-deposits/new" aria-label="Create a fixed deposit"></a>
             <div class="product-card__icon"><i data-lucide="piggy-bank"></i></div>
             <h3>Fixed Deposits</h3>
-            <p>Create fixed deposit placements from your available balance.</p>
+            <p>Create fixed deposit placements from a selected active funding account.</p>
             <div class="product-card__actions">
-              <a href="/customer/fixed-deposits"><i data-lucide="list-checks"></i> View FDs</a>
               <a href="/customer/fixed-deposits/new"><i data-lucide="plus-circle"></i> New Placement</a>
+            </div>
+          </article>
+
+          <article class="product-card">
+            <a class="product-card__main-link" href="/customer/cards" aria-label="Apply for a card product"></a>
+            <div class="product-card__icon"><i data-lucide="credit-card"></i></div>
+            <h3>Card Products</h3>
+            <p>Apply instantly for a debit or student card linked to one of your active accounts.</p>
+            <div class="product-card__actions">
+              <a href="/customer/cards"><i data-lucide="credit-card"></i> Apply / Manage</a>
             </div>
           </article>
         </div>
@@ -114,22 +148,22 @@
       <section class="customer-section">
         <div class="section-heading">
           <div>
-            <p class="customer-kicker">Records</p>
-            <h2>Product activity logs</h2>
+            <p class="customer-kicker">Bank IDs</p>
+            <h2>Your accounts</h2>
           </div>
         </div>
 
-        <div class="portal-action-grid portal-action-grid--two">
-          <a class="portal-action-card portal-action-card--log" href="/customer/loan-activity">
-            <span><i data-lucide="file-clock"></i></span>
-            <strong>Loan Activity Log</strong>
-            <small>View loan disbursements, personal loan payments and home loan payments.</small>
-          </a>
-          <a class="portal-action-card portal-action-card--log" href="/customer/fixed-deposit-activity">
-            <span><i data-lucide="calendar-clock"></i></span>
-            <strong>Fixed Deposit Log</strong>
-            <small>View fixed deposit openings, withdrawals and maturity payouts.</small>
-          </a>
+        <div class="mini-account-list">
+          {% if has_accounts %}
+          {% for account in accounts %}
+          <div class="mini-account-row">
+            <div><strong>{{ account.account_number }}</strong><span>{{ account.product_id_display() }} · {{ account.status_display() }}</span></div>
+            <b>{{ account.balance_display() }}</b>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="empty-state empty-state--small"><div class="empty-state__icon"><i data-lucide="wallet"></i></div><h3>No accounts yet</h3><p>Create an account after onboarding approval to start using banking functions.</p></div>
+          {% endif %}
         </div>
       </section>
     </div>
@@ -137,5 +171,20 @@
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/static/js/app.js"></script>
+  <script>
+    const accountSelect = document.getElementById('dashboard-account-select');
+    const balanceText = document.getElementById('dashboard-balance');
+    const bankIdText = document.getElementById('dashboard-bank-id');
+
+    function syncDashboardAccount() {
+      if (!accountSelect || !balanceText || !bankIdText) return;
+      const selected = accountSelect.options[accountSelect.selectedIndex];
+      balanceText.textContent = selected?.dataset?.balance || balanceText.textContent;
+      bankIdText.textContent = `Bank ID: ${selected?.dataset?.bankId || accountSelect.value}`;
+    }
+
+    accountSelect?.addEventListener('change', syncDashboardAccount);
+    syncDashboardAccount();
+  </script>
 </body>
 </html>

@@ -3,6 +3,7 @@ use crate::repositories::user_repository;
 use crate::AppState;
 use actix_session::Session;
 use actix_web::{http::header, web, HttpResponse, Result};
+use uuid::Uuid;
 
 const CUSTOMER_USER_ID_KEY: &str = "customer_user_id";
 const CUSTOMER_ROLE_KEY: &str = "customer_role";
@@ -43,7 +44,7 @@ async fn require_active_user(
     key: &str,
     login_path: &str,
 ) -> Result<User, HttpResponse> {
-    let Some(user_id) = session.get::<i64>(key).ok().flatten() else {
+    let Some(user_id) = session.get::<Uuid>(key).ok().flatten() else {
         return Err(redirect(login_path));
     };
 
@@ -63,12 +64,12 @@ async fn require_active_user(
     Ok(user)
 }
 
-pub fn customer_session_user_id(session: &Session) -> Option<i64> {
-    session.get::<i64>(CUSTOMER_USER_ID_KEY).ok().flatten()
+pub fn customer_session_user_id(session: &Session) -> Option<Uuid> {
+    session.get::<Uuid>(CUSTOMER_USER_ID_KEY).ok().flatten()
 }
 
-pub fn admin_session_user_id(session: &Session) -> Option<i64> {
-    session.get::<i64>(ADMIN_USER_ID_KEY).ok().flatten()
+pub fn admin_session_user_id(session: &Session) -> Option<Uuid> {
+    session.get::<Uuid>(ADMIN_USER_ID_KEY).ok().flatten()
 }
 
 pub fn store_customer_session(session: &Session, user: &User) -> Result<()> {
@@ -105,7 +106,7 @@ fn clear_session_key(session: &Session, key: &str) {
 
 // Kept for older code that still imports session_user_id.
 // Customer routes should use customer_session_user_id and admin routes should use admin_session_user_id.
-pub fn session_user_id(session: &Session) -> Option<i64> {
+pub fn session_user_id(session: &Session) -> Option<Uuid> {
     customer_session_user_id(session).or_else(|| admin_session_user_id(session))
 }
 

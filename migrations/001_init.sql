@@ -5,6 +5,7 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS cards CASCADE;
 DROP TABLE IF EXISTS fixed_deposits CASCADE;
 DROP TABLE IF EXISTS fixed_deposit_plans CASCADE;
 DROP TABLE IF EXISTS home_loan_applications CASCADE;
@@ -46,13 +47,10 @@ CREATE TABLE customers (
 -- Online banking users are created only after admin approval through an account-creation link.
 -- customer_id is kept on staff/admin rows too for code simplicity, but only customer users map to real customers.
 CREATE TABLE users (
-    id             BIGSERIAL PRIMARY KEY,
-    customer_id    UUID NOT NULL DEFAULT gen_random_uuid(),
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id    UUID NULL REFERENCES customers(id) ON DELETE CASCADE,
     username       TEXT NOT NULL UNIQUE,
-    full_name      TEXT NOT NULL,
     email          TEXT NOT NULL UNIQUE,
-    phone_number   TEXT NOT NULL,
-    date_of_birth  DATE NOT NULL,
     password_hash  TEXT NOT NULL,
     role           TEXT NOT NULL DEFAULT 'customer',
     status         TEXT NOT NULL DEFAULT 'active',
@@ -64,7 +62,9 @@ CREATE TABLE users (
     CONSTRAINT users_role_check
         CHECK (role IN ('customer', 'staff', 'admin')),
     CONSTRAINT users_status_check
-        CHECK (status IN ('active', 'suspended', 'closed'))
+        CHECK (status IN ('active', 'suspended', 'closed')),
+    CONSTRAINT users_customer_mapping_check
+        CHECK ((role = 'customer' AND customer_id IS NOT NULL) OR (role <> 'customer' AND customer_id IS NULL))
 );
 
 -- customer_products is the actual account record used by the app.
@@ -90,9 +90,7 @@ CREATE TABLE customer_products (
 
 CREATE TABLE transactions (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id             BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
-    product_id          UUID NULL REFERENCES customer_products(id) ON DELETE SET NULL,
-    customer_id         UUID NULL REFERENCES customers(id) ON DELETE SET NULL,
+    product_id          UUID NOT NULL REFERENCES customer_products(id) ON DELETE CASCADE,
     transaction_type    TEXT NOT NULL,
     amount_cents        BIGINT NOT NULL,
     balance_after_cents BIGINT NOT NULL,
@@ -105,6 +103,8 @@ CREATE TABLE transactions (
             'withdrawal',
             'transfer_in',
             'transfer_out',
+            'paynow_transfer_in',
+            'paynow_transfer_out',
             'loan_disbursement',
             'loan_payment',
             'home_loan_payment',
@@ -130,7 +130,7 @@ CREATE TABLE personal_loans (
     outstanding_cents     BIGINT NOT NULL DEFAULT 0 CHECK (outstanding_cents >= 0),
     status                TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'active', 'rejected', 'fully_paid', 'cancelled')),
-    reviewed_by           BIGINT REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_by           UUID REFERENCES users(id) ON DELETE SET NULL,
     reviewed_at           TIMESTAMPTZ,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -150,7 +150,7 @@ CREATE TABLE home_loan_applications (
     outstanding_cents     BIGINT NOT NULL DEFAULT 0 CHECK (outstanding_cents >= 0),
     status                TEXT NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'approved', 'rejected', 'fully_paid')),
-    reviewed_by           BIGINT REFERENCES users(id) ON DELETE SET NULL,
+    reviewed_by           UUID REFERENCES users(id) ON DELETE SET NULL,
     reviewed_at           TIMESTAMPTZ,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -184,6 +184,18 @@ CREATE TABLE fixed_deposits (
     updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE cards (
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id        UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    linked_product_id  UUID NOT NULL REFERENCES customer_products(id) ON DELETE RESTRICT,
+    card_type          TEXT NOT NULL CHECK (card_type IN ('debit', 'student')),
+    display_name       TEXT NOT NULL,
+    masked_number      TEXT NOT NULL,
+    status             TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'frozen', 'cancelled')),
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE account_creation_links (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
@@ -198,7 +210,7 @@ CREATE TABLE account_creation_links (
 
 CREATE TABLE audit_logs (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    actor_user_id   BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+    actor_user_id   UUID NULL REFERENCES users(id) ON DELETE SET NULL,
     action          TEXT NOT NULL,
     entity_type     TEXT NOT NULL,
     entity_id       TEXT NULL,
@@ -234,8 +246,6 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_customer_id ON users(customer_id);
 CREATE INDEX idx_customer_products_customer_id ON customer_products(customer_id);
 CREATE INDEX idx_customer_products_account_number ON customer_products(account_number);
-CREATE INDEX idx_transactions_user_id_created_at ON transactions(user_id, created_at DESC);
-CREATE INDEX idx_transactions_customer_id_created_at ON transactions(customer_id, created_at DESC);
 CREATE INDEX idx_transactions_product_id_created_at ON transactions(product_id, created_at DESC);
 CREATE INDEX idx_account_creation_links_customer_status ON account_creation_links(customer_id, status);
 CREATE INDEX idx_personal_loans_customer_id ON personal_loans(customer_id);
@@ -244,6 +254,13 @@ CREATE INDEX idx_home_loan_applications_customer_id ON home_loan_applications(cu
 CREATE INDEX idx_home_loan_applications_status ON home_loan_applications(status);
 CREATE INDEX idx_fixed_deposits_customer_id ON fixed_deposits(customer_id);
 CREATE INDEX idx_fixed_deposits_status_maturity ON fixed_deposits(status, maturity_date);
+CREATE INDEX idx_cards_customer_id ON cards(customer_id);
+CREATE INDEX idx_cards_linked_product_id ON cards(linked_product_id);
+CREATE INDEX idx_registered_paynow_customer_id ON registered_paynow(customer_id);
+CREATE INDEX idx_registered_paynow_linked_account_id ON registered_paynow(linked_account_id);
+CREATE UNIQUE INDEX idx_registered_paynow_active_identifier
+    ON registered_paynow (paynow_type, lower(paynow_id))
+    WHERE status = 'active';
 CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
 CREATE INDEX idx_audit_logs_actor_created_at ON audit_logs(actor_user_id, created_at DESC);
 
@@ -257,13 +274,10 @@ VALUES
 -- Username: admin
 -- Email: admin@rusttogold.test
 -- Password: Admin@12345
-INSERT INTO users (username, full_name, email, phone_number, date_of_birth, password_hash, role, status)
+INSERT INTO users (username, email, password_hash, role, status)
 VALUES (
     'admin',
-    'RustToGold Admin',
     'admin@rusttogold.test',
-    '90000000',
-    DATE '1990-01-01',
     '$argon2id$v=19$m=65536,t=3,p=4$iigvsB3QLIB4HeWPwpF6jQ$i8tsrNgQaQlvXKb41xt0+kMWA6j+0FFzxJi0BOADhNQ',
     'admin',
     'active'

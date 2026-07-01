@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body class="customer-body">
-  <header class="customer-topbar"><div class="customer-container customer-topbar__inner"><a class="customer-brand" href="/customer/dashboard"><span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="" /></span><span>RustToGold</span></a><div class="customer-topbar__actions"><a class="customer-pill" href="/customer/fixed-deposits"><i data-lucide="piggy-bank"></i> Fixed Deposits</a><a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a></div></div></header>
+  {% include "partials/customer_nav.html" %}
 
   <main class="customer-main">
     <div class="customer-container customer-narrow">
@@ -20,7 +20,7 @@
           <div>
             <p class="customer-kicker">Savings</p>
             <h1>Create Fixed Deposit</h1>
-            <p>Place funds from account {{ account_number }}. Current balance: ${{ balance }}.</p>
+            <p>Select the funding account and fixed deposit plan before placing funds.</p>
           </div>
         </div>
 
@@ -28,6 +28,16 @@
           {% if has_error %}<div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>{% endif %}
           {% if has_plans %}
           <form class="form clean-form" action="/customer/fixed-deposits" method="post">
+            <div class="form-field">
+              <label class="form-label" for="account_number">Funding Account</label>
+              <select class="form-select" id="account_number" name="account_number" required>
+                {% for account in accounts %}
+                <option value="{{ account.account_number }}" {% if account.account_number == account_number %}selected{% endif %}>{{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}</option>
+                {% endfor %}
+              </select>
+              <p class="form-help">Only active accounts can be used to fund a fixed deposit placement.</p>
+            </div>
+
             <div class="form-field">
               <label class="form-label" for="plan_id">Fixed Deposit Plan</label>
               <select class="form-select" id="plan_id" name="plan_id" required>

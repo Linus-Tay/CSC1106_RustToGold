@@ -1,24 +1,26 @@
-pub mod account;
 pub mod account_creation_link;
 pub mod admin;
+pub mod card;
 pub mod customer;
 pub mod fixed_deposit;
 pub mod formatting;
 pub mod home_loan;
 pub mod loan;
 pub mod money;
+pub mod paynow;
 pub mod product;
 pub mod transaction;
 pub mod user;
 
-pub use self::account::{AccountWorkflow, BankAccount};
 pub use self::account_creation_link::AccountCreationLink;
+pub use self::card::Card;
 pub use self::admin::{AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser};
 pub use self::customer::Customer;
 pub use self::fixed_deposit::{FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary};
 pub use self::home_loan::{HomeLoanApplication, HomeLoanSummary};
 pub use self::loan::PersonalLoan;
 pub use self::money::Money;
+pub use self::paynow::PayNowRegistration;
 pub use self::product::Product;
 pub use self::transaction::Transaction;
 pub use self::user::User;

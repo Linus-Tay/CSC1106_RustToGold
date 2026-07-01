@@ -8,7 +8,6 @@ use uuid::Uuid;
 pub struct Transaction {
     pub id: Uuid,
     pub product_id: Option<Uuid>,
-    pub customer_id: Option<Uuid>,
     pub transaction_type: String,
     pub amount_cents: i64,
     pub balance_after_cents: i64,
@@ -23,6 +22,8 @@ impl Transaction {
             "WITHDRAWAL" | "withdrawal" => "Withdrawal".to_string(),
             "TRANSFER_IN" | "transfer_in" => "Transfer In".to_string(),
             "TRANSFER_OUT" | "transfer_out" => "Transfer Out".to_string(),
+            "paynow_transfer_in" => "PayNow In".to_string(),
+            "paynow_transfer_out" => "PayNow Out".to_string(),
             "loan_disbursement" => "Loan Disbursement".to_string(),
             "loan_payment" => "Loan Payment".to_string(),
             "home_loan_payment" => "Home Loan Payment".to_string(),

@@ -17,7 +17,7 @@ pub struct HomeLoanApplication {
     pub monthly_payment_cents: i64,
     pub outstanding_cents: i64,
     pub status: String,
-    pub reviewed_by: Option<i64>,
+    pub reviewed_by: Option<Uuid>,
     pub reviewed_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -42,6 +42,10 @@ impl HomeLoanApplication {
 
     pub fn outstanding_display(&self) -> String {
         Money::from_cents(self.outstanding_cents).display()
+    }
+
+    pub fn outstanding_plain(&self) -> String {
+        format!("{:.2}", self.outstanding_cents as f64 / 100.0)
     }
 
     pub fn rate_display(&self) -> String {

@@ -1,7 +1,3 @@
-use askama::DynTemplate;
-
-use crate::views::{ErrorTemplate, OnboardingFormTemplate, OnboardingFormTemplate1};
-
 pub struct ProductDetails {
     pub name: String,
     pub product_type: String,
@@ -9,14 +5,6 @@ pub struct ProductDetails {
     pub rate: String,
     pub minimum: String,
     pub features: Vec<String>,
-}
-
-pub fn get_path_template(id: &str) -> (Option<Box<dyn DynTemplate>>, i32) {
-    match id.to_lowercase().as_str() {
-        "primary-contact-details" => (Some(Box::new(OnboardingFormTemplate { test: true })), 1),
-        "additional-details" => (Some(Box::new(OnboardingFormTemplate1 { test: true })), 2),
-        _ => (None, 0),
-    }
 }
 
 pub fn get_product_details(id: &str) -> Option<ProductDetails> {
@@ -52,9 +40,8 @@ pub fn get_product_details(id: &str) -> Option<ProductDetails> {
         "PL" => Some(ProductDetails {
             name: "Personal Loan".to_string(),
             product_type: "loan".to_string(),
-            summary:
-                "A straight-through loan product for personal expenses with clear repayment terms."
-                    .to_string(),
+            summary: "A straight-through loan product for personal expenses with clear repayment terms."
+                .to_string(),
             rate: "5.88%".to_string(),
             minimum: "0".to_string(),
             features: vec![
@@ -64,6 +51,6 @@ pub fn get_product_details(id: &str) -> Option<ProductDetails> {
                 "Digital application support".to_string(),
             ],
         }),
-        _ => None, // Invalid product
+        _ => None,
     }
 }
