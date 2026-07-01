@@ -45,12 +45,14 @@ CREATE TABLE customers (
 );
 
 -- Online banking users are created only after admin approval through an account-creation link.
--- customer_id is kept on staff/admin rows too for code simplicity, but only customer users map to real customers.
+-- Customer users map to customers. Staff/admin users keep customer_id empty.
 CREATE TABLE users (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id    UUID NULL REFERENCES customers(id) ON DELETE CASCADE,
     username       TEXT NOT NULL UNIQUE,
+    full_name      TEXT NOT NULL DEFAULT '',
     email          TEXT NOT NULL UNIQUE,
+    phone_number   TEXT NOT NULL DEFAULT '',
     password_hash  TEXT NOT NULL,
     role           TEXT NOT NULL DEFAULT 'customer',
     status         TEXT NOT NULL DEFAULT 'active',
@@ -274,10 +276,12 @@ VALUES
 -- Username: admin
 -- Email: admin@rusttogold.test
 -- Password: Admin@12345
-INSERT INTO users (username, email, password_hash, role, status)
+INSERT INTO users (username, full_name, email, phone_number, password_hash, role, status)
 VALUES (
     'admin',
+    'System Administrator',
     'admin@rusttogold.test',
+    '99999999',
     '$argon2id$v=19$m=65536,t=3,p=4$iigvsB3QLIB4HeWPwpF6jQ$i8tsrNgQaQlvXKb41xt0+kMWA6j+0FFzxJi0BOADhNQ',
     'admin',
     'active'

@@ -15,8 +15,9 @@ pub async fn home_loans_page(data: web::Data<AppState>, session: Session) -> Res
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
-    match services::load_home_loan_dashboard(&data.db, user.customer_id).await {
+    match services::load_home_loan_dashboard(&data.db, customer_id).await {
         Ok(dashboard) => render(HomeLoanDashboardTemplate {
             account: dashboard.account,
             accounts: dashboard.accounts,
@@ -38,8 +39,9 @@ pub async fn home_loan_apply_page(
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
-    let accounts = match services::list_active_customer_products(&data.db, user.customer_id).await {
+    let accounts = match services::list_active_customer_products(&data.db, customer_id).await {
         Ok(accounts) => accounts,
         Err(error) => return render_error("Home loan application unavailable", error),
     };
@@ -61,13 +63,14 @@ pub async fn create_home_loan_application(
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
-    match services::submit_home_loan_application(&data.db, user.customer_id, form.into_inner())
+    match services::submit_home_loan_application(&data.db, customer_id, form.into_inner())
         .await
     {
         Ok(_) => Ok(redirect("/customer/home-loans")),
         Err(error) => {
-            let accounts = services::list_active_customer_products(&data.db, user.customer_id)
+            let accounts = services::list_active_customer_products(&data.db, customer_id)
                 .await
                 .unwrap_or_default();
             render(HomeLoanApplyTemplate {
@@ -90,6 +93,7 @@ pub async fn pay_home_loan(
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
     let application_id = match Uuid::parse_str(&path.into_inner()) {
         Ok(value) => value,
@@ -103,7 +107,7 @@ pub async fn pay_home_loan(
 
     match services::pay_home_loan(
         &data.db,
-        user.customer_id,
+        customer_id,
         application_id,
         form.into_inner(),
     )

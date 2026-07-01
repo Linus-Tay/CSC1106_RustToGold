@@ -1,19 +1,31 @@
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_customer};
 use crate::forms::account_forms::{CreateBankAccountForm, TransferForm};
-use crate::forms::{CardApplicationForm, DepositForm, PayNowRegisterForm, PayNowTransferForm, ProfileForm};
-use crate::repositories::{customer_repository, loan_repository};
+use crate::forms::{CardApplicationForm, DepositForm, PayNowRegisterForm, PayNowTransferForm, ProfileForm, StatementRequest};
+use crate::repositories::customer_repository;
 use crate::services;
 use crate::views::{
     render, CardDashboardTemplate, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate,
-    ErrorTemplate, PayNowTemplate, ProfileTemplate, TransactionsTemplate, TransferTemplate,
+    PayNowTemplate, ProfileTemplate, StatementTemplate, TransactionsTemplate, TransferTemplate,
 };
 use crate::AppState;
+use crate::models::Product;
 use actix_session::Session;
 use actix_web::{web, HttpResponse, Result};
 
 fn display_money_without_symbol(value: String) -> String {
     value.trim_start_matches('$').to_string()
+}
+
+fn can_apply_account_products(accounts: &[Product]) -> (bool, bool) {
+    let has_everyday_savings = accounts
+        .iter()
+        .any(|account| account.product_id == "everyday_savings" && account.status != "closed");
+    let has_high_yield_savings = accounts
+        .iter()
+        .any(|account| account.product_id == "high_yield_savings" && account.status != "closed");
+
+    (!has_everyday_savings, !has_high_yield_savings)
 }
 
 pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
@@ -29,15 +41,20 @@ pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<Ht
     };
 
     match services::load_customer_dashboard(&data.db, customer_id).await {
-        Ok(dashboard) => render(DashboardTemplate {
-            full_name: customer.full_name,
-            balance: display_money_without_symbol(dashboard.primary_account.balance_display()),
-            primary_account_number: dashboard.primary_account.account_number.clone(),
-            accounts: dashboard.accounts.clone(),
-            has_accounts: !dashboard.accounts.is_empty(),
-            create_account_error: String::new(),
-            has_create_account_error: false,
-        }),
+        Ok(dashboard) => {
+            let (can_apply_everyday_savings, can_apply_high_yield_savings) =
+                can_apply_account_products(&dashboard.accounts);
+
+            render(DashboardTemplate {
+                full_name: customer.full_name,
+                accounts: dashboard.accounts.clone(),
+                has_accounts: !dashboard.accounts.is_empty(),
+                can_apply_everyday_savings,
+                can_apply_high_yield_savings,
+                create_account_error: String::new(),
+                has_create_account_error: false,
+            })
+        },
         Err(message) => render_error("Dashboard unavailable", message),
     }
 }
@@ -61,12 +78,15 @@ pub async fn create_bank_account(
                     .await
                     .map(|customer| customer.full_name)
                     .unwrap_or_else(|_| user.username.clone());
+                let (can_apply_everyday_savings, can_apply_high_yield_savings) =
+                    can_apply_account_products(&dashboard.accounts);
+
                 render(DashboardTemplate {
                     full_name,
-                    balance: display_money_without_symbol(dashboard.primary_account.balance_display()),
-                    primary_account_number: dashboard.primary_account.account_number.clone(),
                     accounts: dashboard.accounts.clone(),
                     has_accounts: !dashboard.accounts.is_empty(),
+                    can_apply_everyday_savings,
+                    can_apply_high_yield_savings,
                     create_account_error: error,
                     has_create_account_error: true,
                 })
@@ -191,7 +211,7 @@ pub async fn transfer(
 
     match services::transfer(&app_state, customer_id, form_data).await {
         Ok(true) => Ok(redirect("/customer/transactions")),
-        Ok(false) => render(ErrorTemplate),
+        Ok(false) => render_error("Transfer failed", "Transfer failed due to an unknown rule.".to_string()),
         Err(error) => {
             let accounts = match services::list_active_customer_products(&app_state.db, customer_id).await {
                 Ok(accounts) if !accounts.is_empty() => accounts,
@@ -226,6 +246,55 @@ pub async fn transactions(data: web::Data<AppState>, session: Session) -> Result
             transactions,
         }),
         Err(message) => render_error("Transactions unavailable", message),
+    }
+}
+
+pub async fn statements_page(
+    data: web::Data<AppState>,
+    session: Session,
+    query: web::Query<StatementRequest>,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    match services::load_statement_page(&data.db, user.customer_id_or_nil(), query.into_inner()).await {
+        Ok(page) => render(StatementTemplate {
+            has_accounts: !page.accounts.is_empty(),
+            selected_account_id: page.selected_account_id,
+            start_date: page.start_date,
+            end_date: page.end_date,
+            has_transactions: !page.transactions.is_empty(),
+            transactions: page.transactions,
+            accounts: page.accounts,
+            has_error: !page.error.is_empty(),
+            error: page.error,
+        }),
+        Err(message) => render_error("Statements unavailable", message),
+    }
+}
+
+pub async fn download_statement_pdf(
+    data: web::Data<AppState>,
+    session: Session,
+    query: web::Query<StatementRequest>,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    match services::build_bank_statement(&data.db, user.customer_id_or_nil(), query.into_inner()).await {
+        Ok(statement) => {
+            let filename = services::statement_pdf_filename(&statement);
+            let pdf = services::render_statement_pdf(&statement);
+            Ok(HttpResponse::Ok()
+                .append_header(("Content-Type", "application/pdf"))
+                .append_header(("Content-Disposition", format!("attachment; filename=\"{}\"", filename)))
+                .body(pdf))
+        }
+        Err(message) => render_error("Statement download failed", message),
     }
 }
 
@@ -457,40 +526,58 @@ pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result
         Err(_) => return render_error("Profile unavailable", "Could not load your customer profile.".to_string()),
     };
 
-    let account = match loan_repository::find_primary_active_product(&data.db, customer_id).await {
-        Ok(account) => account,
-        _ => return render_error("Account unavailable", "No active customer product account was found.".to_string()),
+    let paynow_dashboard = match services::load_paynow_dashboard(&data.db, customer_id).await {
+        Ok(page) => page,
+        Err(_) => services::PayNowDashboard {
+            accounts: vec![],
+            registrations: vec![],
+        },
     };
 
+    let active_paynow = paynow_dashboard
+        .registrations
+        .iter()
+        .find(|registration| registration.status == "active" && registration.paynow_type == "phone_number");
+
     let date_of_birth = customer.date_of_birth_display();
-    let account_number = account.account_number.clone();
-    let balance = display_money_without_symbol(account.balance_display());
-    let account_type = account.product_id_display();
-    let status = account.status_display();
-    let created_at = account.created_at.format("%d %b %Y").to_string();
     let last_login = user.last_login_display();
+    let paynow_id = active_paynow
+        .map(|registration| registration.paynow_id.clone())
+        .unwrap_or_default();
+    let paynow_linked_product_id = active_paynow
+        .map(|registration| registration.linked_account_id.to_string())
+        .unwrap_or_default();
+    let has_paynow = !paynow_id.is_empty();
+    let accounts = paynow_dashboard.accounts;
+    let has_accounts = !accounts.is_empty();
 
     render(ProfileTemplate {
         full_name: customer.full_name,
         email: customer.email,
         phone: customer.phone_number,
         date_of_birth,
-        account_number,
-        balance,
-        account_type,
-        status,
-        created_at,
         last_login,
+        accounts,
+        has_accounts,
+        paynow_id,
+        paynow_linked_product_id,
+        has_paynow,
     })
 }
 
 pub async fn update_profile(
     data: web::Data<AppState>,
     session: Session,
-    _form: web::Form<ProfileForm>,
+    form: web::Form<ProfileForm>,
 ) -> Result<HttpResponse> {
-    if let Err(response) = require_customer(&data, &session).await {
-        return Ok(response);
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+    let customer_id = user.customer_id_or_nil();
+
+    match services::update_customer_profile(&data.db, customer_id, user.id, form.into_inner()).await {
+        Ok(_) => Ok(redirect("/customer/profile")),
+        Err(error) => render_error("Profile update failed", error),
     }
-    Ok(redirect("/customer/profile"))
 }

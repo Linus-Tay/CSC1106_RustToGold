@@ -24,8 +24,9 @@ pub async fn fixed_deposits_page(
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
-    match services::load_fixed_deposit_dashboard(&data.db, user.customer_id).await {
+    match services::load_fixed_deposit_dashboard(&data.db, customer_id).await {
         Ok(dashboard) => {
             let accounts = dashboard.accounts.clone();
             let success = if query.created.is_some() {
@@ -64,8 +65,9 @@ pub async fn fixed_deposit_new_page(
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
-    match services::load_fixed_deposit_create_page(&data.db, user.customer_id).await {
+    match services::load_fixed_deposit_create_page(&data.db, customer_id).await {
         Ok((account, accounts, plans)) => render(FixedDepositCreateTemplate {
             account_number: account.account_number.clone(),
             balance: display_money_without_symbol(account.balance_display()),
@@ -88,11 +90,12 @@ pub async fn create_fixed_deposit(
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
-    match services::create_fixed_deposit(&data.db, user.customer_id, form.into_inner()).await {
+    match services::create_fixed_deposit(&data.db, customer_id, form.into_inner()).await {
         Ok(_) => Ok(redirect("/customer/fixed-deposits?created=1")),
         Err(error) => {
-            match services::load_fixed_deposit_create_page(&data.db, user.customer_id).await {
+            match services::load_fixed_deposit_create_page(&data.db, customer_id).await {
                 Ok((account, accounts, plans)) => render(FixedDepositCreateTemplate {
                     account_number: account.account_number.clone(),
                     balance: display_money_without_symbol(account.balance_display()),
@@ -117,6 +120,7 @@ pub async fn withdraw_fixed_deposit(
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
     let fixed_deposit_id = match Uuid::parse_str(&path.into_inner()) {
         Ok(value) => value,
@@ -128,7 +132,7 @@ pub async fn withdraw_fixed_deposit(
         }
     };
 
-    match services::withdraw_fixed_deposit(&data.db, user.customer_id, fixed_deposit_id).await {
+    match services::withdraw_fixed_deposit(&data.db, customer_id, fixed_deposit_id).await {
         Ok(status) if status == "paid_out" => Ok(redirect("/customer/fixed-deposits?paid_out=1")),
         Ok(_) => Ok(redirect("/customer/fixed-deposits?withdrawn=1")),
         Err(error) => render_error("Fixed deposit withdrawal failed", error),

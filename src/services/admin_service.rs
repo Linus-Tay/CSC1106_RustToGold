@@ -33,7 +33,7 @@ pub async fn list_admin_customer_applications(
 
 pub async fn approve_customer_application(
     app_state: &AppState,
-    staff_user_id: i64,
+    staff_user_id: Uuid,
     customer_id: Uuid,
 ) -> Result<(), String> {
     crate::services::approve_customer_with_product(app_state, customer_id)
@@ -59,7 +59,7 @@ pub async fn approve_customer_application(
 
 pub async fn reject_customer_application(
     db: &PgPool,
-    staff_user_id: i64,
+    staff_user_id: Uuid,
     customer_id: Uuid,
 ) -> Result<(), String> {
     admin_repository::reject_customer_application(db, customer_id)
@@ -104,7 +104,7 @@ pub async fn list_admin_home_loans(db: &PgPool) -> Result<Vec<AdminHomeLoanRecor
 
 pub async fn approve_personal_loan(
     db: &PgPool,
-    staff_user_id: i64,
+    staff_user_id: Uuid,
     loan_id: Uuid,
 ) -> Result<(), String> {
     admin_repository::approve_personal_loan(db, staff_user_id, loan_id)
@@ -117,7 +117,7 @@ pub async fn approve_personal_loan(
 
 pub async fn reject_personal_loan(
     db: &PgPool,
-    staff_user_id: i64,
+    staff_user_id: Uuid,
     loan_id: Uuid,
 ) -> Result<(), String> {
     admin_repository::reject_personal_loan(db, staff_user_id, loan_id)
@@ -139,7 +139,7 @@ pub async fn list_admin_staff(db: &PgPool) -> Result<Vec<AdminStaffUser>, String
 
 pub async fn create_staff_user(
     db: &PgPool,
-    actor_user_id: i64,
+    actor_user_id: Uuid,
     username: String,
     full_name: String,
     email: String,
@@ -178,8 +178,8 @@ pub async fn create_staff_user(
 
 pub async fn update_staff_user(
     db: &PgPool,
-    actor_user_id: i64,
-    staff_user_id: i64,
+    actor_user_id: Uuid,
+    staff_user_id: Uuid,
     full_name: String,
     email: String,
     phone_number: String,
@@ -227,8 +227,8 @@ pub async fn update_staff_user(
 
 pub async fn delete_staff_user(
     db: &PgPool,
-    actor_user_id: i64,
-    staff_user_id: i64,
+    actor_user_id: Uuid,
+    staff_user_id: Uuid,
 ) -> Result<(), String> {
     if actor_user_id == staff_user_id {
         return Err("You cannot delete your own admin session account.".to_string());
@@ -255,8 +255,8 @@ pub async fn list_admin_customer_accounts(
 
 pub async fn set_customer_user_status(
     db: &PgPool,
-    actor_user_id: i64,
-    target_user_id: i64,
+    actor_user_id: Uuid,
+    target_user_id: Uuid,
     status: &str,
 ) -> Result<(), String> {
     let status = normalise_user_status(status)?;
@@ -270,7 +270,7 @@ pub async fn set_customer_user_status(
 
 pub async fn set_customer_product_status(
     db: &PgPool,
-    actor_user_id: i64,
+    actor_user_id: Uuid,
     product_id: Uuid,
     status: &str,
 ) -> Result<(), String> {

@@ -13,34 +13,49 @@
     <section class="rounded-[2rem] bg-[#0B1F3A] p-8 text-white shadow-xl shadow-[#0B1F3A]/20">
       <p class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.24em] text-[#D6A54A]"><i data-lucide="shield-check" class="h-4 w-4"></i> Operations Control</p>
       <h1 class="text-4xl font-black tracking-tight">Admin Dashboard</h1>
-      <p class="mt-4 max-w-3xl text-white/70">Review account openings, loan applications, home loan submissions, and fixed deposit activity from one approval portal.</p>
+      <p class="mt-4 max-w-3xl text-white/70">Review pending customer onboarding, additional account applications, loan submissions and product operations from one place.</p>
     </section>
 
-    <section class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+    <section class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-6">
       <a href="/admin/onboardings" class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-        <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Pending Onboardings</p>
+        <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Customer onboarding</p>
         <strong class="mt-3 block text-4xl font-black text-[#0B1F3A]">{{ summary.pending_signup_count }}</strong>
+        <span class="mt-2 block text-sm font-semibold leading-6 text-slate-500">Pending KYC and first-account opening applications.</span>
+        <span class="mt-3 inline-flex items-center gap-1 text-sm font-bold text-[#1D4ED8]">Review onboarding <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+      </a>
+
+      <a href="/admin/accounts" class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+        <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">New bank accounts</p>
+        <strong class="mt-3 block text-4xl font-black text-[#0B1F3A]">{{ summary.pending_account_product_count }}</strong>
+        <span class="mt-2 block text-sm font-semibold leading-6 text-slate-500">Additional account products waiting for admin activation.</span>
         <span class="mt-3 inline-flex items-center gap-1 text-sm font-bold text-[#1D4ED8]">Review accounts <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
       </a>
+
       <a href="/admin/personal-loans" class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-        <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Personal Loans</p>
+        <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Personal loans</p>
         <strong class="mt-3 block text-4xl font-black text-[#0B1F3A]">{{ summary.pending_personal_loan_count }}</strong>
+        <span class="mt-2 block text-sm font-semibold leading-6 text-slate-500">Pending loan purpose, income and repayment checks.</span>
         <span class="mt-3 inline-flex items-center gap-1 text-sm font-bold text-[#1D4ED8]">Process loans <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
       </a>
+
       <a href="/admin/home-loans" class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-        <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Home Loans</p>
+        <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Home loans</p>
         <strong class="mt-3 block text-4xl font-black text-[#0B1F3A]">{{ summary.pending_home_loan_count }}</strong>
-        <span class="mt-3 inline-flex items-center gap-1 text-sm font-bold text-[#1D4ED8]">Review property loans <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        <span class="mt-2 block text-sm font-semibold leading-6 text-slate-500">Pending property value, down-payment and LTV review.</span>
+        <span class="mt-3 inline-flex items-center gap-1 text-sm font-bold text-[#1D4ED8]">Review home loans <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
       </a>
+
       <a href="/admin/fixed-deposits" class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
         <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Active FDs</p>
         <strong class="mt-3 block text-4xl font-black text-[#0B1F3A]">{{ summary.active_fixed_deposit_count }}</strong>
+        <span class="mt-2 block text-sm font-semibold leading-6 text-slate-500">Active or matured placements in the system.</span>
         <span class="mt-3 inline-flex items-center gap-1 text-sm font-bold text-[#1D4ED8]">View placements <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
       </a>
+
       <div class="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
         <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Customers</p>
         <strong class="mt-3 block text-4xl font-black text-[#0B1F3A]">{{ summary.total_customer_count }}</strong>
-        <span class="mt-3 block text-sm font-semibold text-slate-500">Total customer records</span>
+        <span class="mt-2 block text-sm font-semibold leading-6 text-slate-500">Total customer records in RustToGold.</span>
       </div>
     </section>
 
@@ -48,32 +63,17 @@
       <a href="/admin/accounts" class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#1D4ED8]/40 hover:shadow-xl">
         <div class="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#1D4ED8]/10 text-[#1D4ED8]"><i data-lucide="wallet-cards" class="h-6 w-6"></i></div>
         <h2 class="text-xl font-black text-[#0B1F3A]">Customer account controls</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-500">Suspend online banking users, freeze products, reactivate products and close products from one operations page.</p>
+        <p class="mt-2 text-sm leading-6 text-slate-500">Approve additional bank accounts, freeze products, reactivate products and close products.</p>
       </a>
       <a href="/admin/staff" class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#1D4ED8]/40 hover:shadow-xl">
         <div class="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#D6A54A]/15 text-[#0B1F3A]"><i data-lucide="users-round" class="h-6 w-6"></i></div>
         <h2 class="text-xl font-black text-[#0B1F3A]">Staff management</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-500">Create, update, suspend and remove staff accounts for the admin approval portal.</p>
+        <p class="mt-2 text-sm leading-6 text-slate-500">Create, update, suspend and remove staff accounts for the admin portal.</p>
       </a>
       <a href="/admin/audit-log" class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#1D4ED8]/40 hover:shadow-xl">
         <div class="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-700"><i data-lucide="scroll-text" class="h-6 w-6"></i></div>
         <h2 class="text-xl font-black text-[#0B1F3A]">Audit log</h2>
         <p class="mt-2 text-sm leading-6 text-slate-500">Review who approved, rejected, froze, closed or updated operational records.</p>
-      </a>
-      <a href="/admin/onboardings" class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#1D4ED8]/40 hover:shadow-xl">
-        <div class="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#1D4ED8]/10 text-[#1D4ED8]"><i data-lucide="clipboard-check" class="h-6 w-6"></i></div>
-        <h2 class="text-xl font-black text-[#0B1F3A]">Account opening approval</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-500">Check identity, residency, contact details, employment, income band and selected account before approving.</p>
-      </a>
-      <a href="/admin/personal-loans" class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#1D4ED8]/40 hover:shadow-xl">
-        <div class="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#D6A54A]/15 text-[#0B1F3A]"><i data-lucide="badge-dollar-sign" class="h-6 w-6"></i></div>
-        <h2 class="text-xl font-black text-[#0B1F3A]">Personal loan approval</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-500">Review KYC, employment, income band, purpose, repayment amount and account status before disbursement.</p>
-      </a>
-      <a href="/admin/home-loans" class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#1D4ED8]/40 hover:shadow-xl">
-        <div class="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-700"><i data-lucide="home" class="h-6 w-6"></i></div>
-        <h2 class="text-xl font-black text-[#0B1F3A]">Home loan review</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-500">Check property value, down payment, loan-to-value ratio, term, repayment and customer profile.</p>
       </a>
     </section>
   </main>

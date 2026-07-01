@@ -15,14 +15,18 @@ use uuid::Uuid;
 #[derive(Debug, Deserialize)]
 pub struct StaffCreateForm {
     pub username: String,
+    pub full_name: String,
     pub email: String,
+    pub phone_number: String,
     pub role: String,
     pub password: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct StaffUpdateForm {
+    pub full_name: String,
     pub email: String,
+    pub phone_number: String,
     pub role: String,
     pub status: String,
     pub password: Option<String>,
@@ -215,7 +219,9 @@ pub async fn create_staff_user(
         &data.db,
         user.id,
         form.username,
+        form.full_name,
         form.email,
+        form.phone_number,
         form.role,
         form.password,
     )
@@ -249,7 +255,9 @@ pub async fn update_staff_user(
         &data.db,
         user.id,
         staff_user_id,
+        form.full_name,
         form.email,
+        form.phone_number,
         form.role,
         form.status,
         form.password,

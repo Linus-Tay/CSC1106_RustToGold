@@ -220,6 +220,34 @@ pub async fn update_customer(
     .await
 }
 
+
+
+pub async fn update_basic_profile(
+    db: &PgPool,
+    customer_id: Uuid,
+    full_name: &str,
+    phone_number: &str,
+) -> Result<Customer, sqlx::Error> {
+    sqlx::query_as::<_, Customer>(
+        r#"
+        UPDATE customers
+        SET full_name = $1,
+            phone_number = $2,
+            updated_at = NOW()
+        WHERE id = $3
+        RETURNING id, full_name, nric, date_of_birth, gender, nationality, residency, race,
+                  email, phone_number, residential_address, mailing_address, preferred_contact,
+                  employment_status, occupation, employer_name, industry, monthly_income_range,
+                  kyc_status, created_at, updated_at
+        "#,
+    )
+    .bind(full_name)
+    .bind(phone_number)
+    .bind(customer_id)
+    .fetch_one(db)
+    .await
+}
+
 pub async fn approve_customer(db: &PgPool, account_id: &Uuid) -> Result<Customer, sqlx::Error> {
     sqlx::query_as::<_, Customer>(
         r#"

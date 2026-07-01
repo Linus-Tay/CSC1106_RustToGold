@@ -10,6 +10,10 @@ pub async fn dashboard_summary(db: &PgPool) -> Result<AdminDashboardSummary, sql
         r#"
         SELECT
             (SELECT COUNT(*) FROM customers WHERE kyc_status = 'pending')::BIGINT AS pending_signup_count,
+            (SELECT COUNT(*)
+             FROM customer_products cp
+             JOIN customers c ON c.id = cp.customer_id
+             WHERE cp.status = 'inactive' AND c.kyc_status = 'approved')::BIGINT AS pending_account_product_count,
             (SELECT COUNT(*) FROM personal_loans WHERE status = 'pending')::BIGINT AS pending_personal_loan_count,
             (SELECT COUNT(*) FROM home_loan_applications WHERE status = 'pending')::BIGINT AS pending_home_loan_count,
             (SELECT COUNT(*) FROM fixed_deposits WHERE status IN ('active', 'matured'))::BIGINT AS active_fixed_deposit_count,
@@ -195,7 +199,7 @@ pub async fn list_home_loans(db: &PgPool) -> Result<Vec<AdminHomeLoanRecord>, sq
 
 pub async fn approve_personal_loan(
     db: &PgPool,
-    staff_user_id: i64,
+    staff_user_id: Uuid,
     loan_id: Uuid,
 ) -> Result<(), sqlx::Error> {
     let mut tx = db.begin().await?;
@@ -243,12 +247,11 @@ pub async fn approve_personal_loan(
 
     sqlx::query(
         r#"
-        INSERT INTO transactions (product_id, customer_id, transaction_type, amount_cents, balance_after_cents, description)
-        VALUES ($1, $2, 'loan_disbursement', $3, $4, 'Personal loan approved and disbursed')
+        INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
+        VALUES ($1, 'loan_disbursement', $2, $3, 'Personal loan approved and disbursed')
         "#,
     )
     .bind(product.id)
-    .bind(loan.customer_id)
     .bind(loan.principal_cents)
     .bind(new_balance)
     .execute(&mut *tx)
@@ -269,7 +272,7 @@ pub async fn approve_personal_loan(
 
 pub async fn reject_personal_loan(
     db: &PgPool,
-    staff_user_id: i64,
+    staff_user_id: Uuid,
     loan_id: Uuid,
 ) -> Result<(), sqlx::Error> {
     let mut tx = db.begin().await?;
@@ -301,7 +304,7 @@ pub async fn reject_personal_loan(
 
 pub async fn record_audit_log(
     db: &PgPool,
-    actor_user_id: Option<i64>,
+    actor_user_id: Option<Uuid>,
     action: &str,
     entity_type: &str,
     entity_id: Option<String>,
@@ -345,14 +348,14 @@ pub async fn create_staff_user(
     phone_number: &str,
     role: &str,
     password_hash: &str,
-    actor_user_id: i64,
+    actor_user_id: Uuid,
 ) -> Result<(), sqlx::Error> {
     let mut tx = db.begin().await?;
 
-    let staff_user_id = sqlx::query_scalar::<_, i64>(
+    let staff_user_id = sqlx::query_scalar::<_, Uuid>(
         r#"
-        INSERT INTO users (username, full_name, email, phone_number, date_of_birth, password_hash, role, status)
-        VALUES ($1, $2, $3, $4, DATE '1990-01-01', $5, $6, 'active')
+        INSERT INTO users (username, full_name, email, phone_number, password_hash, role, status)
+        VALUES ($1, $2, $3, $4, $5, $6, 'active')
         RETURNING id
         "#,
     )
@@ -380,14 +383,14 @@ pub async fn create_staff_user(
 
 pub async fn update_staff_user(
     db: &PgPool,
-    staff_user_id: i64,
+    staff_user_id: Uuid,
     full_name: &str,
     email: &str,
     phone_number: &str,
     role: &str,
     status: &str,
     password_hash: Option<&str>,
-    actor_user_id: i64,
+    actor_user_id: Uuid,
 ) -> Result<(), sqlx::Error> {
     let mut tx = db.begin().await?;
 
@@ -441,8 +444,8 @@ pub async fn update_staff_user(
 
 pub async fn delete_staff_user(
     db: &PgPool,
-    staff_user_id: i64,
-    actor_user_id: i64,
+    staff_user_id: Uuid,
+    actor_user_id: Uuid,
 ) -> Result<(), sqlx::Error> {
     let mut tx = db.begin().await?;
 
@@ -485,7 +488,7 @@ pub async fn list_customer_accounts(db: &PgPool) -> Result<Vec<AdminCustomerAcco
         FROM customer_products cp
         JOIN customers c ON c.id = cp.customer_id
         LEFT JOIN users u ON u.customer_id = c.id AND u.role = 'customer'
-        ORDER BY c.full_name ASC, cp.created_at ASC
+        ORDER BY CASE cp.status WHEN 'inactive' THEN 0 WHEN 'active' THEN 1 WHEN 'frozen' THEN 2 ELSE 3 END, cp.created_at DESC
         "#,
     )
     .fetch_all(db)
@@ -494,9 +497,9 @@ pub async fn list_customer_accounts(db: &PgPool) -> Result<Vec<AdminCustomerAcco
 
 pub async fn set_user_status(
     db: &PgPool,
-    target_user_id: i64,
+    target_user_id: Uuid,
     status: &str,
-    actor_user_id: i64,
+    actor_user_id: Uuid,
 ) -> Result<(), sqlx::Error> {
     let mut tx = db.begin().await?;
 
@@ -529,7 +532,7 @@ pub async fn set_product_status(
     db: &PgPool,
     product_id: Uuid,
     status: &str,
-    actor_user_id: i64,
+    actor_user_id: Uuid,
 ) -> Result<(), sqlx::Error> {
     let mut tx = db.begin().await?;
 
@@ -582,7 +585,7 @@ pub async fn list_audit_logs(db: &PgPool) -> Result<Vec<AdminAuditLogRecord>, sq
 
 async fn insert_audit_log_tx(
     tx: &mut DbTransaction<'_, Postgres>,
-    actor_user_id: Option<i64>,
+    actor_user_id: Option<Uuid>,
     action: &str,
     entity_type: &str,
     entity_id: Option<String>,

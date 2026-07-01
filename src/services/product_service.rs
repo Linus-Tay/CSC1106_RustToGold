@@ -58,9 +58,10 @@ pub async fn create_bank_account(
     customer_id: Uuid,
     account_type: &str,
 ) -> Result<Product, String> {
-    let (product_id, product_type) = match account_type {
-        "high_yield_savings" => ("high_yield_savings", "savings"),
-        _ => return Err("Only High-Yield Savings is available as an additional bank account right now.".to_string()),
+    let (product_id, product_type, product_label) = match account_type {
+        "everyday_savings" => ("everyday_savings", "savings", "Everyday Savings"),
+        "high_yield_savings" => ("high_yield_savings", "savings", "High-Yield Savings"),
+        _ => return Err("Choose a valid bank account product.".to_string()),
     };
 
     let active_accounts = product_repository::list_active_products_by_customer(db, &customer_id)
@@ -79,12 +80,12 @@ pub async fn create_bank_account(
         .iter()
         .any(|account| account.product_id == product_id && account.status != "closed")
     {
-        return Err("You already have a High-Yield Savings account application or account.".to_string());
+        return Err(format!("You already have a {product_label} account application or account."));
     }
 
     let account_number = generate_account_number(db).await;
 
-    product_repository::insert_active_product(
+    product_repository::insert_product(
         db,
         &customer_id,
         product_id,
@@ -93,8 +94,8 @@ pub async fn create_bank_account(
     )
     .await
     .map_err(|error| {
-        eprintln!("create bank account failed: {error:?}");
-        "Could not create the High-Yield Savings account.".to_string()
+        eprintln!("bank account application failed: {error:?}");
+        format!("Could not submit the {product_label} account application.")
     })
 }
 

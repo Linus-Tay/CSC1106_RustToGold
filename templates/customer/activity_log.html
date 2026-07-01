@@ -10,12 +10,7 @@
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body class="customer-body">
-  <header class="customer-topbar">
-    <div class="customer-container customer-topbar__inner">
-      <a class="customer-brand" href="/customer/dashboard"><span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="RustToGold logo" /></span><span>RustToGold</span></a>
-      <div class="customer-topbar__actions"><a class="customer-pill" href="/customer/transactions"><i data-lucide="receipt-text"></i> Transactions</a><a class="customer-pill" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</a><a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a></div>
-    </div>
-  </header>
+  {% include "partials/customer_nav.html" %}
 
   <main class="customer-main">
     <div class="customer-container">

@@ -11,6 +11,7 @@ pub mod onboard_service;
 pub mod paynow_service;
 pub mod product_service;
 pub mod profile_service;
+pub mod statement_service;
 pub mod support;
 
 pub use self::account_service::{
@@ -38,6 +39,7 @@ pub use self::home_loan_service::{
 };
 pub use self::loan_service::{apply_personal_loan, load_loan_dashboard, pay_personal_loan, LoanDashboard};
 pub use self::onboard_service::get_product_details;
-pub use self::paynow_service::{load_paynow_dashboard, register_paynow, transfer_paynow};
+pub use self::paynow_service::{load_paynow_dashboard, register_paynow, transfer_paynow, PayNowDashboard};
 pub use self::product_service::{create_bank_account, create_product, deposit, generate_account_number, list_active_customer_products, list_customer_products, transfer};
 pub use self::profile_service::update_customer_profile;
+pub use self::statement_service::{build_bank_statement, load_statement_page, render_statement_pdf, statement_pdf_filename, StatementPageData};

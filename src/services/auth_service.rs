@@ -47,10 +47,7 @@ pub async fn register_user(
         db,
         customer.id,
         &username,
-        &customer.full_name,
         customer_email,
-        &customer.phone_number,
-        customer.date_of_birth,
         &password_hash,
     )
     .await

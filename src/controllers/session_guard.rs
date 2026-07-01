@@ -44,7 +44,8 @@ async fn require_active_user(
     key: &str,
     login_path: &str,
 ) -> Result<User, HttpResponse> {
-    let Some(user_id) = session.get::<Uuid>(key).ok().flatten() else {
+    let Some(user_id) = session_uuid(session, key) else {
+        clear_session_key(session, key);
         return Err(redirect(login_path));
     };
 
@@ -65,21 +66,21 @@ async fn require_active_user(
 }
 
 pub fn customer_session_user_id(session: &Session) -> Option<Uuid> {
-    session.get::<Uuid>(CUSTOMER_USER_ID_KEY).ok().flatten()
+    session_uuid(session, CUSTOMER_USER_ID_KEY)
 }
 
 pub fn admin_session_user_id(session: &Session) -> Option<Uuid> {
-    session.get::<Uuid>(ADMIN_USER_ID_KEY).ok().flatten()
+    session_uuid(session, ADMIN_USER_ID_KEY)
 }
 
 pub fn store_customer_session(session: &Session, user: &User) -> Result<()> {
-    session.insert(CUSTOMER_USER_ID_KEY, user.id)?;
+    session.insert(CUSTOMER_USER_ID_KEY, user.id.to_string())?;
     session.insert(CUSTOMER_ROLE_KEY, user.role.clone())?;
     Ok(())
 }
 
 pub fn store_admin_session(session: &Session, user: &User) -> Result<()> {
-    session.insert(ADMIN_USER_ID_KEY, user.id)?;
+    session.insert(ADMIN_USER_ID_KEY, user.id.to_string())?;
     session.insert(ADMIN_ROLE_KEY, user.role.clone())?;
     Ok(())
 }
@@ -92,6 +93,14 @@ pub fn clear_customer_session(session: &Session) {
 pub fn clear_admin_session(session: &Session) {
     session.remove(ADMIN_USER_ID_KEY);
     session.remove(ADMIN_ROLE_KEY);
+}
+
+fn session_uuid(session: &Session, key: &str) -> Option<Uuid> {
+    session
+        .get::<String>(key)
+        .ok()
+        .flatten()
+        .and_then(|value| Uuid::parse_str(&value).ok())
 }
 
 fn clear_session_key(session: &Session, key: &str) {

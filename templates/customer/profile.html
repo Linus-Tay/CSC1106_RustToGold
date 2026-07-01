@@ -10,80 +10,131 @@
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body class="customer-body">
-  <header class="customer-topbar">
-    <div class="customer-container customer-topbar__inner">
-      <a class="customer-brand" href="/customer/dashboard">
-        <span class="customer-brand__logo"><img src="/static/images/rusttogold-logo.png" alt="" /></span>
-        <span>RustToGold</span>
-      </a>
-      <div class="customer-topbar__actions">
-        <a class="customer-pill" href="/customer/dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-        <a class="customer-pill customer-pill--danger" href="/logout"><i data-lucide="log-out"></i> Logout</a>
-      </div>
-    </div>
-  </header>
+  {% include "partials/customer_nav.html" %}
 
   <main class="customer-main">
-    <div class="customer-container">
+    <div class="customer-container customer-narrow">
       <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
 
-      <section class="module-hero module-hero--navy">
-        <div>
-          <p class="customer-kicker">Profile</p>
-          <h1>My Profile</h1>
-          <p>Customer information and account summary are kept here so the dashboard can stay focused on actions.</p>
-        </div>
-        <div class="module-stat">
-          <span>Available Balance</span>
-          <strong>${{ balance }}</strong>
-          <small>{{ account_number }}</small>
-        </div>
+      <section class="plain-page-heading profile-page-heading-clean">
+        <p class="customer-kicker">Profile</p>
+        <h1>Profile settings</h1>
+        <p>Update your customer details, PayNow mobile number and online banking password from one place.</p>
       </section>
 
-      <div class="customer-grid customer-grid--two">
-        <section class="customer-card">
-          <div class="customer-card__header">
+      <form class="profile-settings-stack" action="/customer/profile" method="post">
+        <section class="customer-card profile-settings-card profile-personal-card">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="user-round"></i></span>
             <div>
-              <h2>Personal Information</h2>
-              <p>Details captured during account creation.</p>
+              <p class="customer-kicker">Personal</p>
+              <h2>Personal information</h2>
+              <p>These fields update your customer record.</p>
             </div>
           </div>
           <div class="customer-card__body">
-            <div class="detail-list">
-              <div class="detail-row"><div class="detail-row__label">Full Name</div><div class="detail-row__value">{{ full_name }}</div></div>
-              <div class="detail-row"><div class="detail-row__label">Email</div><div class="detail-row__value">{{ email }}</div></div>
-              <div class="detail-row"><div class="detail-row__label">Phone Number</div><div class="detail-row__value">{{ phone }}</div></div>
-              <div class="detail-row"><div class="detail-row__label">Date of Birth</div><div class="detail-row__value">{{ date_of_birth }}</div></div>
+            <div class="profile-form-grid profile-form-grid--two">
+              <div class="form-field form-field--full">
+                <label class="form-label" for="full_name">Full Name</label>
+                <input class="form-input" id="full_name" name="full_name" value="{{ full_name }}" required />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="phone_number">Phone Number</label>
+                <input class="form-input" id="phone_number" name="phone_number" value="{{ phone }}" required />
+              </div>
+              <div class="form-field">
+                <label class="form-label">Email</label>
+                <div class="readonly-field">{{ email }}</div>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Date of Birth</label>
+                <div class="readonly-field">{{ date_of_birth }}</div>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Last Login</label>
+                <div class="readonly-field">{{ last_login }}</div>
+              </div>
             </div>
           </div>
         </section>
 
-        <section class="customer-card">
-          <div class="customer-card__header">
+        <section class="customer-card profile-settings-card profile-paynow-card">
+          <div class="customer-card__header customer-card__header--with-icon profile-card-header--split">
+            <span class="panel-icon"><i data-lucide="scan-line"></i></span>
             <div>
-              <h2>Account Summary</h2>
-              <p>Your primary active RustToGold product account.</p>
+              <p class="customer-kicker">PayNow</p>
+              <h2>Edit PayNow mobile number</h2>
+              <p>This is the mobile number other people use to send PayNow transfers to you.</p>
+            </div>
+            <span class="profile-status-chip {% if has_paynow %}profile-status-chip--active{% endif %}">
+              {% if has_paynow %}Registered{% else %}Not registered{% endif %}
+            </span>
+          </div>
+          <div class="customer-card__body">
+            {% if has_accounts %}
+            <div class="profile-paynow-current">
+              <span>Current PayNow number</span>
+              <strong>{% if has_paynow %}{{ paynow_id }}{% else %}No number registered{% endif %}</strong>
+            </div>
+            <div class="profile-form-grid profile-paynow-editor">
+              <div class="form-field">
+                <label class="form-label" for="paynow_id">New PayNow Mobile Number</label>
+                <input class="form-input form-input--large" id="paynow_id" name="paynow_id" inputmode="numeric" value="{{ paynow_id }}" placeholder="91234567" />
+                <p class="form-help">Use an 8-digit Singapore mobile number starting with 8 or 9.</p>
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="linked_product_id">Receive PayNow into</label>
+                <select class="form-input form-input--large" id="linked_product_id" name="linked_product_id">
+                  {% for account in accounts %}
+                  <option value="{{ account.id }}" {% if account.id_display() == paynow_linked_product_id %}selected{% endif %}>{{ account.product_id_display() }} · {{ account.account_number }}</option>
+                  {% endfor %}
+                </select>
+                <p class="form-help">Changing this only affects incoming PayNow transfers.</p>
+              </div>
+            </div>
+            {% else %}
+            <div class="empty-state empty-state--small">
+              <div class="empty-state__icon"><i data-lucide="wallet"></i></div>
+              <h3>No active account</h3>
+              <p>You need an active account before registering PayNow.</p>
+            </div>
+            <input type="hidden" name="paynow_id" value="" />
+            <input type="hidden" name="linked_product_id" value="" />
+            {% endif %}
+          </div>
+        </section>
+
+        <section class="customer-card profile-settings-card profile-password-card">
+          <div class="customer-card__header customer-card__header--with-icon">
+            <span class="panel-icon"><i data-lucide="lock-keyhole"></i></span>
+            <div>
+              <p class="customer-kicker">Security</p>
+              <h2>Edit password</h2>
+              <p>Leave these fields blank if you only want to update profile or PayNow details.</p>
             </div>
           </div>
           <div class="customer-card__body">
-            <div class="detail-list">
-              <div class="detail-row"><div class="detail-row__label">Account Number</div><div class="detail-row__value">{{ account_number }}</div></div>
-              <div class="detail-row"><div class="detail-row__label">Product</div><div class="detail-row__value">{{ account_type }}</div></div>
-              <div class="detail-row"><div class="detail-row__label">Available Balance</div><div class="detail-row__value">${{ balance }}</div></div>
-              <div class="detail-row"><div class="detail-row__label">Status</div><div class="detail-row__value"><span class="badge badge--success">{{ status }}</span></div></div>
-              <div class="detail-row"><div class="detail-row__label">Created On</div><div class="detail-row__value">{{ created_at }}</div></div>
+            <div class="profile-form-grid profile-password-grid">
+              <div class="form-field">
+                <label class="form-label" for="current_password">Current Password</label>
+                <input class="form-input" id="current_password" name="current_password" type="password" autocomplete="current-password" />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="new_password">New Password</label>
+                <input class="form-input" id="new_password" name="new_password" type="password" autocomplete="new-password" />
+              </div>
+              <div class="form-field">
+                <label class="form-label" for="confirm_password">Confirm New Password</label>
+                <input class="form-input" id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" />
+              </div>
             </div>
           </div>
         </section>
-      </div>
 
-      <section class="customer-card customer-card--compact customer-section">
-        <h2>Security</h2>
-        <div class="detail-list">
-          <div class="detail-row"><div class="detail-row__label">Password</div><div class="detail-row__value">********</div></div>
-          <div class="detail-row"><div class="detail-row__label">Last Login</div><div class="detail-row__value">{{ last_login }}</div></div>
+        <div class="profile-save-bar profile-save-bar--sticky-safe">
+          <button class="c-button c-button--primary" type="submit"><i data-lucide="save"></i> Save Profile Changes</button>
         </div>
-      </section>
+      </form>
     </div>
   </main>
 

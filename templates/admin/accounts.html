@@ -11,9 +11,9 @@
 
   <main class="mx-auto max-w-7xl px-6 py-10">
     <section class="rounded-[2rem] bg-[#0B1F3A] p-8 text-white shadow-xl shadow-[#0B1F3A]/20">
-      <p class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.24em] text-[#D6A54A]"><i data-lucide="wallet-cards" class="h-4 w-4"></i> Account Operations</p>
-      <h1 class="text-4xl font-black tracking-tight">Customer Accounts & Products</h1>
-      <p class="mt-4 max-w-3xl text-white/70">Suspend a customer online banking user to block dashboard login. Freeze a product to let the user log in but stop actions for that specific account.</p>
+      <p class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.24em] text-[#D6A54A]"><i data-lucide="wallet-cards" class="h-4 w-4"></i> Account Opening Review</p>
+      <h1 class="text-4xl font-black tracking-tight">Customer Account Applications</h1>
+      <p class="mt-4 max-w-3xl text-white/70">Review newly requested bank products, approve pending accounts, and manage existing customer access from one admin view.</p>
     </section>
 
     {% if has_error %}
@@ -62,12 +62,12 @@
           </div>
 
           <div class="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
-            <h3 class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#0B1F3A]"><i data-lucide="lock-keyhole" class="h-4 w-4 text-[#1D4ED8]"></i> Product control</h3>
-            <p class="text-sm leading-6 text-slate-500">Freezing the product keeps dashboard login available, but this account disappears from deposit, transfer and product funding actions.</p>
+            <h3 class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#0B1F3A]"><i data-lucide="lock-keyhole" class="h-4 w-4 text-[#1D4ED8]"></i> Product review</h3>
+            <p class="text-sm leading-6 text-slate-500">Inactive products are pending account applications. Activating them makes the account available for deposits, transfers, loans and fixed deposit funding.</p>
             <div class="mt-4 flex flex-wrap gap-2">
               {% if acc.can_activate_product() %}
               <form action="/admin/accounts/products/{{ acc.product_id }}/activate" method="post">
-                <button class="inline-flex min-h-10 items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-black text-white" type="submit"><i data-lucide="check" class="h-4 w-4"></i> Activate</button>
+                <button class="inline-flex min-h-10 items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-black text-white" type="submit"><i data-lucide="check" class="h-4 w-4"></i> Approve / Activate</button>
               </form>
               {% endif %}
               {% if acc.can_freeze_product() %}

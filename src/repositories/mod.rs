@@ -6,5 +6,6 @@ pub mod home_loan_repository;
 pub mod loan_repository;
 pub mod paynow_repository;
 pub mod product_repository;
+pub mod statement_repository;
 pub mod transaction_repository;
 pub mod user_repository;

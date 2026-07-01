@@ -172,7 +172,7 @@ async fn lock_product_by_id(
 async fn insert_product_transaction(
     tx: &mut DbTransaction<'_, Postgres>,
     product_id: Uuid,
-    customer_id: Uuid,
+    _customer_id: Uuid,
     transaction_type: &str,
     amount_cents: i64,
     balance_after_cents: i64,
@@ -180,13 +180,12 @@ async fn insert_product_transaction(
 ) -> Result<Transaction, sqlx::Error> {
     sqlx::query_as::<_, Transaction>(
         r#"
-        INSERT INTO transactions (product_id, customer_id, transaction_type, amount_cents, balance_after_cents, description)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, product_id, customer_id, transaction_type, amount_cents, balance_after_cents, description, created_at
+        INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, product_id, transaction_type, amount_cents, balance_after_cents, description, created_at
         "#,
     )
     .bind(product_id)
-    .bind(customer_id)
     .bind(transaction_type)
     .bind(amount_cents)
     .bind(balance_after_cents)

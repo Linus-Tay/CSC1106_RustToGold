@@ -6,6 +6,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone, FromRow)]
 pub struct AdminDashboardSummary {
     pub pending_signup_count: i64,
+    pub pending_account_product_count: i64,
     pub pending_personal_loan_count: i64,
     pub pending_home_loan_count: i64,
     pub active_fixed_deposit_count: i64,
@@ -15,7 +16,7 @@ pub struct AdminDashboardSummary {
 #[derive(Debug, Clone, FromRow)]
 pub struct AdminCustomerApplication {
     pub customer_id: Uuid,
-    pub user_id: Option<i64>,
+    pub user_id: Option<Uuid>,
     pub full_name: String,
     pub email: String,
     pub phone_number: String,
@@ -75,7 +76,7 @@ impl AdminCustomerApplication {
 
     pub fn user_id_display(&self) -> String {
         self.user_id
-            .map(|id| format!("User #{id}"))
+            .map(|id| format!("User {id}"))
             .unwrap_or_else(|| "Online banking not created yet".to_string())
     }
 
@@ -388,7 +389,7 @@ impl AdminHomeLoanRecord {
 
 #[derive(Debug, Clone, FromRow)]
 pub struct AdminStaffUser {
-    pub id: i64,
+    pub id: Uuid,
     pub username: String,
     pub full_name: String,
     pub email: String,
@@ -434,7 +435,7 @@ pub struct AdminCustomerAccountRecord {
     pub customer_name: String,
     pub customer_email: String,
     pub customer_kyc_status: String,
-    pub user_id: Option<i64>,
+    pub user_id: Option<Uuid>,
     pub username: Option<String>,
     pub user_status: Option<String>,
     pub account_number: String,
@@ -501,15 +502,17 @@ impl AdminCustomerAccountRecord {
         self.user_status.as_deref() == Some("suspended")
     }
 
-    pub fn user_action_id(&self) -> i64 {
-        self.user_id.unwrap_or(0)
+    pub fn user_action_id(&self) -> String {
+        self.user_id
+            .map(|id| id.to_string())
+            .unwrap_or_else(|| Uuid::nil().to_string())
     }
 }
 
 #[derive(Debug, Clone, FromRow)]
 pub struct AdminAuditLogRecord {
     pub id: Uuid,
-    pub actor_user_id: Option<i64>,
+    pub actor_user_id: Option<Uuid>,
     pub actor_username: Option<String>,
     pub action: String,
     pub entity_type: String,
@@ -523,7 +526,7 @@ impl AdminAuditLogRecord {
         self.actor_username
             .as_deref()
             .map(ToString::to_string)
-            .or_else(|| self.actor_user_id.map(|id| format!("User #{id}")))
+            .or_else(|| self.actor_user_id.map(|id| format!("User {id}")))
             .unwrap_or_else(|| "System".to_string())
     }
 

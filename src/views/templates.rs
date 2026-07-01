@@ -1,7 +1,7 @@
 use crate::models::{
     AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser,
     FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, HomeLoanApplication,
-    HomeLoanSummary, PayNowRegistration, PersonalLoan, Product, Transaction, Card,
+    HomeLoanSummary, PayNowRegistration, PersonalLoan, Product, StatementTransaction, Transaction, Card,
 };
 use askama::Template;
 use uuid::Uuid;
@@ -176,10 +176,10 @@ pub struct LoginTemplate {
 #[template(path = "customer/dashboard.html")]
 pub struct DashboardTemplate {
     pub full_name: String,
-    pub balance: String,
-    pub primary_account_number: String,
     pub accounts: Vec<Product>,
     pub has_accounts: bool,
+    pub can_apply_everyday_savings: bool,
+    pub can_apply_high_yield_savings: bool,
     pub create_account_error: String,
     pub has_create_account_error: bool,
 }
@@ -202,6 +202,21 @@ pub struct TransferTemplate {
     pub accounts: Vec<Product>,
     pub selected_account_number: String,
     pub balance: String,
+    pub error: String,
+    pub has_error: bool,
+}
+
+
+#[derive(Template)]
+#[template(path = "customer/statements.html")]
+pub struct StatementTemplate {
+    pub accounts: Vec<Product>,
+    pub has_accounts: bool,
+    pub selected_account_id: String,
+    pub start_date: String,
+    pub end_date: String,
+    pub transactions: Vec<StatementTransaction>,
+    pub has_transactions: bool,
     pub error: String,
     pub has_error: bool,
 }
@@ -260,12 +275,12 @@ pub struct ProfileTemplate {
     pub email: String,
     pub phone: String,
     pub date_of_birth: String,
-    pub account_number: String,
-    pub balance: String,
-    pub account_type: String,
-    pub status: String,
-    pub created_at: String,
     pub last_login: String,
+    pub accounts: Vec<Product>,
+    pub has_accounts: bool,
+    pub paynow_id: String,
+    pub paynow_linked_product_id: String,
+    pub has_paynow: bool,
 }
 
 #[derive(Template)]

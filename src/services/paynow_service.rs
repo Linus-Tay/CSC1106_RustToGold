@@ -42,26 +42,36 @@ pub async fn register_paynow(
         .await
         .map_err(|_| "Choose an active account that belongs to you.".to_string())?;
 
-    if paynow_repository::find_active_by_identifier(db, &paynow_type, &paynow_id)
+    if let Some(existing) = paynow_repository::find_active_by_identifier(db, &paynow_type, &paynow_id)
         .await
         .map_err(|_| "Could not check existing PayNow registrations.".to_string())?
-        .is_some()
     {
-        return Err("This PayNow ID is already registered.".to_string());
+        if existing.customer_id != customer_id {
+            return Err("This PayNow ID is already registered.".to_string());
+        }
     }
 
-    paynow_repository::insert_registration(
-        db,
-        customer_id,
-        &paynow_type,
-        &paynow_id,
-        linked_product_id,
-    )
-    .await
-    .map_err(|error| {
-        eprintln!("PayNow registration failed: {error:?}");
-        "Could not register this PayNow ID. Please check the details and try again.".to_string()
-    })?;
+    if paynow_type == "phone_number" {
+        paynow_repository::upsert_phone_registration(db, customer_id, &paynow_id, linked_product_id)
+            .await
+            .map_err(|error| {
+                eprintln!("PayNow registration update failed: {error:?}");
+                "Could not save this PayNow number. Please check the details and try again.".to_string()
+            })?;
+    } else {
+        paynow_repository::insert_registration(
+            db,
+            customer_id,
+            &paynow_type,
+            &paynow_id,
+            linked_product_id,
+        )
+        .await
+        .map_err(|error| {
+            eprintln!("PayNow registration failed: {error:?}");
+            "Could not register this PayNow ID. Please check the details and try again.".to_string()
+        })?;
+    }
 
     Ok(())
 }

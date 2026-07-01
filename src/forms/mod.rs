@@ -7,6 +7,7 @@ pub mod loan_forms;
 pub mod onboard_forms;
 pub mod paynow_forms;
 pub mod profile_forms;
+pub mod statement_forms;
 
 pub use self::account_forms::{CreateBankAccountForm, DepositForm};
 pub use self::auth_forms::{AccountCreationForm, LoginForm};
@@ -19,3 +20,4 @@ pub use self::loan_forms::{LoanApplicationForm, LoanPaymentForm};
 pub use self::onboard_forms::{OnboardingForm, Step1Form, Step2Form, Step3Form, Step4Form};
 pub use self::paynow_forms::{PayNowRegisterForm, PayNowTransferForm};
 pub use self::profile_forms::ProfileForm;
+pub use self::statement_forms::StatementRequest;

@@ -77,6 +77,64 @@ pub async fn insert_registration(
     .await
 }
 
+
+pub async fn upsert_phone_registration(
+    db: &PgPool,
+    customer_id: Uuid,
+    paynow_id: &str,
+    linked_product_id: Uuid,
+) -> Result<(), sqlx::Error> {
+    let mut tx = db.begin().await?;
+
+    let existing_id = sqlx::query_scalar::<_, Uuid>(
+        r#"
+        SELECT id
+        FROM registered_paynow
+        WHERE customer_id = $1
+          AND paynow_type = 'phone_number'
+          AND status = 'active'
+        ORDER BY registered_at DESC
+        LIMIT 1
+        "#,
+    )
+    .bind(customer_id)
+    .fetch_optional(&mut *tx)
+    .await?;
+
+    if let Some(existing_id) = existing_id {
+        sqlx::query(
+            r#"
+            UPDATE registered_paynow
+            SET paynow_id = $1,
+                linked_account_id = $2,
+                status = 'active'
+            WHERE id = $3
+            "#,
+        )
+        .bind(paynow_id)
+        .bind(linked_product_id)
+        .bind(existing_id)
+        .execute(&mut *tx)
+        .await?;
+    } else {
+        sqlx::query(
+            r#"
+            INSERT INTO registered_paynow (customer_id, paynow_type, paynow_id, linked_account_id, status)
+            VALUES ($1, 'phone_number', $2, $3, 'active')
+            "#,
+        )
+        .bind(customer_id)
+        .bind(paynow_id)
+        .bind(linked_product_id)
+        .execute(&mut *tx)
+        .await?;
+    }
+
+    tx.commit().await?;
+    Ok(())
+}
+
+
 pub async fn execute_paynow_transfer(
     db: &PgPool,
     sender_customer_id: Uuid,

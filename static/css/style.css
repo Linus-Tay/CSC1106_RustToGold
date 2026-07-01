@@ -3477,3 +3477,1384 @@ select:-webkit-autofill {
     width: 100%;
   }
 }
+
+/* =========================================================
+   Phase 6B UI cleanup - customer dashboard, PayNow, cards
+   Frontend-only polish. Keeps existing Rust routes unchanged.
+   ========================================================= */
+
+.customer-topbar--minimal {
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.customer-topbar--minimal .customer-topbar__inner {
+  min-height: 66px;
+}
+
+.customer-brand--icon-only {
+  gap: 0;
+}
+
+.customer-brand--icon-only .customer-brand__logo {
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: 1rem;
+}
+
+.customer-nav-links {
+  display: none !important;
+}
+
+.dashboard-intro-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 1.6rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+}
+
+.dashboard-intro-card h1 {
+  color: #0B1F3A;
+  font-family: var(--font-heading);
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  line-height: 1;
+  letter-spacing: -0.055em;
+  font-weight: 900;
+}
+
+.dashboard-intro-card p:not(.customer-kicker) {
+  max-width: 720px;
+  margin-top: 0.55rem;
+  color: #64748B;
+  font-weight: 600;
+  line-height: 1.65;
+}
+
+.account-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.account-overview-card {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 1.65rem;
+  color: #fff;
+  background:
+    radial-gradient(circle at top right, rgba(212, 168, 79, 0.28), transparent 13rem),
+    linear-gradient(135deg, #0B1F3A, #12345F 70%, #1D4ED8);
+  box-shadow: 0 18px 44px rgba(11, 31, 58, 0.18);
+  overflow: hidden;
+}
+
+.account-overview-card::after {
+  content: "";
+  position: absolute;
+  right: -3rem;
+  bottom: -3rem;
+  width: 10rem;
+  height: 10rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+.account-overview-card__top,
+.account-overview-card__balance,
+.account-overview-card__footer {
+  position: relative;
+  z-index: 1;
+}
+
+.account-overview-card__top span,
+.account-overview-card__balance span,
+.account-overview-card__footer label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.73rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.account-overview-card__top strong {
+  display: block;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  letter-spacing: -0.04em;
+}
+
+.account-overview-card__balance b {
+  display: block;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.account-overview-card .form-select {
+  width: 100%;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  background-color: rgba(255, 255, 255, 0.13) !important;
+  color: #fff !important;
+}
+
+.account-overview-card .form-select option {
+  color: #0B1F3A;
+  background: #fff;
+}
+
+.mini-account-list--dashboard {
+  align-content: start;
+}
+
+.mini-account-list--dashboard .mini-account-row {
+  align-items: center;
+  border-color: rgba(226, 232, 240, 0.95);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.055);
+}
+
+.mini-account-row strong {
+  display: block;
+  color: #0B1F3A;
+  font-weight: 900;
+}
+
+.mini-account-row b {
+  color: #0B1F3A;
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.dashboard-logs-bottom {
+  margin-top: 1.4rem;
+  padding-top: 0.25rem;
+}
+
+.dashboard-log-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-log-grid .dashboard-log-link {
+  height: 100%;
+  margin-top: 0 !important;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.paynow-hero {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+}
+
+.paynow-step-card {
+  display: grid;
+  gap: 0.75rem;
+  align-content: center;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.paynow-step-card__item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.1rem;
+  opacity: 0.65;
+}
+
+.paynow-step-card__item--active {
+  background: rgba(255, 255, 255, 0.12);
+  opacity: 1;
+}
+
+.paynow-step-card__item > span {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  color: #0B1F3A;
+  background: #F8D982;
+  font-weight: 900;
+  flex: 0 0 auto;
+}
+
+.paynow-step-card__item strong {
+  display: block;
+  color: #fff;
+  font-weight: 900;
+}
+
+.paynow-step-card__item small {
+  display: block;
+  margin-top: 0.12rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 650;
+}
+
+.paynow-grid--flow {
+  align-items: stretch;
+}
+
+.paynow-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.paynow-panel--register {
+  border-color: rgba(29, 78, 216, 0.18);
+}
+
+.paynow-panel--locked {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.customer-card__header--with-icon {
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.panel-icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1.1rem;
+  color: #1D4ED8;
+  background: #DBEAFE;
+  flex: 0 0 auto;
+}
+
+.paynow-locked-state {
+  display: grid;
+  place-items: center;
+  min-height: 270px;
+  padding: 1.5rem;
+  border: 1px dashed #CBD5E1;
+  border-radius: 1.25rem;
+  background: #F8FAFC;
+  text-align: center;
+}
+
+.paynow-locked-state > div {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 1rem;
+  border-radius: 1.35rem;
+  color: #64748B;
+  background: #E2E8F0;
+}
+
+.paynow-locked-state h3 {
+  color: #0B1F3A;
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.paynow-locked-state p {
+  max-width: 360px;
+  margin-top: 0.45rem;
+  color: #64748B;
+  font-weight: 650;
+  line-height: 1.6;
+}
+
+.cards-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: 1.25rem;
+  align-items: stretch;
+  margin-bottom: 1.25rem;
+  padding: clamp(1.3rem, 3vw, 2rem);
+  border-radius: 2rem;
+  color: #fff;
+  background:
+    radial-gradient(circle at top right, rgba(212, 168, 79, 0.28), transparent 17rem),
+    linear-gradient(135deg, #0B1F3A, #12345F 70%, #1D4ED8);
+  box-shadow: 0 22px 56px rgba(11, 31, 58, 0.2);
+}
+
+.cards-hero h1 {
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+  font-weight: 900;
+}
+
+.cards-hero p:not(.customer-kicker) {
+  max-width: 650px;
+  margin-top: 0.7rem;
+  color: rgba(255, 255, 255, 0.74);
+  line-height: 1.7;
+}
+
+.cards-hero__visual {
+  display: grid;
+  place-items: center;
+}
+
+.demo-bank-card,
+.customer-bank-card__face {
+  min-height: 190px;
+  width: 100%;
+  padding: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1.45rem;
+  color: #fff;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(248, 217, 130, 0.32), transparent 7rem),
+    linear-gradient(135deg, #0B1F3A, #1D4ED8);
+  box-shadow: 0 18px 42px rgba(11, 31, 58, 0.22);
+}
+
+.demo-bank-card {
+  transform: rotate(-2deg);
+}
+
+.demo-bank-card__top,
+.demo-bank-card__bottom,
+.customer-bank-card__top,
+.customer-bank-card__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.demo-bank-card__top span,
+.customer-bank-card__top span {
+  font-family: var(--font-heading);
+  font-weight: 900;
+}
+
+.demo-bank-card strong,
+.customer-bank-card__face strong {
+  display: block;
+  margin: 2.5rem 0 1.25rem;
+  font-size: clamp(1.3rem, 3vw, 1.65rem);
+  letter-spacing: 0.08em;
+}
+
+.demo-bank-card small,
+.customer-bank-card__face small,
+.customer-bank-card__face p {
+  color: rgba(255, 255, 255, 0.76);
+  font-weight: 750;
+}
+
+.cards-page-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1.18fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.card-apply-panel {
+  position: sticky;
+  top: 86px;
+}
+
+.card-benefit-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0.25rem 0 0.35rem;
+}
+
+.card-benefit-strip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(29, 78, 216, 0.14);
+  border-radius: 999px;
+  color: #1D4ED8;
+  background: #EFF6FF;
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.card-showcase-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.customer-bank-card {
+  display: grid;
+  gap: 0.9rem;
+  padding: 0.95rem;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 1.55rem;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.customer-bank-card--frozen .customer-bank-card__face {
+  filter: grayscale(0.35);
+  background:
+    radial-gradient(circle at 85% 20%, rgba(148, 163, 184, 0.35), transparent 7rem),
+    linear-gradient(135deg, #334155, #64748B);
+}
+
+.customer-bank-card__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.customer-bank-card__meta div {
+  padding: 0.85rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 1rem;
+  background: #F8FAFC;
+}
+
+.customer-bank-card__meta span {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #64748B;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.customer-bank-card__meta strong {
+  display: block;
+  color: #0B1F3A;
+  font-size: 0.92rem;
+  font-weight: 900;
+  word-break: break-word;
+}
+
+.customer-bank-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.customer-bank-card__actions form {
+  margin: 0;
+}
+
+.customer-bank-card__bottom .badge {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+@media (max-width: 1080px) {
+  .account-overview-grid,
+  .paynow-hero,
+  .cards-hero,
+  .cards-page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-apply-panel {
+    position: static;
+  }
+
+  .dashboard-log-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .dashboard-intro-card,
+  .mini-account-row,
+  .customer-bank-card__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .account-overview-card,
+  .cards-hero,
+  .paynow-step-card,
+  .customer-card {
+    border-radius: 1.3rem;
+  }
+
+  .customer-bank-card__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-bank-card {
+    transform: none;
+  }
+
+  .customer-pill {
+    width: auto;
+  }
+}
+
+/* =========================================================
+   Phase 6B correction pass - customer/admin UI consistency
+   ========================================================= */
+.customer-brand--clean {
+  gap: 0.75rem;
+}
+
+.customer-brand__text {
+  color: #0B1F3A;
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+}
+
+.customer-topbar--minimal .customer-brand__logo {
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: 1rem;
+}
+
+.dashboard-bank-summary .section-heading h1,
+.profile-page-header h1 {
+  color: #0B1F3A;
+  font-family: var(--font-heading);
+  font-size: clamp(1.85rem, 4vw, 2.7rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+  font-weight: 900;
+}
+
+.section-subtext,
+.profile-page-header p:not(.customer-kicker) {
+  max-width: 760px;
+  margin-top: 0.45rem;
+  color: #64748B;
+  font-weight: 650;
+  line-height: 1.7;
+}
+
+.account-summary-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.account-summary-primary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 180px;
+  padding: clamp(1.25rem, 3vw, 1.7rem);
+  border-radius: 1.75rem;
+  color: #fff;
+  background:
+    radial-gradient(circle at top right, rgba(212, 168, 79, 0.26), transparent 12rem),
+    linear-gradient(135deg, #0B1F3A, #12345F 72%, #1D4ED8);
+  box-shadow: 0 18px 44px rgba(11, 31, 58, 0.18);
+}
+
+.account-summary-primary span {
+  display: block;
+  margin-bottom: 0.65rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.account-summary-primary strong {
+  display: block;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 5vw, 3.1rem);
+  line-height: 1;
+  letter-spacing: -0.065em;
+}
+
+.account-summary-primary small {
+  display: block;
+  margin-top: 0.8rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 800;
+}
+
+.account-summary-primary > i {
+  width: 2rem;
+  height: 2rem;
+  color: #F8D982;
+  flex: 0 0 auto;
+}
+
+.paynow-grid--single-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.paynow-hero--simple {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+}
+
+.paynow-status-card {
+  display: grid;
+  align-content: center;
+  gap: 0.5rem;
+  min-height: 150px;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.paynow-status-card span {
+  color: #F8D982;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.paynow-status-card strong {
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  letter-spacing: -0.045em;
+}
+
+.paynow-status-card small {
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.paynow-panel .customer-card__body,
+.card-apply-panel .customer-card__body,
+.card-manage-panel .customer-card__body,
+.profile-settings-card .customer-card__body {
+  padding: clamp(1.2rem, 3vw, 1.65rem);
+}
+
+.paynow-register-only {
+  max-width: 760px;
+}
+
+.form-input--large {
+  min-height: 3.35rem !important;
+  font-size: 1.05rem;
+}
+
+.cards-page-grid--comfortable {
+  gap: 1.4rem;
+}
+
+.cards-hero--polished {
+  margin-top: 0.15rem;
+}
+
+.customer-bank-card {
+  padding: 1.15rem;
+}
+
+.profile-page-header {
+  margin-bottom: 1.25rem;
+  padding: 1.35rem 1.45rem;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 1.65rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+}
+
+.profile-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.profile-settings-card--summary,
+.profile-save-bar {
+  grid-column: 1 / -1;
+}
+
+.readonly-field {
+  display: flex;
+  align-items: center;
+  min-height: 3.05rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 1rem;
+  color: #334155;
+  background: #F8FAFC;
+  font-weight: 750;
+}
+
+.profile-paynow-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(29, 78, 216, 0.14);
+  border-radius: 1rem;
+  color: #1D4ED8;
+  background: #EFF6FF;
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+.profile-save-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 1.35rem;
+  background: #fff;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+}
+
+@media (max-width: 1080px) {
+  .account-summary-grid,
+  .paynow-grid--single-flow,
+  .paynow-hero--simple,
+  .profile-settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .customer-brand__text {
+    font-size: 1.02rem;
+  }
+
+  .account-summary-primary,
+  .profile-page-header {
+    border-radius: 1.3rem;
+  }
+
+  .profile-save-bar .c-button {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   Phase 6B UI + Statements patch
+   ========================================================= */
+.customer-topbar__actions--simple {
+  flex: 0 0 auto;
+}
+
+.account-list-view,
+.portal-list-view,
+.product-list-view,
+.card-list-view,
+.statement-preview-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.account-list-row,
+.portal-list-row,
+.product-list-row,
+.card-list-row,
+.statement-preview-row {
+  display: grid;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(1rem, 2.4vw, 1.25rem);
+  border: 1px solid #E2E8F0;
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.055);
+}
+
+.account-list-row {
+  grid-template-columns: minmax(0, 1fr) minmax(160px, auto);
+}
+
+.account-list-row__main,
+.card-list-row__main {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.account-list-row__icon,
+.card-list-row__icon,
+.portal-list-row > span,
+.product-list-row > span {
+  display: grid;
+  width: 2.85rem;
+  height: 2.85rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 1rem;
+  color: #1D4ED8;
+  background: #EFF6FF;
+}
+
+.account-list-row strong,
+.portal-list-row strong,
+.product-list-row strong,
+.card-list-row strong,
+.statement-preview-row strong {
+  display: block;
+  color: #0B1F3A;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.account-list-row small,
+.portal-list-row small,
+.product-list-row small,
+.card-list-row small,
+.statement-preview-row small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #64748B;
+  font-size: 0.86rem;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.account-list-row__balance {
+  text-align: right;
+}
+
+.account-list-row__balance span,
+.statement-preview-row__amounts span {
+  display: block;
+  color: #94A3B8;
+  font-size: 0.73rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.account-list-row__balance strong {
+  margin-top: 0.25rem;
+  font-size: 1.3rem;
+}
+
+.portal-list-row,
+.product-list-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.portal-list-row:hover,
+.product-list-row:hover,
+.card-list-row:hover {
+  transform: translateY(-2px);
+  border-color: rgba(29, 78, 216, 0.28);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+}
+
+.portal-list-row--featured,
+.product-list-row--navy {
+  border-color: rgba(29, 78, 216, 0.2);
+  background: linear-gradient(135deg, #FFFFFF, #EFF6FF);
+}
+
+.product-list-row em {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.2rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  color: #0B1F3A;
+  background: #F8FAFC;
+  font-style: normal;
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.dashboard-log-grid--rows {
+  grid-template-columns: 1fr;
+}
+
+.plain-page-heading {
+  margin-bottom: 1.15rem;
+  padding: clamp(1.25rem, 3vw, 1.6rem);
+  border: 1px solid #E2E8F0;
+  border-radius: 1.6rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+}
+
+.plain-page-heading--split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.plain-page-heading h1 {
+  color: #0B1F3A;
+  font-family: var(--font-heading);
+  font-size: clamp(1.85rem, 4vw, 2.7rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.plain-page-heading p:not(.customer-kicker) {
+  max-width: 760px;
+  margin-top: 0.5rem;
+  color: #64748B;
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.card-apply-panel--simple {
+  margin-bottom: 1.25rem;
+}
+
+.cards-list-section {
+  margin-top: 1.25rem;
+}
+
+.card-list-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.card-list-row__meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.35rem;
+}
+
+.card-list-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.paynow-grid--single-flow {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.paynow-register-only {
+  max-width: none;
+}
+
+.statement-card .customer-card__body {
+  padding: clamp(1.15rem, 3vw, 1.55rem);
+}
+
+.statement-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  justify-content: flex-end;
+}
+
+.statement-format-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  color: #0B1F3A;
+  background: #F8D982;
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.statement-preview-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.statement-preview-row__amounts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(90px, auto));
+  gap: 0.75rem;
+  align-items: center;
+  text-align: right;
+}
+
+.statement-preview-row__amounts strong {
+  font-size: 1rem;
+}
+
+@media (max-width: 820px) {
+  .account-list-row,
+  .portal-list-row,
+  .product-list-row,
+  .card-list-row,
+  .statement-preview-row,
+  .plain-page-heading--split {
+    grid-template-columns: 1fr;
+  }
+
+  .plain-page-heading--split {
+    display: grid;
+  }
+
+  .account-list-row__balance,
+  .card-list-row__meta,
+  .card-list-row__actions,
+  .statement-preview-row__amounts {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .statement-preview-row__amounts {
+    grid-template-columns: 1fr;
+  }
+
+  .statement-form__actions .c-button,
+  .card-list-row__actions .c-button {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   Phase 6B polish follow-up: dashboard, profile and statements
+   ========================================================= */
+.section-heading--dashboard-clean {
+  align-items: flex-start;
+}
+
+.account-apply-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  max-width: 520px;
+}
+
+.account-apply-actions .inline-account-form {
+  margin: 0;
+}
+
+.account-apply-complete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.6rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 999px;
+  color: #047857;
+  background: #ECFDF5;
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.account-list-view--no-primary {
+  margin-top: 1rem;
+}
+
+.account-list-row--balanced {
+  grid-template-columns: minmax(0, 1fr) minmax(150px, auto);
+}
+
+.portal-list-view--comfortable,
+.product-list-view--comfortable,
+.dashboard-log-grid--review {
+  gap: 0.95rem;
+}
+
+.dashboard-log-grid--review .dashboard-log-link {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.05rem 1.15rem;
+  border-radius: 1.25rem;
+}
+
+.dashboard-log-link--statement {
+  border-color: rgba(29, 78, 216, 0.2) !important;
+  background: linear-gradient(135deg, #FFFFFF, #EFF6FF) !important;
+}
+
+.profile-page-heading-clean {
+  margin-bottom: 1rem;
+}
+
+.profile-settings-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-settings-stack .customer-card__header {
+  padding: clamp(1.05rem, 2.5vw, 1.35rem);
+}
+
+.profile-settings-stack .customer-card__body {
+  padding: clamp(1.05rem, 2.5vw, 1.4rem);
+}
+
+.profile-form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-form-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.profile-form-grid .form-field--full {
+  grid-column: 1 / -1;
+}
+
+.profile-card-header--split {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.profile-status-chip,
+.statement-preview-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.15rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 999px;
+  color: #64748B;
+  background: #F8FAFC;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.profile-status-chip--active {
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #047857;
+  background: #ECFDF5;
+}
+
+.profile-paynow-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 1rem;
+  background: #F8FAFC;
+}
+
+.profile-paynow-current span {
+  color: #64748B;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.profile-paynow-current strong {
+  color: #0B1F3A;
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.profile-paynow-editor {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.profile-paynow-editor .form-field,
+.profile-password-grid .form-field,
+.profile-form-grid--two .form-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.profile-password-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.profile-save-bar--sticky-safe {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 5;
+}
+
+.statement-page-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: clamp(1.2rem, 3vw, 1.7rem);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 1.65rem;
+  background:
+    radial-gradient(circle at top right, rgba(29, 78, 216, 0.09), transparent 14rem),
+    rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+}
+
+.statement-page-hero h1 {
+  color: #0B1F3A;
+  font-family: var(--font-heading);
+  font-size: clamp(1.85rem, 4vw, 2.65rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.statement-page-hero p:not(.customer-kicker) {
+  max-width: 760px;
+  margin-top: 0.5rem;
+  color: #64748B;
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.statement-page-hero__badge {
+  display: grid;
+  place-items: center;
+  min-width: 116px;
+  min-height: 116px;
+  padding: 1rem;
+  border-radius: 1.4rem;
+  color: #0B1F3A;
+  background: #F8D982;
+  box-shadow: 0 14px 28px rgba(212, 168, 79, 0.24);
+}
+
+.statement-page-hero__badge svg {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+
+.statement-page-hero__badge strong {
+  margin-top: 0.25rem;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.statement-page-hero__badge span {
+  color: rgba(11, 31, 58, 0.7);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.statement-card--clean {
+  overflow: hidden;
+}
+
+.statement-control-form {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.4fr) minmax(160px, 0.65fr) minmax(160px, 0.65fr);
+  gap: 1rem;
+  align-items: end;
+}
+
+.statement-control-form__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  padding-top: 0.15rem;
+}
+
+.statement-preview-section {
+  margin-top: 1.25rem;
+}
+
+.statement-preview-list--clean {
+  gap: 0.75rem;
+}
+
+.statement-preview-row--clean {
+  box-shadow: none;
+}
+
+.statement-empty-state {
+  background: #fff;
+}
+
+@media (max-width: 900px) {
+  .section-heading--dashboard-clean,
+  .statement-page-hero,
+  .profile-card-header--split,
+  .statement-control-form {
+    grid-template-columns: 1fr;
+  }
+
+  .account-apply-actions {
+    justify-content: flex-start;
+    max-width: none;
+  }
+
+  .profile-form-grid--two,
+  .profile-paynow-editor,
+  .profile-password-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .statement-page-hero__badge {
+    width: fit-content;
+    min-width: 0;
+    min-height: 0;
+    grid-auto-flow: column;
+    gap: 0.45rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .account-list-row--balanced {
+    grid-template-columns: 1fr;
+  }
+
+  .account-list-row__balance {
+    text-align: left;
+  }
+
+  .profile-save-bar--sticky-safe {
+    position: static;
+  }
+
+  .profile-paynow-current {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .statement-control-form__actions .c-button,
+  .account-apply-actions .c-button {
+    width: 100%;
+  }
+
+  .account-apply-actions,
+  .account-apply-actions .inline-account-form {
+    width: 100%;
+  }
+}

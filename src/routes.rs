@@ -91,6 +91,8 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("/cards/{id}/freeze", web::post().to(controllers::freeze_card))
                     .route("/cards/{id}/activate", web::post().to(controllers::activate_card))
                     .route("/transactions", web::get().to(controllers::transactions))
+                    .route("/statements", web::get().to(controllers::statements_page))
+                    .route("/statements/download", web::get().to(controllers::download_statement_pdf))
                     .route("/loan-activity", web::get().to(controllers::loan_activity))
                     .route("/loan-log", web::get().to(controllers::loan_activity))
                     .route("/fixed-deposit-activity", web::get().to(controllers::fixed_deposit_activity))

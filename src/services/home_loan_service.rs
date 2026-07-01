@@ -160,7 +160,7 @@ pub async fn list_admin_home_loans(db: &PgPool) -> Result<Vec<AdminHomeLoanRecor
 
 pub async fn approve_home_loan(
     db: &PgPool,
-    staff_user_id: i64,
+    staff_user_id: Uuid,
     application_id: Uuid,
 ) -> Result<HomeLoanApplication, String> {
     let approved = home_loan_repository::approve_home_loan(db, staff_user_id, application_id)
@@ -185,7 +185,7 @@ pub async fn approve_home_loan(
 
 pub async fn reject_home_loan(
     db: &PgPool,
-    staff_user_id: i64,
+    staff_user_id: Uuid,
     application_id: Uuid,
 ) -> Result<HomeLoanApplication, String> {
     let rejected = home_loan_repository::reject_home_loan(db, staff_user_id, application_id)

@@ -9,6 +9,7 @@ pub mod loan;
 pub mod money;
 pub mod paynow;
 pub mod product;
+pub mod statement;
 pub mod transaction;
 pub mod user;
 
@@ -22,5 +23,6 @@ pub use self::loan::PersonalLoan;
 pub use self::money::Money;
 pub use self::paynow::PayNowRegistration;
 pub use self::product::Product;
+pub use self::statement::{BankStatement, StatementTransaction};
 pub use self::transaction::Transaction;
 pub use self::user::User;

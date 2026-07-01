@@ -1,26 +1,17 @@
-<header class="customer-topbar">
+<header class="customer-topbar customer-topbar--minimal">
   <div class="customer-container customer-topbar__inner">
-    <a class="customer-brand" href="/customer/dashboard" aria-label="RustToGold customer dashboard">
+    <a class="customer-brand customer-brand--clean" href="/customer/dashboard" aria-label="RustToGold customer dashboard">
       <span class="customer-brand__logo" aria-hidden="true">
         <img src="/static/images/rusttogold-logo.png" alt="" />
       </span>
-      <span>
-        <span>RustToGold</span>
-        <small class="customer-brand__subtitle">Customer banking</small>
-      </span>
+      <span class="customer-brand__text">RustToGold</span>
     </a>
 
-    <nav class="customer-nav-links" aria-label="Customer navigation">
-      <a href="/customer/dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-      <a href="/customer/transactions"><i data-lucide="receipt-text"></i> Transactions</a>
-      <a href="/customer/paynow"><i data-lucide="scan-line"></i> PayNow</a>
-      <a href="/customer/cards"><i data-lucide="credit-card"></i> Cards</a>
-      <a href="/customer/loan-activity"><i data-lucide="file-signature"></i> Loan Log</a>
-      <a href="/customer/fixed-deposit-activity"><i data-lucide="piggy-bank"></i> FD Log</a>
-      <a href="/customer/profile"><i data-lucide="user-round"></i> Profile</a>
-    </nav>
-
-    <div class="customer-topbar__actions">
+    <div class="customer-topbar__actions" aria-label="Customer account actions">
+      <a class="customer-pill" href="/customer/profile">
+        <i data-lucide="user-round"></i>
+        Profile
+      </a>
       <a class="customer-pill customer-pill--danger" href="/logout">
         <i data-lucide="log-out"></i>
         Logout

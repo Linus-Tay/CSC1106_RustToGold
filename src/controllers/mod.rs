@@ -18,8 +18,8 @@ pub use self::admin_controller::{
 };
 pub use self::auth_controller::{admin_login, admin_login_page, admin_logout, login, login_page, logout};
 pub use self::customer_controller::{
-    activate_card, cards_page, create_bank_account, create_card, dashboard, deposit, deposit_page, fixed_deposit_activity, freeze_card, loan_activity,
-    paynow_page, profile_page, register_paynow, transactions, transfer, transfer_page, transfer_paynow, update_profile,
+    activate_card, cards_page, create_bank_account, create_card, dashboard, deposit, deposit_page, download_statement_pdf, fixed_deposit_activity, freeze_card, loan_activity,
+    paynow_page, profile_page, register_paynow, statements_page, transactions, transfer, transfer_page, transfer_paynow, update_profile,
 };
 pub use self::error_controller::{forbidden, not_found};
 pub use self::fixed_deposit_controller::{

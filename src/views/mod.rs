@@ -8,5 +8,5 @@ pub use self::templates::{
     ErrorTemplate, FaqTemplate, FixedDepositCreateTemplate, FixedDepositDashboardTemplate,
     ForbiddenTemplate, HomeLoanApplyTemplate, HomeLoanDashboardTemplate, HomeTemplate, LoginTemplate,
     LoanApplyTemplate, LoanDashboardTemplate, NotFoundTemplate, OnboardingResultTemplate, OnboardingTemplate, PayNowTemplate, ProfileTemplate,
-    SecurityTemplate, TransactionsTemplate, TransferTemplate,
+    SecurityTemplate, StatementTemplate, TransactionsTemplate, TransferTemplate,
 };

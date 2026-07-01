@@ -21,14 +21,7 @@ pub struct AccountCreationQueryParams {
     link: String,
 }
 
-pub async fn onboarding_entry_redirect(session: Session) -> Result<HttpResponse> {
-    if customer_session_user_id(&session).is_some() {
-        return Ok(redirect("/customer/dashboard"));
-    }
-    if admin_session_user_id(&session).is_some() {
-        return Ok(redirect("/admin/dashboard"));
-    }
-
+pub async fn onboarding_entry_redirect(_session: Session) -> Result<HttpResponse> {
     Ok(redirect("/onboarding/account"))
 }
 
@@ -57,14 +50,10 @@ pub async fn legacy_signup_path_redirect(path: web::Path<String>, session: Sessi
     Ok(redirect(target))
 }
 
-fn logged_in_redirect(session: &Session) -> Option<HttpResponse> {
-    if customer_session_user_id(session).is_some() {
-        Some(redirect("/customer/dashboard"))
-    } else if admin_session_user_id(session).is_some() {
-        Some(redirect("/admin/dashboard"))
-    } else {
-        None
-    }
+fn logged_in_redirect(_session: &Session) -> Option<HttpResponse> {
+    // Public account-opening pages stay reachable for the project demo.
+    // Existing customer/admin sessions should not force the Sign Up button back to a dashboard.
+    None
 }
 
 pub async fn onboarding(path: web::Path<String>, session: Session) -> Result<HttpResponse> {

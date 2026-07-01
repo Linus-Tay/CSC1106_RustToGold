@@ -13,8 +13,9 @@ pub async fn loans_page(data: web::Data<AppState>, session: Session) -> Result<H
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
-    match services::load_loan_dashboard(&data.db, user.customer_id).await {
+    match services::load_loan_dashboard(&data.db, customer_id).await {
         Ok(dashboard) => render(LoanDashboardTemplate {
             account: dashboard.account,
             accounts: dashboard.accounts,
@@ -32,8 +33,9 @@ pub async fn loan_apply_page(data: web::Data<AppState>, session: Session) -> Res
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
-    let accounts = match services::list_active_customer_products(&data.db, user.customer_id).await {
+    let accounts = match services::list_active_customer_products(&data.db, customer_id).await {
         Ok(accounts) => accounts,
         Err(error) => return render_error("Loan application unavailable", error),
     };
@@ -55,11 +57,12 @@ pub async fn create_personal_loan(
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
-    match services::apply_personal_loan(&data.db, user.customer_id, form.into_inner()).await {
+    match services::apply_personal_loan(&data.db, customer_id, form.into_inner()).await {
         Ok(_) => Ok(redirect("/customer/loans")),
         Err(error) => {
-            let accounts = services::list_active_customer_products(&data.db, user.customer_id)
+            let accounts = services::list_active_customer_products(&data.db, customer_id)
                 .await
                 .unwrap_or_default();
             render(LoanApplyTemplate {
@@ -82,6 +85,7 @@ pub async fn pay_loan(
         Ok(user) => user,
         Err(response) => return Ok(response),
     };
+    let customer_id = user.customer_id_or_nil();
 
     let loan_id = match Uuid::parse_str(&path.into_inner()) {
         Ok(value) => value,
@@ -93,7 +97,7 @@ pub async fn pay_loan(
         }
     };
 
-    match services::pay_personal_loan(&data.db, user.customer_id, loan_id, form.into_inner()).await
+    match services::pay_personal_loan(&data.db, customer_id, loan_id, form.into_inner()).await
     {
         Ok(_) => Ok(redirect("/customer/loans")),
         Err(error) => render_error("Loan payment failed", error),

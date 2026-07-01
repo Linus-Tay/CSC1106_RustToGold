@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Bank Statements</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+
+  <main class="customer-main">
+    <div class="customer-container customer-narrow">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+
+      <section class="statement-page-hero">
+        <div>
+          <p class="customer-kicker">Bank Statements</p>
+          <h1>Download account statement</h1>
+          <p>Select one active account and a date range of up to 3 months. The PDF is generated from your RustToGold transaction records.</p>
+        </div>
+        <div class="statement-page-hero__badge">
+          <i data-lucide="file-down"></i>
+          <strong>PDF</strong>
+          <span>3-month max</span>
+        </div>
+      </section>
+
+      {% if has_error %}
+      <div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>
+      {% endif %}
+
+      <section class="customer-card statement-card statement-card--clean">
+        <div class="customer-card__header customer-card__header--with-icon">
+          <span class="panel-icon"><i data-lucide="calendar-range"></i></span>
+          <div>
+            <p class="customer-kicker">Statement setup</p>
+            <h2>Choose account and date range</h2>
+            <p>Preview the records first, then download the PDF for your demo evidence.</p>
+          </div>
+        </div>
+        <div class="customer-card__body">
+          {% if has_accounts %}
+          <form class="statement-control-form" action="/customer/statements" method="get">
+            <div class="form-field statement-control-form__account">
+              <label class="form-label" for="account_id">Account</label>
+              <select class="form-input form-input--large" id="account_id" name="account_id" required>
+                {% for account in accounts %}
+                <option value="{{ account.id }}" {% if account.id_display() == selected_account_id %}selected{% endif %}>{{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="start_date">Start Date</label>
+              <input class="form-input form-input--large" id="start_date" name="start_date" type="date" value="{{ start_date }}" required />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="end_date">End Date</label>
+              <input class="form-input form-input--large" id="end_date" name="end_date" type="date" value="{{ end_date }}" required />
+            </div>
+            <div class="statement-control-form__actions">
+              <button class="c-button c-button--secondary" type="submit"><i data-lucide="search"></i> Preview</button>
+              <button class="c-button c-button--primary" formaction="/customer/statements/download" formmethod="get" type="submit"><i data-lucide="file-down"></i> Download PDF</button>
+            </div>
+          </form>
+          {% else %}
+          <div class="empty-state empty-state--small">
+            <div class="empty-state__icon"><i data-lucide="wallet"></i></div>
+            <h3>No active account found</h3>
+            <p>You need an active account before generating a statement.</p>
+          </div>
+          {% endif %}
+        </div>
+      </section>
+
+      {% if has_accounts %}
+      <section class="customer-section statement-preview-section">
+        <div class="section-heading section-heading--split">
+          <div>
+            <p class="customer-kicker">Preview</p>
+            <h2>Transactions in selected range</h2>
+          </div>
+          <span class="statement-preview-count">{% if has_transactions %}Records loaded{% else %}No records{% endif %}</span>
+        </div>
+
+        {% if has_transactions %}
+        <div class="statement-preview-list statement-preview-list--clean">
+          {% for transaction in transactions %}
+          <article class="statement-preview-row statement-preview-row--clean">
+            <div>
+              <strong>{{ transaction.transaction_type_display() }}</strong>
+              <small>{{ transaction.date_display() }} · {{ transaction.time_display() }} · {{ transaction.description_display() }}</small>
+            </div>
+            <div class="statement-preview-row__amounts">
+              <span>Debit {{ transaction.debit_display() }}</span>
+              <span>Credit {{ transaction.credit_display() }}</span>
+              <strong>{{ transaction.balance_after_display() }}</strong>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state empty-state--small statement-empty-state">
+          <div class="empty-state__icon"><i data-lucide="file-search"></i></div>
+          <h3>No transactions in this range</h3>
+          <p>You can still download the statement. It will show the selected account, selected period and opening/closing information.</p>
+        </div>
+        {% endif %}
+      </section>
+      {% endif %}
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
