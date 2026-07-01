@@ -6,7 +6,6 @@ use serde::Deserialize;
 // Form payload for the PayNowRegisterForm request.
 pub struct PayNowRegisterForm {
     pub paynow_type: String,
-    pub paynow_id: String,
     pub linked_product_id: String,
 }
 

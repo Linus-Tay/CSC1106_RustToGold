@@ -1,10 +1,7 @@
 // View layer: Askama template structs and rendering helpers.
 
 use crate::models::{
-    AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser,
-    FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, HomeLoanApplication,
-    HomeLoanSummary, PayNowRegistration, PersonalLoan, Product, StatementTransaction, Transaction, Card,
-    TransactionControl, FraudAlert, GiroArrangement, HighValueAlertRecord,
+    AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser, Card, FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, FraudAlert, GiroArrangement, HighValueAlertRecord, HomeLoanApplication, HomeLoanSummary, PayNowRegistration, PersonalLoan, Product, StatementTransaction, Transaction, TransactionControl,
 };
 use askama::Template;
 use uuid::Uuid;
@@ -173,6 +170,14 @@ pub struct AccountCreationEmailTemplate {
 }
 
 #[derive(Template)]
+#[template(path = "email/account_2fa_email.html")]
+// Data carrier for the AccountCreationEmailTemplate workflow.
+pub struct Account2FAEmailTemplate {
+    pub verification_code: String,
+}
+
+
+#[derive(Template)]
 #[template(path = "email/application_received_email.html")]
 // Data carrier for the ApplicationReceivedEmailTemplate workflow.
 pub struct ApplicationReceivedEmailTemplate;
@@ -192,6 +197,16 @@ pub struct AdminLoginTemplate {
 pub struct LoginTemplate {
     pub error: String,
     pub has_error: bool,
+}
+
+#[derive(Template)]
+#[template(path = "auth/2fa.html")]
+// Data carrier for the AdminFixedDepositPlansTemplate workflow.
+pub struct TwoFactorAuthTemplate {
+    pub error: String,
+    pub has_error: bool,
+    pub success: String,
+    pub has_success: bool,
 }
 
 #[derive(Template)]
@@ -329,7 +344,41 @@ pub struct PayNowTemplate {
     pub has_error: bool,
     pub success: String,
     pub has_success: bool,
+    pub nric: String,
+    pub phone: String
 }
+
+#[derive(Template)]
+#[template(path = "customer/paynow_register.html")]
+// Data carrier for the PayNowTemplate workflow.
+pub struct PayNowRegisterTemplate {
+    pub accounts: Vec<Product>,
+    pub nric: String,
+    pub phone: String,
+    pub has_success: bool,
+    pub has_error: bool,
+    pub success: String,
+    pub error: String
+}
+
+
+
+
+// #[derive(Template)]
+// #[template(path = "customer/profile.html")]
+// // Data carrier for the ProfileTemplate workflow.
+// pub struct ProfileTemplate {
+//     pub full_name: String,
+//     pub email: String,
+//     pub phone: String,
+//     pub date_of_birth: String,
+//     pub last_login: String,
+//     pub accounts: Vec<Product>,
+//     pub has_accounts: bool,
+//     pub paynow_id: String,
+//     pub paynow_linked_product_id: String,
+//     pub has_paynow: bool,
+// }
 
 #[derive(Template)]
 #[template(path = "customer/profile.html")]
@@ -342,38 +391,37 @@ pub struct ProfileTemplate {
     pub last_login: String,
     pub accounts: Vec<Product>,
     pub has_accounts: bool,
-    pub paynow_id: String,
-    pub paynow_linked_product_id: String,
-    pub has_paynow: bool,
+    pub paynow_registrations: Vec<PayNowRegistration>,
 }
 
+// #[derive(Template)]
+// #[template(path = "customer/home_loans.html")]
+// pub struct HomeLoanDashboardTemplate {
+//     pub account: Product,
+//     pub summary: HomeLoanSummary,
+//     pub applications: Vec<HomeLoanApplication>,
+//     pub has_applications: bool,
+//     pub error: String,  
+//     pub has_error: bool,
+// }
 
-#[derive(Template)]
-#[template(path = "customer/home_loans.html")]
-pub struct HomeLoanDashboardTemplate {
-    pub account: BankAccount,
-    pub summary: HomeLoanSummary,
-    pub applications: Vec<HomeLoanApplication>,
-    pub has_applications: bool,
-    pub error: String,
-    pub has_error: bool,
-}
+// #[derive(Template)]
+// #[template(path = "customer/home_loan_apply.html")]
+// pub struct HomeLoanApplyTemplate {
+//     pub accounts: Vec<Product>,
+//     pub has_accounts: bool,
+//     pub error: String,
+//     pub has_error: bool,
+// }
 
-#[derive(Template)]
-#[template(path = "customer/home_loan_apply.html")]
-pub struct HomeLoanApplyTemplate {
-    pub error: String,
-    pub has_error: bool,
-}
-
-#[derive(Template)]
-#[template(path = "admin/home_loans.html")]
-pub struct AdminHomeLoansTemplate {
-    pub records: Vec<AdminHomeLoanRecord>,
-    pub has_records: bool,
-    pub error: String,
-    pub has_error: bool,
-}
+// #[derive(Template)]
+// #[template(path = "admin/home_loans.html")]
+// pub struct AdminHomeLoansTemplate {
+//     pub records: Vec<AdminHomeLoanRecord>,
+//     pub has_records: bool,
+//     pub error: String,
+//     pub has_error: bool,
+// }
 
 #[derive(Template)]
 #[template(path = "errors/403.html")]
@@ -566,3 +614,5 @@ pub struct AdminFixedDepositPlansTemplate {
     pub success: String,
     pub has_success: bool,
 }
+
+

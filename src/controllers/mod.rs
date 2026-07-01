@@ -8,8 +8,8 @@ pub mod home_loan_controller;
 pub mod loan_controller;
 pub mod onboard_controller;
 pub mod public_controller;
-pub mod loan_controller;
-pub mod home_loan_controller;
+// pub mod loan_controller;
+// pub mod home_loan_controller;
 pub mod session_guard;
 
 pub use self::admin_controller::{
@@ -25,7 +25,7 @@ pub use self::customer_controller::{
     create_giro_arrangement, dashboard, deposit, deposit_page, download_statement_pdf,
     fixed_deposit_activity, freeze_card, giro_page, loan_activity, paynow_page,
     profile_page, register_paynow, statements_page, transaction_controls_page,
-    transactions, transfer, transfer_page, transfer_paynow, update_money_lock,
+    transactions, transfer, transfer_page, register_paynow_page, transfer_paynow, update_money_lock,
     update_profile, update_transaction_limit,
 };
 pub use self::fixed_deposit_controller::{
@@ -35,11 +35,11 @@ pub use self::fixed_deposit_controller::{
 };
 
 pub use self::error_controller::{forbidden, not_found};
-pub use self::fixed_deposit_controller::{
-    admin_fixed_deposit_plans_page, admin_fixed_deposits_page, create_fixed_deposit,
-    create_fixed_deposit_plan, fixed_deposit_new_page, fixed_deposits_page,
-    update_fixed_deposit_plan, withdraw_fixed_deposit,
-};
+// pub use self::fixed_deposit_controller::{
+//     admin_fixed_deposit_plans_page, admin_fixed_deposits_page, create_fixed_deposit,
+//     create_fixed_deposit_plan, fixed_deposit_new_page, fixed_deposits_page,
+//     update_fixed_deposit_plan, withdraw_fixed_deposit,
+// };
 pub use self::home_loan_controller::{
     admin_home_loans_page, approve_home_loan, create_home_loan_application, home_loan_apply_page,
     home_loans_page, pay_home_loan, reject_home_loan,

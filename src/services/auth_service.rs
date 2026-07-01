@@ -1,13 +1,17 @@
 // Service layer: keeps banking validation and workflow rules away from templates and SQL.
 
 use crate::forms::{AccountCreationForm, LoginForm};
-use crate::models::User;
-use crate::repositories::{customer_repository, user_repository};
+use crate::models::{KnownDevice, User};
+use crate::repositories::{customer_repository, known_device_repository, user_repository};
+use crate::services;
+use crate::views::templates::Account2FAEmailTemplate;
 use actix_web::Error;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use rand::RngExt;
+use sha2::{Sha256, Digest};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -92,6 +96,91 @@ pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, Str
 
     Ok(user)
 }
+// Runs business logic for authenticate device.
+pub async fn authenticate_device(db: &PgPool, raw_token: &str) -> Result<KnownDevice, String> {
+    let hashed_token = hash_device_token(raw_token);
+    let device = known_device_repository::find_device_by_hashed_token(db, &hashed_token)
+        .await
+        .map_err(|error| {
+            eprintln!("LOGIN device lookup failed: {error:?}");
+            "Could not verify your device.".to_string()
+        })?
+        .ok_or_else(|| "Not known device".to_string())?;
+
+    if device.is_active() == false {
+        return Err("Device is not active".to_string())
+    }
+
+    known_device_repository::update_last_login(db, &hashed_token)
+        .await
+        .map_err(|error| {
+            eprintln!(
+                "DEVICE last-used update failed: {:?}",
+                error 
+            );
+            "Device verified, but the last-used timestamp could not be updated.".to_string()
+        })?;
+
+    Ok(device)
+}
+
+// Runs business logic to add trusted device.
+pub async fn add_trusted_device(db: &PgPool, user_id: &Uuid, raw_token: &str) -> Result<KnownDevice, String> {
+    let hashed_token = hash_device_token(raw_token);
+    let device = known_device_repository::create_known_device(db,  user_id, &hashed_token)
+        .await
+        .map_err(|error| {
+            eprintln!("Failed to add trusted device: {error:?}");
+            "Could not add this device.".to_string()
+        })?;
+
+    Ok(device)
+}
+
+
+// Runs business logic to trigger 2FA email.
+pub async fn generate_and_send_2fa(db: &PgPool, user_id: &Uuid) -> Result<(), String> {
+    let mut rng = rand::rng();
+    let verification_code: String = (0..6)
+        .map(|_| rng.random_range(0..10).to_string())
+        .collect();
+
+    let user = user_repository::find_user_by_id(db, *user_id)
+    .await
+    .map_err(|error| {
+        eprintln!("2FA lookup failed for {user_id}: {error:?}");
+        "Could not load your account.".to_string()
+    })?
+    .ok_or_else(|| "Not known device".to_string())?;
+
+
+    let email_to_send = user.email.clone();
+    let subject_to_send = format!(
+        "Login Request: {}",
+        user.username.clone()
+    );
+    let template = Account2FAEmailTemplate {
+        verification_code: verification_code,
+    };
+
+    println!(
+        "2FA EMAIL: sending 2fa email to {email_to_send}."
+    );
+
+    if let Err(error) = services::send_template_email(&email_to_send, &subject_to_send, &template).await {
+        eprintln!("2fa email failed: {error}");
+        return Err("failed to send 2fa email".to_string())
+    }
+
+    Ok(())
+}
+
+// Runs business logic to trigger 2FA email.
+pub async fn verify_2fa(db: &PgPool, 2fa_code: &str, user_id: &Uuid) -> Result<bool, String> {
+    
+
+    Ok(())
+}
 
 // Hashes sensitive input before it is stored.
 fn hash_password(password: &str) -> Result<String, Error> {
@@ -114,4 +203,12 @@ fn verify_password(password: &str, password_hash: &str) -> bool {
         .is_some()
 }
 
-
+// When you generate the UUID and want to save it to the DB:
+pub fn hash_device_token(raw_token: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(raw_token.as_bytes());
+    let result = hasher.finalize();
+    
+    // Use the hex crate to encode the byte array into a String
+    hex::encode(result) 
+}

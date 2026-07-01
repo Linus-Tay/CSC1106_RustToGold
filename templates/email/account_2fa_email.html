@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" style="color-scheme: light only;">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light" />
+  <title>Your 2FA Verification Code</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600&display=swap');
+
+    /* Force light mode — prevents Gmail/Apple Mail dark mode override */
+    :root { color-scheme: light only; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: #EEF2F7 !important;
+      font-family: 'Inter', Arial, sans-serif;
+      color: #1A2B4A !important;
+      padding: 40px 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .email-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #0A2A6E 0%, #1A56C4 100%) !important;
+      border-radius: 12px 12px 0 0;
+      padding: 36px 48px;
+      text-align: center;
+    }
+
+    .logo-area {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .bank-name {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px;
+      color: #FFFFFF !important;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Body card ── */
+    .card {
+      background: #FFFFFF !important;
+      padding: 48px 48px 40px;
+    }
+
+    .greeting {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      color: #1A56C4 !important;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .headline {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px;
+      color: #0A2A6E !important;
+      line-height: 1.35;
+      margin-bottom: 20px;
+    }
+
+    .divider {
+      width: 48px;
+      height: 3px;
+      background: #1A56C4 !important;
+      border-radius: 2px;
+      margin-bottom: 24px;
+    }
+
+    .body-text {
+      font-size: 15px;
+      line-height: 1.75;
+      color: #3A4D6B !important;
+      margin-bottom: 16px;
+    }
+
+    /* ── 2FA Code Box ── */
+    .code-wrap {
+      text-align: center;
+      margin: 32px 0;
+      background: #F8FAFC !important;
+      border: 2px dashed #CBD5E1;
+      border-radius: 8px;
+      padding: 24px;
+    }
+
+    .code-text {
+      font-family: 'Inter', monospace;
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 12px;
+      color: #0A2A6E !important;
+      margin-left: 12px; /* Offsets the final letter spacing to keep it centered */
+    }
+
+    /* ── Warning banner ── */
+    .warning-box {
+      background: #E8EEFF !important;
+      border-left: 4px solid #1A56C4;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 28px 0;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .warning-icon {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      margin-top: 1px;
+    }
+
+    .warning-text {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: #1A2B4A !important;
+    }
+
+    .warning-text strong {
+      color: #0A2A6E !important;
+      display: block;
+      margin-bottom: 3px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* ── Expiry note ── */
+    .expiry-note {
+      text-align: center;
+      font-size: 13px;
+      color: #7A8EAA !important;
+      margin-top: -12px;
+      margin-bottom: 28px;
+    }
+
+    .expiry-note span {
+      font-weight: 600;
+      color: #3A4D6B !important;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      background: #0A2A6E !important;
+      border-radius: 0 0 12px 12px;
+      padding: 28px 48px;
+      text-align: center;
+    }
+
+    .footer p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6) !important;
+      line-height: 1.7;
+    }
+
+    .footer a {
+      color: rgba(255,255,255,0.8) !important;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .footer .footer-brand {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 14px;
+      color: #FFFFFF !important;
+      margin-bottom: 10px;
+    }
+
+    /* Dark mode override — force light appearance in all clients */
+    @media (prefers-color-scheme: dark) {
+      body { background-color: #EEF2F7 !important; color: #1A2B4A !important; }
+      .card { background: #FFFFFF !important; }
+      .headline { color: #0A2A6E !important; }
+      .greeting { color: #1A56C4 !important; }
+      .body-text { color: #3A4D6B !important; }
+      .code-wrap { background: #F8FAFC !important; border-color: #CBD5E1 !important; }
+      .code-text { color: #0A2A6E !important; }
+      .warning-box { background: #E8EEFF !important; }
+      .warning-text { color: #1A2B4A !important; }
+      .warning-text strong { color: #0A2A6E !important; }
+      .footer { background: #0A2A6E !important; }
+      .footer p { color: rgba(255,255,255,0.6) !important; }
+      .footer .footer-brand { color: #FFFFFF !important; }
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 32px 24px; }
+      .header { padding: 28px 24px; }
+      .footer { padding: 24px; }
+      .headline { font-size: 22px; }
+      .code-text { font-size: 28px; letter-spacing: 8px; margin-left: 8px; }
+    }
+  </style>
+</head>
+<body style="background-color:#EEF2F7; margin:0; padding:40px 16px; font-family:'Inter',Arial,sans-serif; color:#1A2B4A;">
+  <div class="email-wrapper" style="max-width:600px; margin:0 auto;">
+
+    <div class="header" style="background:#0D3AAA; border-radius:12px 12px 0 0; padding:36px 48px; text-align:center;">
+      <div class="logo-area" style="display:inline-flex; align-items:center; gap:14px;">
+        <img src="data:image/png;base64,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" alt="Rust To Gold Logo" style="width:48px;height:48px;object-fit:contain;display:block;" />
+        <div class="bank-name" style="font-family:'Playfair Display',Georgia,serif;font-size:22px;color:#FFFFFF;letter-spacing:0.3px;">Rust To Gold</div>
+      </div>
+    </div>
+
+    <div class="card" style="background:#FFFFFF; padding:48px 48px 40px;">
+
+      <p class="greeting" style="font-size:13px;text-transform:uppercase;letter-spacing:1.4px;color:#1A56C4;font-weight:600;margin-bottom:10px;">Security Notice</p>
+      <h1 class="headline" style="font-family:'Playfair Display',Georgia,serif;font-size:26px;color:#0A2A6E;line-height:1.35;margin-bottom:20px;">Your 2FA Verification Code</h1>
+      <div class="divider" style="width:48px;height:3px;background:#1A56C4;border-radius:2px;margin-bottom:24px;"></div>
+
+      <p class="body-text" style="font-size:15px;line-height:1.75;color:#3A4D6B;margin-bottom:16px;">
+        Dear Valued Customer,
+      </p>
+      <p class="body-text" style="font-size:15px;line-height:1.75;color:#3A4D6B;margin-bottom:16px;">
+        We received a request to access your Rust To Gold online banking account from an unrecognized device. To complete your login securely, please enter the following 6-digit verification code on the authentication page:
+      </p>
+
+      <div class="code-wrap" style="text-align:center;margin:32px 0;background:#F8FAFC;border:2px dashed #CBD5E1;border-radius:8px;padding:24px;">
+        <span class="code-text" style="font-family:'Inter',monospace;font-size:36px;font-weight:700;letter-spacing:12px;color:#0A2A6E;margin-left:12px;">{{ verification_code }}</span>
+      </div>
+
+      <p class="expiry-note" style="text-align:center;font-size:13px;color:#7A8EAA;margin-top:-12px;margin-bottom:28px;">This code expires in <span style="font-weight:600;color:#3A4D6B;">10 minutes</span>.</p>
+
+      <div class="warning-box" style="background:#E8EEFF;border-left:4px solid #1A56C4;border-radius:0 8px 8px 0;padding:16px 20px;margin:28px 0;display:flex;gap:14px;align-items:flex-start;">
+        <svg class="warning-icon" style="flex-shrink:0;width:22px;height:22px;margin-top:1px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2.5 19.5H21.5L12 2Z" stroke="#1A56C4" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M12 9V13" stroke="#1A56C4" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="12" cy="16.5" r="0.75" fill="#1A56C4" stroke="#1A56C4" stroke-width="1"/>
+        </svg>
+        <div class="warning-text" style="font-size:13.5px;line-height:1.65;color:#1A2B4A;">
+          <strong style="color:#0A2A6E;display:block;margin-bottom:3px;font-size:13px;text-transform:uppercase;letter-spacing:0.8px;">Do Not Share This Code</strong>
+          Never share this verification code with anyone — including individuals claiming to be bank staff. Our representatives will never ask for your code over the phone, text, or email.
+        </div>
+      </div>
+
+      <p class="body-text" style="font-size:15px;line-height:1.75;color:#3A4D6B;margin-top:24px;">
+        If you did not attempt to log in to your account, please ignore this email and contact our fraud department immediately at <a href="mailto:fraud@rusttogold.com" style="color:#1A56C4;text-decoration:none;font-weight:500;">fraud@rusttogold.com</a>.
+      </p>
+
+    </div>
+
+    <div class="footer" style="background:#0A2A6E;border-radius:0 0 12px 12px;padding:28px 48px;text-align:center;">
+      <p class="footer-brand" style="font-family:'Playfair Display',Georgia,serif;font-size:14px;color:#FFFFFF;margin-bottom:10px;">Rust To Gold</p>
+      <p style="font-size:12px;color:rgba(255,255,255,0.6);line-height:1.7;">
+        This is an automated security message. Please do not reply directly to this email.<br>
+        &copy; 2026 Rust To Gold. All rights reserved.<br>
+        <a href="#" style="color:rgba(255,255,255,0.8);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.3);">Privacy Policy</a> &nbsp;|&nbsp;
+        <a href="#" style="color:rgba(255,255,255,0.8);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.3);">Terms of Service</a>
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>

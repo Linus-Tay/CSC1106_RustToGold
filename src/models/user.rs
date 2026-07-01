@@ -13,7 +13,6 @@ pub struct User {
     pub email: String,
     pub password_hash: String,
     pub role: String,
-    pub monthly_income_cents: i64,
     pub status: String,
     pub last_login_at: Option<NaiveDateTime>,
     pub created_at: NaiveDateTime,

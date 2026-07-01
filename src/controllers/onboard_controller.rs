@@ -14,6 +14,8 @@ use crate::views::templates::{
 use crate::views::{render, ErrorTemplate, NotFoundTemplate, OnboardingResultTemplate};
 use crate::AppState;
 use actix_session::Session;
+use actix_web::cookie::Cookie;
+use actix_web::cookie::time::Duration;
 use actix_web::{web, HttpResponse, Result};
 use askama::DynTemplate;
 use serde::Deserialize;
@@ -141,14 +143,46 @@ pub async fn account_creation_submit(
 
     match services::register_user(&data.db, &customer.id, &customer.email, form).await {
         Ok(user) => {
+            let raw_token = uuid::Uuid::new_v4().to_string();
+
+            if let Err(error) = services::add_trusted_device(&data.db, &user.id, &raw_token).await {
+                eprintln!("Failed to save trusted device for user {}: {}", user.id, error);
+            }
+
             if let Err(error) = services::invalidate_account_creation_link(&data, &link).await {
                 eprintln!("Could not invalidate account creation link: {error}");
             }
             session.remove("account_creation_link");
-            render(AccountCreationSuccessTemplate {
+
+            let device_cookie = Cookie::build("device_id", raw_token)
+                .path("/")
+                .secure(false) // Crucial for HTTPS
+                .http_only(true) // Protects against XSS
+                .max_age(Duration::days(180))
+                .finish();
+
+            // 4. Initialize your template
+            let template = AccountCreationSuccessTemplate {
                 username: user.username,
                 email: user.email,
-            })
+            };
+
+            // 5. Render the template to an HTML string
+            // (If using Askama, it's `.render().unwrap()`. If Tera, use your Tera instance.)
+            let html_body = template.dyn_render().unwrap(); 
+
+            // 6. Build the response, attach the cookie, and send the HTML
+            Ok(
+                HttpResponse::Ok()
+                    .cookie(device_cookie) // <--- Cookie goes here
+                    .content_type("text/html; charset=utf-8")
+                    .body(html_body) // <--- HTML goes here
+            )
+
+            // render(AccountCreationSuccessTemplate {
+            //     username: user.username,
+            //     email: user.email,
+            // })
         }
         Err(error) => render(AccountCreationSetupTemplate {
             email: customer.email,

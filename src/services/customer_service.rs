@@ -43,7 +43,7 @@ pub async fn create_customer_with_product(
         .map_err(|error| error.to_string())?
         .is_some()
     {
-        return Err("An application with these identity details is already pending or approved.".to_string());
+        return Err("We are unable to perform this action at this moment. Please try again later.".to_string());
     }
 
     let dob = NaiveDate::parse_from_str(&step2.dob, "%Y-%m-%d")

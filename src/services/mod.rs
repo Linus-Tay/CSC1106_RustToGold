@@ -28,7 +28,7 @@ pub use self::admin_service::{
     load_admin_dashboard, reject_customer_application, reject_personal_loan, set_customer_product_status,
     set_customer_user_status, update_staff_user,
 };
-pub use self::auth_service::{authenticate_user, register_user};
+pub use self::auth_service::{authenticate_user, register_user, authenticate_device, add_trusted_device, generate_and_send_2fa};
 pub use self::card_service::{create_card, load_card_dashboard, set_card_status};
 pub use self::customer_service::{create_customer_with_product, approve_customer_with_product, validate_account_creation_link, get_customer_by_account_creation_link, invalidate_account_creation_link};
 pub use self::email_service::{send_html_email, send_template_email};

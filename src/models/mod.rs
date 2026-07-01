@@ -16,6 +16,8 @@ pub mod statement;
 pub mod transaction;
 pub mod transaction_control;
 pub mod user;
+pub mod known_device;
+pub mod otp_code;
 
 pub use self::account_creation_link::AccountCreationLink;
 pub use self::card::Card;
@@ -33,6 +35,4 @@ pub use self::statement::{BankStatement, StatementTransaction};
 pub use self::transaction::Transaction;
 pub use self::transaction_control::{FraudAlert, TransactionControl};
 pub use self::user::User;
-pub use self::home_loan::{
-    AdminHomeLoanRecord, HomeLoanApplication, HomeLoanSummary
-};
+pub use self::known_device::KnownDevice;

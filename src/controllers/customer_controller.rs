@@ -6,14 +6,14 @@ use crate::forms::account_forms::{CreateBankAccountForm, TransferForm};
 use crate::forms::{CardApplicationForm, DepositForm, GiroArrangementForm, MoneyLockForm, PayNowRegisterForm, PayNowTransferForm, ProfileForm, StatementRequest, TransactionLimitForm};
 use crate::repositories::customer_repository;
 use crate::services;
+use crate::views::templates::{PayNowRegisterTemplate, TwoFactorAuthTemplate};
 use crate::views::{
-    render, CardDashboardTemplate, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate,
-    GiroTemplate, PayNowTemplate, ProfileTemplate, StatementTemplate, TransactionControlsTemplate,
-    TransactionsTemplate, TransferTemplate,
+    CardDashboardTemplate, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate, GiroTemplate, NotFoundTemplate, PayNowTemplate, ProfileTemplate, StatementTemplate, TransactionControlsTemplate, TransactionsTemplate, TransferTemplate, render,
 };
 use crate::AppState;
-use crate::models::Product;
+use crate::models::{Product};
 use actix_session::Session;
+use actix_web::web::service;
 use actix_web::{web, HttpResponse, Result};
 
 // Handles the display money without symbol request.
@@ -542,6 +542,8 @@ async fn render_paynow_dashboard(
             has_error: !error.is_empty(),
             success: success.clone(),
             has_success: !success.is_empty(),
+            nric: String::from("T1111111A"),
+            phone: String::from("91111111")
         }),
         Err(message) => render_error("PayNow unavailable", message),
     }
@@ -556,6 +558,40 @@ pub async fn paynow_page(data: web::Data<AppState>, session: Session) -> Result<
 
     render_paynow_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
 }
+
+// Renders the register paynow page screen with data prepared by the service layer.
+pub async fn register_paynow_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+
+    let customer_id = user.customer_id_or_nil();
+
+    let customer = match  customer_repository::get_customer_by_id(&data.db, &customer_id).await {
+        Ok(customer) => customer,
+        Err(e) => return render(ErrorTemplate)
+    };
+
+    let accounts = match services::list_active_customer_products(&data.db, customer_id).await {
+        Ok(accounts) if !accounts.is_empty() => accounts,
+        _ => return render_error("Account unavailable", "No active bank account was found.".to_string()),
+    };
+
+    render(PayNowRegisterTemplate {
+        accounts,
+        error: String::new(),
+        has_error: false,
+        success: String::new(),
+        has_success: false,
+        nric: customer.nric,
+        phone: customer.phone_number
+    })
+    
+
+    //render_paynow_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
+}
+
 
 // Handles the register paynow form action and redirects after the service result.
 pub async fn register_paynow(
@@ -609,6 +645,20 @@ pub async fn transfer_paynow(
     }
 }
 
+pub async fn twofactor_page(data: &web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+    if let Ok(Some(pending_user_id)) = session.get::<String>("pending_2fa_user_id") {
+        render(TwoFactorAuthTemplate {
+            error: String::new(),
+            has_error: false,
+            success: String::new(),
+            has_success: false
+        })
+    }
+    else {
+        render(NotFoundTemplate)
+    }
+}
+
 // Renders the profile page screen with data prepared by the service layer.
 pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
@@ -630,22 +680,46 @@ pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result
         },
     };
 
-    let active_paynow = paynow_dashboard
-        .registrations
-        .iter()
-        .find(|registration| registration.status == "active" && registration.paynow_type == "phone_number");
+    // let active_paynow = paynow_dashboard
+    //     .registrations
+    //     .iter()
+    //     .find(|registration| registration.status == "active" && registration.paynow_type == "phone_number");
 
     let date_of_birth = customer.date_of_birth_display();
     let last_login = user.last_login_display();
-    let paynow_id = active_paynow
-        .map(|registration| registration.paynow_id.clone())
-        .unwrap_or_default();
-    let paynow_linked_product_id = active_paynow
-        .map(|registration| registration.linked_account_id.to_string())
-        .unwrap_or_default();
-    let has_paynow = !paynow_id.is_empty();
+    // let paynow_id = active_paynow
+    //     .map(|registration| registration.paynow_id.clone())
+    //     .unwrap_or_default();
+    // let paynow_linked_product_id = active_paynow
+    //     .map(|registration| registration.linked_account_id.to_string())
+    //     .unwrap_or_default();
+    //let has_paynow = !paynow_id.is_empty();
     let accounts = paynow_dashboard.accounts;
     let has_accounts = !accounts.is_empty();
+
+    // render(ProfileTemplate {
+    //     full_name: customer.full_name,
+    //     email: customer.email,
+    //     phone: customer.phone_number,
+    //     date_of_birth,
+    //     last_login,
+    //     accounts,
+    //     has_accounts,
+    //     paynow_id,
+    //     paynow_linked_product_id,
+    //     has_paynow,
+    // })
+
+    //     render(ProfileTemplate {
+    //     full_name: customer.full_name,
+    //     email: customer.email,
+    //     phone: customer.phone_number,
+    //     date_of_birth,
+    //     last_login,
+    //     accounts,
+    //     has_accounts,
+    //     paynow_links: vec![], // TODO: replace with real query, e.g. fetch_paynow_links(&pool, customer.id).await?
+    // })
 
     render(ProfileTemplate {
         full_name: customer.full_name,
@@ -655,9 +729,7 @@ pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result
         last_login,
         accounts,
         has_accounts,
-        paynow_id,
-        paynow_linked_product_id,
-        has_paynow,
+        paynow_registrations: paynow_dashboard.registrations
     })
 }
 

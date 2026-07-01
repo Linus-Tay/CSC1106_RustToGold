@@ -45,6 +45,10 @@ impl PayNowRegistration {
         title_case_code(&self.product_id)
     }
 
+    pub fn id_display(&self) -> String {
+        self.id.to_string()
+    }
+
     // Formats the value for display in templates.
     pub fn balance_display(&self) -> String {
         Money::from_cents(self.balance_cents).display()

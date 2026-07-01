@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RustToGold | Register PayNow</title>
+  {% include "partials/customer_assets.html" %}
+</head>
+<body class="customer-body">
+  {% include "partials/customer_nav.html" %}
+
+  <main class="customer-main">
+    <div class="customer-container customer-narrow">
+      <a class="back-link" href="/customer/dashboard"><i data-lucide="arrow-left"></i> Back to dashboard</a>
+
+      <section class="customer-card form-card">
+        <div class="customer-card__header">
+          <div>
+            <p class="customer-kicker">Payments & Transfers</p>
+            <h1>Register for PayNow</h1>
+            <p>Link your NRIC or Mobile Number to a bank account to receive funds instantly.</p>
+          </div>
+        </div>
+
+        <div class="customer-card__body">
+          {% if has_success %}
+          <div class="alert alert--success"><i data-lucide="check-circle"></i> {{ success }}</div>
+          {% endif %}
+
+          {% if has_error %}
+          <div class="alert alert--danger"><i data-lucide="circle-alert"></i> {{ error }}</div>
+          {% endif %}
+
+          <form class="form clean-form" action="/customer/paynow/register" method="post">
+            
+            <div class="form-field">
+              <label class="form-label" for="paynow_type">PayNow Type</label>
+              <select class="form-select" id="paynow_type" name="paynow_type" required>
+                <option value="" disabled selected>Select PayNow Type</option>
+                <option value="nric">NRIC / FIN</option>
+                <option value="phone_number">Mobile Number</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="paynow_value">PayNow Value</label>
+              <input class="form-input bg-gray-100 cursor-not-allowed text-gray-500" 
+                     id="paynow_value" 
+                     name="paynow_value" 
+                     type="text" 
+                     readonly 
+                     placeholder="Select a type above" />
+            </div>
+
+            <div class="form-field">
+              <label class="form-label" for="account_number">Link to Account</label>
+              <select class="form-select" id="linked_product_id" name="linked_product_id" required>
+                <option value="" disabled selected>Select an account</option>
+                {% for account in accounts %}
+                <option value="{{ account.id }}">
+                  {{ account.product_id_display() }} · {{ account.account_number }} · {{ account.balance_display() }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <button class="c-button c-button--primary mt-4" type="submit">
+              <i data-lucide="link"></i> Register PayNow
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/js/app.js"></script>
+
+ <!-- JavaScript to handle the dynamic field update -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Askama expects these to match fields in your Rust Template struct perfectly.
+      // Make sure your struct has `nric` and `mobile_number` as Strings or &str.
+      const userData = {
+        nric: "{{ nric }}",
+        mobile: "{{ phone }}"
+      };
+
+      const typeSelect = document.getElementById('paynow_type');
+      const valueInput = document.getElementById('paynow_value');
+
+      typeSelect.addEventListener('change', function() {
+        if (this.value === 'nric') {
+          valueInput.value = userData.nric;
+        } else if (this.value === 'phone_number') {
+          valueInput.value = userData.mobile;
+        } else {
+          valueInput.value = '';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

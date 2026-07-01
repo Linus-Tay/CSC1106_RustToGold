@@ -2,7 +2,7 @@
 
 use crate::forms::{PayNowRegisterForm, PayNowTransferForm};
 use crate::models::{Money, PayNowRegistration, Product};
-use crate::repositories::{paynow_repository, product_repository};
+use crate::repositories::{customer_repository, paynow_repository, product_repository};
 use crate::services::support::clean_optional_text;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -39,9 +39,19 @@ pub async fn register_paynow(
     form: PayNowRegisterForm,
 ) -> Result<(), String> {
     let paynow_type = normalise_paynow_type(&form.paynow_type)?;
-    let paynow_id = normalise_paynow_identifier(&paynow_type, &form.paynow_id)?;
+    //let paynow_id = normalise_paynow_identifier(&paynow_type, &form.paynow_id)?;
     let linked_product_id = Uuid::parse_str(form.linked_product_id.trim())
         .map_err(|_| "Choose a valid account to link.".to_string())?;
+
+    let customer = customer_repository::get_customer_by_id(db, &customer_id)
+    .await
+    .map_err(|_| "Failed to get customer details".to_string())?;
+
+    let paynow_id: String = match paynow_type.as_str() {
+        "nric" => customer.nric.clone(), // Converts &str to String
+        "phone_number" => customer.phone_number.clone(), // Do the same here if phone_number is also a &str
+        _ => return Err("Invalid PayNow type".to_string())
+    };
 
     // Only active accounts can receive PayNow funds.
     product_repository::get_active_product_for_customer_by_id(db, customer_id, linked_product_id)
@@ -53,8 +63,18 @@ pub async fn register_paynow(
         .await
         .map_err(|_| "Could not check existing PayNow registrations.".to_string())?
     {
-        if existing.customer_id != customer_id {
+        if existing.customer_id == customer_id {
             return Err("This PayNow ID is already registered.".to_string());
+        }
+    }
+
+    // A bank account can only point to either their PayNow number/NRIC.
+    if let Some(existing) = paynow_repository::find_active_by_product_id(db, &linked_product_id)
+        .await
+        .map_err(|_| "Could not check existing PayNow registrations.".to_string())?
+    {
+        if existing.customer_id == customer_id {
+            return Err("This bank account is already linked to an existing PayNow ID".to_string());
         }
     }
 

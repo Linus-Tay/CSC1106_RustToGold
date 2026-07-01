@@ -60,43 +60,54 @@
             <span class="panel-icon"><i data-lucide="scan-line"></i></span>
             <div>
               <p class="customer-kicker">PayNow</p>
-              <h2>Edit PayNow mobile number</h2>
-              <p>This is the mobile number other people use to send PayNow transfers to you.</p>
+              <h2>Linked PayNow</h2>
+              <p>Your linked PayNow accounts are here</p>
             </div>
-            <span class="profile-status-chip {% if has_paynow %}profile-status-chip--active{% endif %}">
-              {% if has_paynow %}Registered{% else %}Not registered{% endif %}
-            </span>
+            <a
+              href="/customer/paynow/register"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-900 transition hover:bg-amber-50 {% if paynow_registrations.len() >= 2 %}pointer-events-none cursor-not-allowed opacity-40{% endif %}"
+              aria-label="Register new PayNow"
+              title="Register new PayNow"
+              {% if paynow_registrations.len() >= 2 %}aria-disabled="true" tabindex="-1"{% endif %}
+            ><i data-lucide="plus" class="h-4 w-4"></i></a>
           </div>
           <div class="customer-card__body">
-            {% if has_accounts %}
-            <div class="profile-paynow-current">
-              <span>Current PayNow number</span>
-              <strong>{% if has_paynow %}{{ paynow_id }}{% else %}No number registered{% endif %}</strong>
-            </div>
-            <div class="profile-form-grid profile-paynow-editor">
-              <div class="form-field">
-                <label class="form-label" for="paynow_id">New PayNow Mobile Number</label>
-                <input class="form-input form-input--large" id="paynow_id" name="paynow_id" inputmode="numeric" value="{{ paynow_id }}" placeholder="91234567" />
-                <p class="form-help">Use an 8-digit Singapore mobile number starting with 8 or 9.</p>
-              </div>
-              <div class="form-field">
-                <label class="form-label" for="linked_product_id">Receive PayNow into</label>
-                <select class="form-input form-input--large" id="linked_product_id" name="linked_product_id">
-                  {% for account in accounts %}
-                  <option value="{{ account.id }}" {% if account.id_display() == paynow_linked_product_id %}selected{% endif %}>{{ account.product_id_display() }} · {{ account.account_number }}</option>
-                  {% endfor %}
-                </select>
-                <p class="form-help">Changing this only affects incoming PayNow transfers.</p>
-              </div>
-            </div>
-            {% else %}
+            {% if paynow_registrations.is_empty() %}
             <div class="empty-state empty-state--small">
               <div class="empty-state__icon"><i data-lucide="wallet"></i></div>
-              <h3>No active account</h3>
-              <p>You need an active account before registering PayNow.</p>
+              <h3>No linked PayNow</h3>
+              <p>Register for one</p>
             </div>
-            <input type="hidden" name="paynow_id" value="" />
-            <input type="hidden" name="linked_product_id" value="" />
+            {% else %}
+            <div class="flex flex-col gap-2">
+              <div class="grid grid-cols-[1fr_1fr_auto] gap-4 px-5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <span>PayNow Type</span>
+                <span>Linked Bank Account</span>
+                <span class="w-[90px]"></span>
+              </div>
+              <div class="flex flex-col gap-3">
+                {% for registration in paynow_registrations %}
+                <div class="grid grid-cols-[1fr_1fr_auto] items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+                  <div class="flex items-center gap-2.5 font-semibold text-slate-900">
+                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                      <i data-lucide="scan-line" class="h-4 w-4"></i>
+                    </span>
+                    <span>{{ registration.paynow_type_display() }}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5 text-sm">
+                    <span class="text-xs text-slate-400">{{ registration.linked_product_display() }}</span>
+                    <span class="font-medium tabular-nums text-slate-900">{{ registration.account_number }}</span>
+                  </div>
+                  <button
+                    type="submit"
+                    form="unlink-form-{{ registration.id_display() }}"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 hover:border-red-300"
+                    aria-label="Unlink PayNow"
+                  ><i data-lucide="unlink" class="h-3.5 w-3.5"></i> Unlink</button>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
             {% endif %}
           </div>
         </section>
@@ -107,7 +118,7 @@
             <div>
               <p class="customer-kicker">Security</p>
               <h2>Edit password</h2>
-              <p>Leave these fields blank if you only want to update profile or PayNow details.</p>
+              <p>Leave these fields blank if you only want to update profile</p>
             </div>
           </div>
           <div class="customer-card__body">
@@ -132,6 +143,11 @@
           <button class="c-button c-button--primary" type="submit"><i data-lucide="save"></i> Save Profile Changes</button>
         </div>
       </form>
+
+      {% for registration in paynow_registrations %}
+      <form id="unlink-form-{{ registration.id_display() }}" action="/customer/paynow/{{ registration.id_display() }}/unlink" method="post"></form>
+      {% endfor %}
+
     </div>
   </main>
 

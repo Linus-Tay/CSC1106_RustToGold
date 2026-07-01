@@ -289,6 +289,20 @@ CREATE TABLE giro_arrangements (
     CHECK (end_date IS NULL OR end_date >= next_payment_date)
 );
 
+CREATE TABLE otp_codes (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code                TEXT NOT NULL UNIQUE,
+    expires_at          TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE known_devices (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    token_hash          TEXT NOT NULL,
+    user_id             UUID NULL REFERENCES users(id) ON DELETE CASCADE,
+    last_used           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
+
 CREATE UNIQUE INDEX idx_customers_active_nric_unique
     ON customers (lower(nric))
     WHERE kyc_status <> 'rejected';

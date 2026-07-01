@@ -31,7 +31,7 @@ pub async fn list_by_customer(
 pub async fn find_active_by_identifier(
     db: &PgPool,
     paynow_type: &str,
-    paynow_id: &str,
+    paynow_id: &str
 ) -> Result<Option<PayNowRegistration>, sqlx::Error> {
     sqlx::query_as::<_, PayNowRegistration>(
         r#"
@@ -48,6 +48,27 @@ pub async fn find_active_by_identifier(
     )
     .bind(paynow_type)
     .bind(paynow_id)
+    .fetch_optional(db)
+    .await
+}
+
+pub async fn find_active_by_product_id(
+    db: &PgPool,
+    product_id: &uuid::Uuid
+) -> Result<Option<PayNowRegistration>, sqlx::Error> {
+    sqlx::query_as::<_, PayNowRegistration>(
+        r#"
+        SELECT pr.id, pr.customer_id, pr.paynow_type, pr.paynow_id,
+               pr.linked_account_id, cp.account_number, cp.product_id,
+               cp.balance_cents, pr.status, pr.registered_at
+        FROM registered_paynow pr
+        JOIN customer_products cp ON cp.id = pr.linked_account_id
+        WHERE cp.id = $1
+        AND pr.status = 'active'
+        LIMIT 1
+        "#,
+    )
+    .bind(product_id)
     .fetch_optional(db)
     .await
 }

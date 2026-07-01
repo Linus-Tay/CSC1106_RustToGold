@@ -10,6 +10,12 @@ pub struct LoginForm {
 }
 
 #[derive(Debug, Deserialize)]
+// Form payload for the LoginForm request.
+pub struct TwoFactorForm {
+    pub code: String
+}
+
+#[derive(Debug, Deserialize)]
 // Form payload for the AccountCreationForm request.
 pub struct AccountCreationForm {
     pub username: String,
