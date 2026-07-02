@@ -36,3 +36,4 @@ pub use self::transaction::Transaction;
 pub use self::transaction_control::{FraudAlert, TransactionControl};
 pub use self::user::User;
 pub use self::known_device::KnownDevice;
+pub use self::otp_code::OTPCode;

@@ -208,6 +208,54 @@ pub async fn deposit_into_product(
     Ok((updated_product, transaction))
 }
 
+// Persists the deposit into product database change.
+pub async fn withdraw_from_product(
+    db: &PgPool,
+    customer_id: &Uuid,
+    account_number: &str,
+    amount_cents: i64,
+    description: Option<&str>,
+) -> Result<Result<(Product, Transaction), String>, sqlx::Error> {
+    let mut tx = db.begin().await?;
+    let product = lock_product(&mut tx, customer_id, account_number).await?;
+
+    if product.balance_cents < amount_cents {
+        return Ok(Err("Insufficient balance".to_string()));    
+    }
+
+    let new_balance = product.balance_cents - amount_cents;
+
+    let updated_product = sqlx::query_as::<_, Product>(
+        r#"
+        UPDATE customer_products
+        SET balance_cents = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
+        "#,
+    )
+    .bind(new_balance)
+    .bind(product.id)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    let transaction = sqlx::query_as::<_, Transaction>(
+        r#"
+        INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
+        VALUES ($1, 'withdrawal', $2, $3, $4)
+        RETURNING id, product_id, transaction_type, amount_cents, balance_after_cents, description, created_at
+        "#,
+    )
+    .bind(product.id)
+    .bind(amount_cents)
+    .bind(new_balance)
+    .bind(description)
+    .fetch_one(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+    Ok(Ok((updated_product, transaction)))
+}
+
 // Persists the transfer database change.
 pub async fn transfer(
     db: &PgPool,

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RustToGold ATM — Enter PIN</title>
+<link rel="stylesheet" href="/static/css/atm.css">
+</head>
+<body>
+
+<div class="atm-machine">
+
+  <div class="atm-brandbar">
+    <div class="atm-brand">
+      <span class="mark"></span>
+      RustToGold <span class="sub">ATM Network</span>
+    </div>
+    <div class="atm-clock"><span class="status-dot"></span><span id="clock">--:--</span></div>
+  </div>
+
+  <div class="atm-body">
+
+    <div class="fkey-col left">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F1</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F2</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F3</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F4</button></div>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen">
+
+        {% if has_error %}
+        <div class="atm-alert" role="alert" id="atmAlert">
+          <span class="a-icon">!</span>
+          <div class="a-body">{{ error }}</div>
+          <button type="button" class="a-close" onclick="document.getElementById('atmAlert').remove()" aria-label="Dismiss">✕</button>
+        </div>
+        {% endif %}
+
+        <div class="screen-topline">
+          <span>CARD: <span id="cardMasked">•••• ••••</span></span>
+          <span>SESSION: CARD READ</span>
+        </div>
+
+        <div class="screen-content">
+          <h1 class="screen-title">Enter Your PIN</h1>
+          <p class="screen-subtitle">Enter your 4‑digit PIN using the keypad below, then press Confirm.</p>
+
+          <form id="pinForm" action="/pin/verify" method="post">
+            <input type="hidden" id="cardHidden" name="card" value="">
+
+            <div class="pin-dots" id="pinDots">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+
+            <!-- hidden real input kept in sync, in case a physical keyboard is used -->
+            <input
+              type="password"
+              id="pin"
+              name="pin"
+              inputmode="numeric"
+              maxlength="4"
+              pattern="[0-9]{4}"
+              required
+              class="hidden"
+            >
+
+            <div class="keypad" aria-hidden="false">
+              <button type="button" class="pad-key" data-num="1">1</button>
+              <button type="button" class="pad-key" data-num="2">2</button>
+              <button type="button" class="pad-key" data-num="3">3</button>
+              <button type="button" class="pad-key" data-num="4">4</button>
+              <button type="button" class="pad-key" data-num="5">5</button>
+              <button type="button" class="pad-key" data-num="6">6</button>
+              <button type="button" class="pad-key" data-num="7">7</button>
+              <button type="button" class="pad-key" data-num="8">8</button>
+              <button type="button" class="pad-key" data-num="9">9</button>
+              <button type="button" class="clear" id="clearBtn">CLEAR</button>
+              <button type="button" class="pad-key" data-num="0">0</button>
+              <button type="submit" class="enter" id="enterBtn">ENTER</button>
+            </div>
+
+            <div class="btn-row">
+              <a href="/eject" class="btn btn-danger">Cancel &amp; Eject Card</a>
+            </div>
+          </form>
+        </div>
+
+        <p class="screen-footnote">Never share your PIN with anyone. RustToGold staff will never ask for it.</p>
+      </div>
+    </div>
+
+    <div class="fkey-col right">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F5</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F6</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F7</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F8</button></div>
+    </div>
+
+  </div>
+
+  <div class="slot-row">
+    <div class="slot"><div class="opening active"></div><div class="label">Card Slot</div></div>
+    <div class="slot"><div class="opening"></div><div class="label">Receipt</div></div>
+    <div class="slot"><div class="opening"></div><div class="label">Cash</div></div>
+  </div>
+
+</div>
+
+<script>
+  function tick(){
+    var d = new Date();
+    var h = d.getHours() % 12 || 12;
+    var m = d.getMinutes().toString().padStart(2,'0');
+    var ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+    document.getElementById('clock').textContent = h + ':' + m + ' ' + ampm;
+  }
+  tick(); setInterval(tick, 15000);
+
+  // pull the card number forward from the previous screen (query string)
+  var params = new URLSearchParams(window.location.search);
+  var card = (params.get('card') || '').replace(/\D/g,'');
+  document.getElementById('cardHidden').value = card;
+  document.getElementById('cardMasked').textContent = card.length >= 4
+    ? '•••• •••• •••• ' + card.slice(-4)
+    : '•••• •••• •••• ••••';
+
+  // on-screen keypad -> fills the pin value and lights up dots
+  var pin = '';
+  var pinInput = document.getElementById('pin');
+  var dots = document.querySelectorAll('#pinDots .dot');
+
+  function renderDots(){
+    dots.forEach(function(dot, i){
+      dot.classList.toggle('filled', i < pin.length);
+    });
+    pinInput.value = pin;
+  }
+
+  document.querySelectorAll('.pad-key').forEach(function(key){
+    key.addEventListener('click', function(){
+      if (pin.length < 4) {
+        pin += key.dataset.num;
+        renderDots();
+      }
+    });
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', function(){
+    pin = '';
+    renderDots();
+  });
+
+  document.getElementById('pinForm').addEventListener('submit', function(e){
+    if (pin.length !== 4) {
+      e.preventDefault();
+      alert('Please enter your full 4-digit PIN.');
+    }
+  });
+</script>
+
+</body>
+</html>

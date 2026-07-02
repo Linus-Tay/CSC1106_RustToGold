@@ -109,49 +109,72 @@ pub async fn transfer_paynow(
     customer_id: Uuid,
     form: PayNowTransferForm,
 ) -> Result<(), String> {
-    let from_product_id = Uuid::parse_str(form.from_product_id.trim())
-        .map_err(|_| "Choose a valid account to transfer from.".to_string())?;
-    let recipient_type = normalise_paynow_type(&form.recipient_type)?;
-    let recipient_id = normalise_paynow_identifier(&recipient_type, &form.recipient_id)?;
-    let amount = Money::parse_dollars(&form.amount)?;
-    let note = clean_optional_text(&form.note);
+    // let from_product_id = Uuid::parse_str(form.from_product_id.trim())
+    //     .map_err(|_| "Choose a valid account to transfer from.".to_string())?;
+    if let Some((account_number, paynow_id)) = form.from_product_id.split_once('/') {
 
-    // Keep PayNow single-transfer value inside the configured limit.
-    if amount.cents() > 50_000_00 {
-        return Err("PayNow transfers are capped at $50,000.00 per transaction.".to_string());
-    }
+        let recipient_type = normalise_paynow_type(&form.recipient_type)?;
+        let recipient_id = normalise_paynow_identifier(&recipient_type, &form.recipient_id)?;
+        let amount = Money::parse_dollars(&form.amount)?;
+        let note = clean_optional_text(&form.note);
 
-    // Apply daily limit, Money Lock and monitoring before funds move.
-    crate::services::transaction_control_service::validate_outgoing_transaction(
-        db,
-        customer_id,
-        Some(from_product_id),
-        amount.cents(),
-        note.as_deref(),
-        "PayNow",
-        true,
-    )
-    .await?;
+        let product = product_repository::get_product_by_account_number(db, account_number)
+        .await
+        .map_err(|e| "Could not load your bank account".to_string())?
+        .ok_or_else(|| "No bank account found".to_string())?;
 
-    match paynow_repository::execute_paynow_transfer(
-        db,
-        customer_id,
-        from_product_id,
-        &recipient_type,
-        &recipient_id,
-        amount.cents(),
-        note.as_deref(),
-    )
-    .await
-    {
-        Ok((true, _)) => Ok(()),
-        Ok((false, Some(message))) => Err(message),
-        Ok((false, None)) => Err("PayNow transfer could not be completed.".to_string()),
-        Err(error) => {
-            eprintln!("PayNow transfer failed: {error:?}");
-            Err("A database error occurred while processing the PayNow transfer.".to_string())
+        // Keep PayNow single-transfer value inside the configured limit.
+        if amount.cents() > 50_000_00 {
+            return Err("PayNow transfers are capped at $50,000.00 per transaction.".to_string());
         }
+
+        // Apply daily limit, Money Lock and monitoring before funds move.
+        crate::services::transaction_control_service::validate_outgoing_transaction(
+            db,
+            customer_id,
+            Some(product.id),
+            amount.cents(),
+            note.as_deref(),
+            "PayNow",
+            true,
+        )
+        .await?;
+
+        match paynow_repository::execute_paynow_transfer(
+            db,
+            customer_id,
+            product.id,
+            &recipient_type,
+            &recipient_id,
+            amount.cents(),
+            note.as_deref(),
+        )
+        .await
+        {
+            Ok((true, _)) => Ok(()),
+            Ok((false, Some(message))) => Err(message),
+            Ok((false, None)) => Err("PayNow transfer could not be completed.".to_string()),
+            Err(error) => {
+                eprintln!("PayNow transfer failed: {error:?}");
+                Err("A database error occurred while processing the PayNow transfer.".to_string())
+            }
+        }
+    } else {
+        return Err("Choose a valid PayNow type to transfer from".to_string())
     }
+}
+
+// Validates and coordinates the register paynow workflow.
+pub async fn unlink_paynow(
+    db: &PgPool,
+    paynow_id: Uuid,
+) -> Result<(), String> {
+    paynow_repository::set_paynow_to_inactive(db, &paynow_id)
+    .await
+    .map_err(|_| "No paynow ID found".to_string())?
+    .ok_or_else(|| "No paynow ID found".to_string())?;
+
+    Ok(())
 }
 
 // Normalises paynow type before validation or storage.

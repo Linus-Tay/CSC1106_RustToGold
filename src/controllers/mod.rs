@@ -8,8 +8,7 @@ pub mod home_loan_controller;
 pub mod loan_controller;
 pub mod onboard_controller;
 pub mod public_controller;
-// pub mod loan_controller;
-// pub mod home_loan_controller;
+pub mod atm_controller;
 pub mod session_guard;
 
 pub use self::admin_controller::{
@@ -19,14 +18,14 @@ pub use self::admin_controller::{
     create_staff_user, delete_staff_user, freeze_customer_product, reject_customer_application,
     reject_personal_loan, suspend_customer_user, update_high_value_alert_status, update_staff_user,
 };
-pub use self::auth_controller::{admin_login, admin_login_page, admin_logout, login, login_page, logout};
+pub use self::auth_controller::{admin_login, admin_login_page, admin_logout, login, login_page, logout, twofactor_page, verify_2fa};
 pub use self::customer_controller::{
     activate_card, cancel_giro_arrangement, cards_page, create_bank_account, create_card,
     create_giro_arrangement, dashboard, deposit, deposit_page, download_statement_pdf,
     fixed_deposit_activity, freeze_card, giro_page, loan_activity, paynow_page,
     profile_page, register_paynow, statements_page, transaction_controls_page,
     transactions, transfer, transfer_page, register_paynow_page, transfer_paynow, update_money_lock,
-    update_profile, update_transaction_limit,
+    update_profile, update_transaction_limit, unlink_paynow
 };
 pub use self::fixed_deposit_controller::{
     admin_fixed_deposit_plans_page, admin_fixed_deposits_page, create_fixed_deposit,
@@ -47,3 +46,4 @@ pub use self::home_loan_controller::{
 pub use self::loan_controller::{create_personal_loan, loan_apply_page, loans_page, pay_loan};
 pub use self::onboard_controller::{account_creation, account_creation_init, account_creation_submit, legacy_signup_path_redirect, legacy_signup_redirect, onboarding, onboarding_entry_redirect, step1_post, step2_post, step3_post, step4_post, submit};
 pub use self::public_controller::{about_page, banking_page, contact_page, faq_page, home, security_page};
+pub use self::atm_controller::{atm_page, pin_page, card_validation, pin_validation, menu_page, atm_deposit_page, atm_deposit, atm_withdrawal_page, atm_withdraw, eject};

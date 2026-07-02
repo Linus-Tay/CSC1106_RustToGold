@@ -6,9 +6,9 @@ use crate::forms::account_forms::{CreateBankAccountForm, TransferForm};
 use crate::forms::{CardApplicationForm, DepositForm, GiroArrangementForm, MoneyLockForm, PayNowRegisterForm, PayNowTransferForm, ProfileForm, StatementRequest, TransactionLimitForm};
 use crate::repositories::customer_repository;
 use crate::services;
-use crate::views::templates::{PayNowRegisterTemplate, TwoFactorAuthTemplate};
+use crate::views::templates::{PayNowRegisterTemplate};
 use crate::views::{
-    CardDashboardTemplate, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate, ErrorTemplate, GiroTemplate, NotFoundTemplate, PayNowTemplate, ProfileTemplate, StatementTemplate, TransactionControlsTemplate, TransactionsTemplate, TransferTemplate, render,
+    CardDashboardTemplate, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate, GiroTemplate, PayNowTemplate, ProfileTemplate, StatementTemplate, TransactionControlsTemplate, TransactionsTemplate, TransferTemplate, render,
 };
 use crate::AppState;
 use crate::models::{Product};
@@ -541,9 +541,7 @@ async fn render_paynow_dashboard(
             error: error.clone(),
             has_error: !error.is_empty(),
             success: success.clone(),
-            has_success: !success.is_empty(),
-            nric: String::from("T1111111A"),
-            phone: String::from("91111111")
+            has_success: !success.is_empty()
         }),
         Err(message) => render_error("PayNow unavailable", message),
     }
@@ -570,7 +568,7 @@ pub async fn register_paynow_page(data: web::Data<AppState>, session: Session) -
 
     let customer = match  customer_repository::get_customer_by_id(&data.db, &customer_id).await {
         Ok(customer) => customer,
-        Err(e) => return render(ErrorTemplate)
+        Err(e) => return render_error("Account unavailable", "No active bank account was found".to_string())
     };
 
     let accounts = match services::list_active_customer_products(&data.db, customer_id).await {
@@ -605,17 +603,39 @@ pub async fn register_paynow(
     };
     let customer_id = user.customer_id_or_nil();
 
+    let customer = match  customer_repository::get_customer_by_id(&data.db, &customer_id).await {
+        Ok(customer) => customer,
+        Err(e) => return render_error("Account unavailable", "No active bank account was found".to_string())
+    };
+
+    let accounts = match services::list_active_customer_products(&data.db, customer_id).await {
+        Ok(accounts) if !accounts.is_empty() => accounts,
+        _ => return render_error("Account unavailable", "No active bank account was found.".to_string()),
+    };
+
     match services::register_paynow(&data.db, customer_id, form.into_inner()).await {
         Ok(()) => {
-            render_paynow_dashboard(
-                &data,
-                customer_id,
-                String::new(),
-                "PayNow registration completed successfully.".to_string(),
-            )
-            .await
+            render(PayNowRegisterTemplate {
+                accounts,
+                error: String::new(),
+                has_error: false,
+                success: String::from("PayNow Registration completed successfully"),
+                has_success: true,
+                nric: customer.nric,
+                phone: customer.phone_number
+            })
         }
-        Err(error) => render_paynow_dashboard(&data, customer_id, error, String::new()).await,
+        Err(error) => {
+            render(PayNowRegisterTemplate {
+                accounts,
+                error: error,
+                has_error: true,
+                success: String::new(),
+                has_success: false,
+                nric: customer.nric,
+                phone: customer.phone_number
+            })
+        }
     }
 }
 
@@ -645,17 +665,27 @@ pub async fn transfer_paynow(
     }
 }
 
-pub async fn twofactor_page(data: &web::Data<AppState>, session: Session) -> Result<HttpResponse> {
-    if let Ok(Some(pending_user_id)) = session.get::<String>("pending_2fa_user_id") {
-        render(TwoFactorAuthTemplate {
-            error: String::new(),
-            has_error: false,
-            success: String::new(),
-            has_success: false
-        })
-    }
-    else {
-        render(NotFoundTemplate)
+
+// Handles the unlink paynow form action and redirects after the service result.
+pub async fn unlink_paynow(
+    data: web::Data<AppState>,
+    session: Session,
+    paynow_id: web::Path<String>,
+) -> Result<HttpResponse> {
+    let user = match require_customer(&data, &session).await {
+        Ok(user) => user,
+        Err(response) => return Ok(response),
+    };
+    let customer_id = user.customer_id_or_nil();
+
+    let paynow_id = match uuid::Uuid::parse_str(&paynow_id.into_inner()) {
+        Ok(value) => value,
+        Err(_) => return render_error("PayNow Unlink", "Could not unlink your PayNow account.".to_string()),
+    };
+
+    match services::unlink_paynow(&data.db, paynow_id).await {
+        Ok(()) => Ok(redirect("/customer/profile")),
+        Err(error) => return render_error("PayNow Unlink", "Could not unlink your PayNow account.".to_string()),
     }
 }
 

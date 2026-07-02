@@ -55,7 +55,7 @@
           </div>
         </section>
 
-        <section class="customer-card profile-settings-card profile-paynow-card">
+        <section id="paynow" class="customer-card profile-settings-card profile-paynow-card">
           <div class="customer-card__header customer-card__header--with-icon profile-card-header--split">
             <span class="panel-icon"><i data-lucide="scan-line"></i></span>
             <div>
@@ -145,7 +145,7 @@
       </form>
 
       {% for registration in paynow_registrations %}
-      <form id="unlink-form-{{ registration.id_display() }}" action="/customer/paynow/{{ registration.id_display() }}/unlink" method="post"></form>
+      <form id="unlink-form-{{ registration.id_display() }}" action="/customer/paynow/unlink/{{ registration.id_display() }}" method="post"></form>
       {% endfor %}
 
     </div>

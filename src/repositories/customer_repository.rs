@@ -1,6 +1,6 @@
 // Repository layer: isolates SQLx queries so services do not depend on raw database code.
 
-use crate::models::{AccountCreationLink, Customer, Product};
+use crate::models::{AccountCreationLink, Customer, KnownDevice, OTPCode, Product};
 use chrono::{Duration, NaiveDate, Utc};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
@@ -416,6 +416,94 @@ pub async fn create_customer_profile_for_user(
     .bind(occupation)
     .bind(employer_name)
     .bind(monthly_income_range)
+    .fetch_one(db)
+    .await
+}
+
+// Reads find user by email data from the database.
+pub async fn find_device_by_hashed_token(db: &PgPool, hashed_token: &str) -> Result<Option<KnownDevice>, sqlx::Error> {
+    sqlx::query_as::<_, KnownDevice>(r#"
+        SELECT id, token_hash, user_id, last_used
+        FROM known_devices
+        WHERE token_hash = $1
+    "#)
+    .bind(hashed_token)
+    .fetch_optional(db)
+    .await
+}
+
+
+// Backwards-compatible name for older imports. Customer identity belongs to customers, not users.
+pub async fn create_known_device(
+    db: &PgPool,
+    user_id: &Uuid,
+    hashed_token: &str,
+) -> Result<KnownDevice, sqlx::Error> {
+     sqlx::query_as::<_, KnownDevice>(
+        r#"
+        INSERT INTO known_devices (user_id, token_hash)
+        VALUES ($1, $2)
+        RETURNING id, user_id, token_hash, last_used
+        "#,
+    )
+    .bind(user_id)
+    .bind(hashed_token)
+    .fetch_one(db)
+    .await
+}
+
+// Persists the update last login database change.
+pub async fn update_known_device_last_used(db: &PgPool, id: &Uuid) -> Result<(), sqlx::Error> {
+    sqlx::query("UPDATE known_devices SET last_used = NOW() WHERE id = $1")
+        .bind(id)
+        .execute(db)
+        .await?;
+
+    Ok(())
+}
+
+// Reads find user by email data from the database.
+pub async fn get_otp_code(db: &PgPool, code: &str) -> Result<Option<OTPCode>, sqlx::Error> {
+    sqlx::query_as::<_, OTPCode>(r#"
+        SELECT id, user_id, code, expires_at, created_at
+        FROM otp_codes
+        WHERE code = $1
+
+    "#)
+    .bind(code)
+    .fetch_optional(db)
+    .await
+}
+
+// Reads find user by username data from the database.
+pub async fn delete_otp_code(db: &PgPool, id: &Uuid) -> Result<(), sqlx::Error> {
+    sqlx::query(r#"
+        DELETE FROM otp_codes
+        WHERE id = $1
+    "#)
+        .bind(id)
+        .execute(db)
+        .await?;
+
+    Ok(())
+}
+
+// Backwards-compatible name for older imports. Customer identity belongs to customers, not users.
+pub async fn create_otp_code(
+    db: &PgPool,
+    user_id: &Uuid,
+    otp_code: &str,
+) -> Result<OTPCode, sqlx::Error> {
+     sqlx::query_as::<_, OTPCode>(
+        r#"
+        INSERT INTO otp_codes (user_id, code, expires_at)
+        VALUES ($1, $2, $3)
+        RETURNING id, user_id, code, expires_at, created_at
+        "#,
+    )
+    .bind(user_id)
+    .bind(otp_code)
+    .bind(Utc::now() + Duration::minutes(2))
     .fetch_one(db)
     .await
 }

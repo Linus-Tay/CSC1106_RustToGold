@@ -200,8 +200,9 @@ CREATE TABLE cards (
     customer_id        UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
     linked_product_id  UUID NOT NULL REFERENCES customer_products(id) ON DELETE RESTRICT,
     card_type          TEXT NOT NULL CHECK (card_type IN ('debit', 'student')),
+    pin_hash           TEXT NOT NULL,
     display_name       TEXT NOT NULL,
-    masked_number      TEXT NOT NULL,
+    card_number        TEXT NOT NULL,
     status             TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'frozen', 'cancelled')),
     created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -291,6 +292,7 @@ CREATE TABLE giro_arrangements (
 
 CREATE TABLE otp_codes (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id             UUID NULL REFERENCES users(id) ON DELETE CASCADE,
     code                TEXT NOT NULL UNIQUE,
     expires_at          TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP

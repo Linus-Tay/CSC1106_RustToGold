@@ -9,7 +9,7 @@ pub async fn list_cards_by_customer(db: &PgPool, customer_id: Uuid) -> Result<Ve
     sqlx::query_as::<_, Card>(
         r#"
         SELECT c.id, c.customer_id, c.linked_product_id, cp.account_number,
-               c.card_type, c.display_name, c.masked_number, c.status, c.created_at, c.updated_at
+               c.pin_hash, c.card_type, c.display_name, c.card_number, c.status, c.created_at, c.updated_at
         FROM cards c
         JOIN customer_products cp ON cp.id = c.linked_product_id
         WHERE c.customer_id = $1
@@ -21,29 +21,81 @@ pub async fn list_cards_by_customer(db: &PgPool, customer_id: Uuid) -> Result<Ve
     .await
 }
 
+// Find active card by linked product
+pub async fn find_card_by_linked_account(db: &PgPool, linked_product_id: Uuid) -> Result<Option<Card>, sqlx::Error> {
+    sqlx::query_as::<_, Card>(
+        r#"
+        SELECT c.id, c.customer_id, c.linked_product_id, cp.account_number,
+               c.card_type, c.pin_hash, c.display_name, c.card_number, c.status, c.created_at, c.updated_at
+        FROM cards c
+        JOIN customer_products cp ON cp.id = c.linked_product_id
+        WHERE cp.id = $1
+        "#,
+    )
+    .bind(linked_product_id)
+    .fetch_optional(db)
+    .await
+}
+
+// Reads list cards by customer data from the database.
+pub async fn find_active_by_card_number(db: &PgPool, card_number: &str) -> Result<Option<Card>, sqlx::Error> {
+    sqlx::query_as::<_, Card>(
+        r#"
+        SELECT c.id, c.customer_id, c.linked_product_id, cp.account_number,
+               c.card_type, c.pin_hash, c.display_name, c.card_number, c.status, c.created_at, c.updated_at
+        FROM cards c
+        JOIN customer_products cp ON cp.id = c.linked_product_id
+        WHERE c.card_number = $1
+        AND c.status = 'active'
+        "#,
+    )
+    .bind(card_number)
+    .fetch_optional(db)
+    .await
+}
+
+// Reads list cards by customer data from the database.
+pub async fn find_active_by_card_id(db: &PgPool, card_id: &Uuid) -> Result<Option<Card>, sqlx::Error> {
+    sqlx::query_as::<_, Card>(
+        r#"
+        SELECT c.id, c.customer_id, c.linked_product_id, cp.account_number,
+               c.card_type, c.pin_hash, c.display_name, c.card_number, c.status, c.created_at, c.updated_at
+        FROM cards c
+        JOIN customer_products cp ON cp.id = c.linked_product_id
+        WHERE c.id = $1
+        AND c.status = 'active'
+        "#,
+    )
+    .bind(card_id)
+    .fetch_optional(db)
+    .await
+}
+
 // Persists the create card database change.
 pub async fn create_card(
     db: &PgPool,
     customer_id: Uuid,
     linked_product_id: Uuid,
     card_type: &str,
+    pin_hash: &str,
     display_name: &str,
-    masked_number: &str,
+    card_number: &str,
 ) -> Result<Card, sqlx::Error> {
     sqlx::query_as::<_, Card>(
         r#"
-        INSERT INTO cards (customer_id, linked_product_id, card_type, display_name, masked_number, status)
-        VALUES ($1, $2, $3, $4, $5, 'active')
+        INSERT INTO cards (customer_id, linked_product_id, card_type, pin_hash, display_name, card_number, status)
+        VALUES ($1, $2, $3, $4, $5, $6, 'active')
         RETURNING id, customer_id, linked_product_id,
             (SELECT account_number FROM customer_products WHERE id = $2) AS account_number,
-            card_type, display_name, masked_number, status, created_at, updated_at
+            pin_hash, card_type, display_name, card_number, status, created_at, updated_at
         "#,
     )
     .bind(customer_id)
     .bind(linked_product_id)
     .bind(card_type)
+    .bind(pin_hash)
     .bind(display_name)
-    .bind(masked_number)
+    .bind(card_number)
     .fetch_one(db)
     .await
 }

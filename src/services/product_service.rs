@@ -2,6 +2,7 @@
 
 use crate::forms::account_forms::TransferForm;
 use crate::forms::DepositForm;
+use crate::forms::atm_forms::ATMDepositForm;
 use crate::models::product::ProductWorkflow;
 use crate::models::{Money, Product};
 use crate::repositories::product_repository;
@@ -158,6 +159,87 @@ pub async fn deposit(
     )
     .await
     .map_err(|_| "Deposit failed. Please try again later.".to_string())?;
+
+    Ok(updated_product)
+}
+
+// Runs business logic for atm deposit.
+pub async fn atm_deposit(
+    app_state: &AppState,
+    customer_id: Uuid,
+    amount: &str,
+    account_number: &str
+) -> Result<Product, String> {
+    let amount = Money::parse_dollars(&amount)?;
+    if amount.cents() > 1_000_000_00 {
+        return Err("Single customer deposits are capped at $1,000,000.00.".to_string());
+    }
+
+    let current_product = product_repository::get_product_by_account_number(&app_state.db, account_number)
+        .await
+        .map_err(|_| "Could not load your bank account.".to_string())?
+        .ok_or_else(|| "No bank account was found under this number.".to_string())?;
+
+    if current_product.get_customer_id() != customer_id {
+        return Err("You cannot deposit to an account that is not owned by you.".to_string());
+    }
+
+    if !current_product.is_open_for_customer_actions() {
+        return Err("This account is not open for deposits.".to_string());
+    }
+
+    if current_product.projected_balance_after_deposit(amount).is_none() {
+        return Err("This deposit cannot be applied to the account.".to_string());
+    }
+
+    let (updated_product, _) = product_repository::deposit_into_product(
+        &app_state.db,
+        &customer_id,
+        account_number,
+        amount.cents(),
+        Some("ATM Deposit"),
+    )
+    .await
+    .map_err(|_| "Deposit failed. Please try again later.".to_string())?;
+
+    Ok(updated_product)
+}
+
+// Runs business logic for atm withdrawal.
+pub async fn atm_withdraw(
+    app_state: &AppState,
+    customer_id: Uuid,
+    amount: &str,
+    account_number: &str
+) -> Result<Product, String> {
+    let amount = Money::parse_dollars(&amount)?;
+
+    let current_product = product_repository::get_product_by_account_number(&app_state.db, account_number)
+        .await
+        .map_err(|_| "Could not load your bank account.".to_string())?
+        .ok_or_else(|| "No bank account was found under this number.".to_string())?;
+
+    if current_product.get_customer_id() != customer_id {
+        return Err("You cannot withdraw from an account that is not owned by you.".to_string());
+    }
+
+    if !current_product.is_open_for_customer_actions() {
+        return Err("This account is not open for withdrawal.".to_string());
+    }
+
+    if current_product.balance_cents < amount.cents() {
+        return Err("Insufficient balance for withdrawal".to_string());
+    }
+
+    let (updated_product, _) = product_repository::withdraw_from_product(
+        &app_state.db,
+        &customer_id,
+        account_number,
+        amount.cents(),
+        Some("ATM Withdraw"),
+    )
+    .await
+    .map_err(|_| "Withdrawal failed. Please try again later.".to_string())??;
 
     Ok(updated_product)
 }

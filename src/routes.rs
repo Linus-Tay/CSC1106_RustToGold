@@ -1,11 +1,26 @@
 // Central route registration for public, customer and admin pages.
 
-use crate::controllers;
+use crate::controllers::{self, atm_deposit};
 use actix_web::{guard, web};
 
 // Registers application routes with Actix Web.
 pub fn configure(cfg: &mut web::ServiceConfig) {
-    cfg.service(
+    cfg
+    .service(
+        web::scope("")
+            .guard(guard::Host("atm.localhost"))
+            .route("/", web::get().to(controllers::atm_page))
+            .route("/pin",web::get().to(controllers::pin_page))
+            .route("/card/verify", web::post().to(controllers::card_validation))
+            .route("/pin/verify", web::post().to(controllers::pin_validation))
+            .route("/menu", web::get().to(controllers::menu_page))
+            .route("/deposit", web::get().to(controllers::atm_deposit_page))
+            .route("/deposit", web::post().to(controllers::atm_deposit))
+            .route("/withdraw", web::get().to(controllers::atm_withdrawal_page))
+            .route("/withdraw", web::post().to(controllers::atm_withdraw))
+            .route("/eject", web::get().to(controllers::eject))
+    )
+    .service(
         web::scope("")
             .route("/", web::get().to(controllers::home))
             .route("/banking", web::get().to(controllers::banking_page))
@@ -22,6 +37,8 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .route("/api/account-creation/submit", web::post().to(controllers::account_creation_submit))
             .route("/login", web::get().to(controllers::login_page))
             .route("/login", web::post().to(controllers::login))
+            .route("/2fa", web::get().to(controllers::twofactor_page))
+            .route("/verify-2fa", web::post().to(controllers::verify_2fa))
             .service(
                 web::scope("/api/onboarding/actions")
                     .route("/submit-step1", web::post().to(controllers::step1_post))
@@ -57,6 +74,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("/paynow", web::get().to(controllers::paynow_page))
                     .route("/paynow/register", web::get().to(controllers::register_paynow_page))
                     .route("/paynow/register", web::post().to(controllers::register_paynow))
+                    .route("/paynow/unlink/{paynow_id}", web::post().to(controllers::unlink_paynow))
                     .route("/paynow/transfer", web::post().to(controllers::transfer_paynow))
                     .route("/cards", web::get().to(controllers::cards_page))
                     .route("/cards", web::post().to(controllers::create_card))
@@ -83,7 +101,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                     .route("/fixed-deposits/{id}/withdraw", web::post().to(controllers::withdraw_fixed_deposit))
                     .route("/fixed-deposits/{id}/withdraw", web::get().to(controllers::withdraw_fixed_deposit))
                     .route("/profile", web::get().to(controllers::profile_page))
-                    .route("/profile", web::post().to(controllers::update_profile)),
+                    .route("/profile", web::post().to(controllers::update_profile))
             )
             .service(
                 web::scope("/admin")

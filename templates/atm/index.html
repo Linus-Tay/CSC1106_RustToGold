@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RustToGold ATM — Insert Card</title>
+<link rel="stylesheet" href="/static/css/atm.css">
+</head>
+<body>
+
+<div class="atm-machine">
+
+  <div class="atm-brandbar">
+    <div class="atm-brand">
+      <span class="mark"></span>
+      RustToGold <span class="sub">ATM Network</span>
+    </div>
+    <div class="atm-clock"><span class="status-dot"></span><span id="clock">--:--</span></div>
+  </div>
+
+  <div class="atm-body">
+
+    <div class="fkey-col left">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F1</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F2</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F3</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F4</button></div>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen">
+
+        {% if has_error %}
+        <div class="atm-alert" role="alert" id="atmAlert">
+          <span class="a-icon">!</span>
+          <div class="a-body">{{ error }}</div>
+          <button type="button" class="a-close" onclick="document.getElementById('atmAlert').remove()" aria-label="Dismiss">✕</button>
+        </div>
+        {% endif %}
+
+        <div class="screen-topline">
+          <span>RUSTTOGOLD // TERMINAL 04</span>
+          <span>SESSION: WAITING</span>
+        </div>
+
+        <div class="screen-content">
+          <h1 class="screen-title">Welcome</h1>
+          <p class="screen-subtitle">Insert your debit card to begin. This terminal accepts RustToGold debit cards only.</p>
+
+          <!-- This form simulates the card reader. In production this step happens
+               automatically when a physical card is inserted; here the customer
+               types the card number to simulate insertion. -->
+          <form action="/card/verify" method="post">
+            <label class="field-label" for="cardNumber">Debit Card Number</label>
+            <input
+              class="field-input"
+              type="text"
+              id="cardNumber"
+              name="card_number"
+              inputmode="numeric"
+              placeholder="0000 0000 0000 0000"
+              maxlength="19"
+              autocomplete="off"
+              required
+            >
+            <p class="field-hint">16 digits, found on the banking platform website.</p>
+
+            <div class="btn-row">
+              <button type="submit" class="btn btn-primary">Insert Card →</button>
+            </div>
+          </form>
+        </div>
+
+        <p class="screen-footnote">This is a university project simulation, not a real banking service.</p>
+      </div>
+    </div>
+
+    <div class="fkey-col right">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F5</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F6</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F7</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F8</button></div>
+    </div>
+
+  </div>
+
+  <div class="slot-row">
+    <div class="slot">
+      <div class="opening active"></div>
+      <div class="label">Card Slot</div>
+    </div>
+    <div class="slot">
+      <div class="opening"></div>
+      <div class="label">Receipt</div>
+    </div>
+    <div class="slot">
+      <div class="opening"></div>
+      <div class="label">Cash</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function tick(){
+    var d = new Date();
+    var h = d.getHours() % 12 || 12;
+    var m = d.getMinutes().toString().padStart(2,'0');
+    var ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+    document.getElementById('clock').textContent = h + ':' + m + ' ' + ampm;
+  }
+  tick(); setInterval(tick, 15000);
+
+  // light formatting assist — groups digits into 4s as the customer types
+  var input = document.getElementById('cardNumber');
+  input.addEventListener('input', function(){
+    var digits = input.value.replace(/\D/g,'').slice(0,16);
+    var groups = digits.match(/.{1,4}/g) || [];
+    input.value = groups.join(' ');
+  });
+</script>
+
+</body>
+</html>

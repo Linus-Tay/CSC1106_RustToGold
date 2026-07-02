@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RustToGold ATM — Deposit Money</title>
+<link rel="stylesheet" href="/static/css/atm.css">
+</head>
+<body>
+
+<div class="atm-machine">
+
+  <div class="atm-brandbar">
+    <div class="atm-brand">
+      <span class="mark"></span>
+      RustToGold <span class="sub">ATM Network</span>
+    </div>
+    <div class="atm-clock"><span class="status-dot"></span><span id="clock">--:--</span></div>
+  </div>
+
+  <div class="atm-body">
+
+    <div class="fkey-col left">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F1</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F2</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F3</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F4</button></div>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen">
+
+        {% if has_error %}
+        <div class="atm-alert" role="alert" id="atmAlert">
+          <span class="a-icon">!</span>
+          <div class="a-body">{{ error }}</div>
+          <button type="button" class="a-close" onclick="document.getElementById('atmAlert').remove()" aria-label="Dismiss">✕</button>
+        </div>
+        {% endif %}
+
+        <div class="screen-topline">
+          <span>CARD: <span id="cardMasked">•••• •••• •••• {{ card_number_last_4 }}</span></span>
+          <span>DEPOSIT</span>
+        </div>
+
+        <div class="screen-content">
+          <h1 class="screen-title">Deposit Money</h1>
+          <p class="screen-subtitle">Insert cash or checks into the deposit slot, then enter the total amount to credit.</p>
+
+          <form id="depositForm" action="/deposit" method="post">
+            <input type="hidden" id="cardHidden" name="card" value="">
+
+            <label class="field-label" for="amount">Deposit Amount</label>
+            <div class="amount-display"><span class="cur">$</span><span id="amountText">0.00</span></div>
+            <input type="hidden" id="amount" name="amount" value="0.00" required>
+
+            <div class="quick-amounts">
+              <button type="button" class="qa" data-add="20">+ $20</button>
+              <button type="button" class="qa" data-add="50">+ $50</button>
+              <button type="button" class="qa" data-add="100">+ $100</button>
+              <button type="button" class="qa" data-add="500">+ $500</button>
+              <button type="button" id="qaClear">Clear</button>
+              <button type="button" id="qaCustom">Enter Custom</button>
+            </div>
+
+            <div id="customWrap" class="hidden">
+              <label class="field-label" for="customAmount">Custom Amount (SGD)</label>
+              <input class="field-input" type="number" id="customAmount" min="1" step="0.01" placeholder="0.00">
+            </div>
+
+            <div class="btn-row">
+              <a href="/menu" class="btn btn-secondary">← Back to Menu</a>
+              <button type="submit" class="btn btn-primary" id="confirmBtn" disabled>Confirm Deposit</button>
+            </div>
+          </form>
+        </div>
+
+        <p class="screen-footnote">Deposited funds are typically available within 1 business day.</p>
+      </div>
+    </div>
+
+    <div class="fkey-col right">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F5</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F6</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F7</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F8</button></div>
+    </div>
+
+  </div>
+
+  <div class="slot-row">
+    <div class="slot"><div class="opening"></div><div class="label">Card Slot</div></div>
+    <div class="slot"><div class="opening"></div><div class="label">Receipt</div></div>
+    <div class="slot"><div class="opening active"></div><div class="label">Cash In</div></div>
+  </div>
+
+</div>
+
+<script>
+  function tick(){
+    var d = new Date();
+    var h = d.getHours() % 12 || 12;
+    var m = d.getMinutes().toString().padStart(2,'0');
+    var ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+    document.getElementById('clock').textContent = h + ':' + m + ' ' + ampm;
+  }
+  tick(); setInterval(tick, 15000);
+
+  var total = 0;
+  var amountText = document.getElementById('amountText');
+  var amountField = document.getElementById('amount');
+  var confirmBtn = document.getElementById('confirmBtn');
+
+  function render(){
+    amountText.textContent = total.toFixed(2);
+    amountField.value = total.toFixed(2);
+    confirmBtn.disabled = total <= 0;
+  }
+
+  document.querySelectorAll('.qa').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      total += parseFloat(btn.dataset.add);
+      render();
+    });
+  });
+
+  document.getElementById('qaClear').addEventListener('click', function(){
+    total = 0;
+    render();
+  });
+
+  var customWrap = document.getElementById('customWrap');
+  var customInput = document.getElementById('customAmount');
+  document.getElementById('qaCustom').addEventListener('click', function(){
+    customWrap.classList.toggle('hidden');
+    if (!customWrap.classList.contains('hidden')) customInput.focus();
+  });
+  customInput.addEventListener('input', function(){
+    total = parseFloat(customInput.value) || 0;
+    render();
+  });
+
+  render();
+</script>
+
+</body>
+</html>

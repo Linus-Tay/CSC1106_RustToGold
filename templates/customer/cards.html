@@ -53,6 +53,20 @@
                   {% endfor %}
                 </select>
               </div>
+              <div class="form-field">
+                <label class="form-label" for="pin_number">Card Pin Number</label>
+                <input 
+                  type="password" 
+                  class="form-input" 
+                  id="pin_number"
+                  name="pin_number" 
+                  maxlength="4" 
+                  inputmode="numeric" 
+                  pattern="[0-9]*"
+                  placeholder="••••" 
+                  required
+                />
+              </div>
               <div class="form-field form-field--full">
                 <label class="form-label" for="display_name">Card Display Name</label>
                 <input class="form-input" id="display_name" name="display_name" placeholder="Optional, e.g. Daily Spend Card" />
@@ -92,7 +106,7 @@
                 <div class="customer-bank-card__face">
                   <div class="customer-bank-card__top"><span>RustToGold</span><i data-lucide="contactless"></i></div>
                   <p>{{ card.card_type_display() }}</p>
-                  <strong>{{ card.masked_number }}</strong>
+                  <strong>{{ card.card_number }}</strong>
                   <div class="customer-bank-card__bottom"><small>{{ card.display_name }}</small><span class="badge {% if card.status == "active" %}badge--success{% else %}badge--warning{% endif %}">{{ card.status_display() }}</span></div>
                 </div>
                 <div class="customer-bank-card__meta">

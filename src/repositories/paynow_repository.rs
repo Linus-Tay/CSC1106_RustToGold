@@ -16,7 +16,7 @@ pub async fn list_by_customer(
                cp.balance_cents, pr.status, pr.registered_at
         FROM registered_paynow pr
         JOIN customer_products cp ON cp.id = pr.linked_account_id
-        WHERE pr.customer_id = $1
+        WHERE pr.customer_id = $1 AND pr.status = 'active'
         ORDER BY
             CASE pr.status WHEN 'active' THEN 0 ELSE 1 END,
             pr.registered_at DESC
@@ -69,6 +69,51 @@ pub async fn find_active_by_product_id(
         "#,
     )
     .bind(product_id)
+    .fetch_optional(db)
+    .await
+}
+
+// Reads find active by identifier data from the database.
+pub async fn find_active_by_id(
+    db: &PgPool,
+    paynow_id: &Uuid
+) -> Result<Option<PayNowRegistration>, sqlx::Error> {
+    sqlx::query_as::<_, PayNowRegistration>(
+        r#"
+        SELECT pr.id, pr.customer_id, pr.paynow_type, pr.paynow_id,
+               pr.linked_account_id, cp.account_number, cp.product_id,
+               cp.balance_cents, pr.status, pr.registered_at
+        FROM registered_paynow pr
+        JOIN customer_products cp ON cp.id = pr.linked_account_id
+        WHERE pr.id = $1
+        "#,
+    )
+    .bind(paynow_id)
+    .fetch_optional(db)
+    .await
+}
+
+pub async fn set_paynow_to_inactive(
+    db: &PgPool,
+    paynow_id: &Uuid
+) -> Result<Option<PayNowRegistration>, sqlx::Error> {
+    sqlx::query_as::<_, PayNowRegistration>(
+        r#"
+        WITH updated_paynow AS (
+            UPDATE registered_paynow
+            SET status = 'inactive'
+            WHERE id = $1
+            RETURNING *
+        )
+        SELECT 
+            up.id, up.customer_id, up.paynow_type, up.paynow_id,
+            up.linked_account_id, cp.account_number, cp.product_id,
+            cp.balance_cents, up.status, up.registered_at
+        FROM updated_paynow up
+        JOIN customer_products cp ON cp.id = up.linked_account_id
+        "#,
+    )
+    .bind(paynow_id)
     .fetch_optional(db)
     .await
 }
@@ -172,52 +217,75 @@ pub async fn execute_paynow_transfer(
     amount_cents: i64,
     note: Option<&str>,
 ) -> Result<(bool, Option<String>), sqlx::Error> {
+    
+    // 1. SECURITY: Prevent negative or zero amounts immediately
+    if amount_cents <= 0 {
+        return Ok((false, Some("Transfer amount must be greater than zero.".to_string())));
+    }
+
     let mut tx = db.begin().await?;
 
-    let sender_product = sqlx::query_as::<_, Product>(
+    // 2. Find Recipient Account ID (NO LOCK YET)
+    let recipient_info = sqlx::query!(
         r#"
-        SELECT id, customer_id, account_number, product_id, product_type,
-               balance_cents, status, created_at, updated_at
-        FROM customer_products
-        WHERE id = $1 AND customer_id = $2 AND status = 'active'
-        FOR UPDATE
-        "#,
-    )
-    .bind(sender_product_id)
-    .bind(sender_customer_id)
-    .fetch_optional(&mut *tx)
-    .await?;
-
-    let Some(sender_product) = sender_product else {
-        return Ok((false, Some("Choose an active account that belongs to you.".to_string())));
-    };
-
-    let recipient_product = sqlx::query_as::<_, Product>(
-        r#"
-        SELECT cp.id, cp.customer_id, cp.account_number, cp.product_id, cp.product_type,
-               cp.balance_cents, cp.status, cp.created_at, cp.updated_at
+        SELECT cp.id AS account_id, cp.customer_id
         FROM registered_paynow pr
         JOIN customer_products cp ON cp.id = pr.linked_account_id
-        WHERE pr.paynow_type = $1
+        WHERE pr.paynow_type = $1 
           AND lower(pr.paynow_id) = lower($2)
           AND pr.status = 'active'
           AND cp.status = 'active'
         ORDER BY pr.registered_at DESC
         LIMIT 1
-        FOR UPDATE OF cp
         "#,
+        recipient_type,
+        recipient_id
     )
-    .bind(recipient_type)
-    .bind(recipient_id)
     .fetch_optional(&mut *tx)
     .await?;
 
-    let Some(recipient_product) = recipient_product else {
+    let Some(recipient) = recipient_info else {
         return Ok((false, Some("No active PayNow recipient was found.".to_string())));
     };
 
-    if recipient_product.customer_id == sender_customer_id {
+    if recipient.customer_id == sender_customer_id {
         return Ok((false, Some("You cannot transfer to your own PayNow registration.".to_string())));
+    }
+
+    // 3. DEADLOCK PREVENTION: Sort the IDs to guarantee lock order
+    let (first_lock_id, second_lock_id) = if sender_product_id < recipient.account_id {
+        (sender_product_id, recipient.account_id)
+    } else {
+        (recipient.account_id, sender_product_id)
+    };
+
+    // 4. Lock both rows in the deterministic order
+    let locked_accounts = sqlx::query_as::<_, Product>(
+        r#"
+        SELECT id, customer_id, account_number, product_id, product_type,
+               balance_cents, status, created_at, updated_at
+        FROM customer_products
+        WHERE id = ANY($1) AND status = 'active'
+        ORDER BY id
+        FOR UPDATE
+        "#
+    )
+    .bind(&[first_lock_id, second_lock_id][..])
+    .fetch_all(&mut *tx)
+    .await?;
+
+    // Ensure both accounts are still active and found
+    if locked_accounts.len() != 2 {
+        return Ok((false, Some("One or both accounts are unavailable.".to_string())));
+    }
+
+    // Extract sender and recipient from the locked rows
+    let sender_product = locked_accounts.iter().find(|a| a.id == sender_product_id).unwrap();
+    let recipient_product = locked_accounts.iter().find(|a| a.id == recipient.account_id).unwrap();
+
+    // 5. Check ownership and balance
+    if sender_product.customer_id != sender_customer_id {
+        return Ok((false, Some("Choose an active account that belongs to you.".to_string())));
     }
 
     if sender_product.balance_cents < amount_cents {
@@ -227,63 +295,35 @@ pub async fn execute_paynow_transfer(
     let sender_new_balance = sender_product.balance_cents - amount_cents;
     let recipient_new_balance = recipient_product.balance_cents + amount_cents;
 
-    sqlx::query(
-        r#"
-        UPDATE customer_products
-        SET balance_cents = $1, updated_at = NOW()
-        WHERE id = $2
-        "#,
-    )
-    .bind(sender_new_balance)
-    .bind(sender_product.id)
-    .execute(&mut *tx)
-    .await?;
+    // 6. Execute Updates (Can be done in parallel or sequentially safely now)
+    sqlx::query("UPDATE customer_products SET balance_cents = $1, updated_at = NOW() WHERE id = $2")
+        .bind(sender_new_balance)
+        .bind(sender_product.id)
+        .execute(&mut *tx).await?;
 
-    sqlx::query(
-        r#"
-        UPDATE customer_products
-        SET balance_cents = $1, updated_at = NOW()
-        WHERE id = $2
-        "#,
-    )
-    .bind(recipient_new_balance)
-    .bind(recipient_product.id)
-    .execute(&mut *tx)
-    .await?;
+    sqlx::query("UPDATE customer_products SET balance_cents = $1, updated_at = NOW() WHERE id = $2")
+        .bind(recipient_new_balance)
+        .bind(recipient_product.id)
+        .execute(&mut *tx).await?;
 
+    // 7. Insert transaction records (Removed RETURNING and query_as)
     let sender_description = match note {
         Some(value) if !value.trim().is_empty() => format!("PayNow transfer to {}: {}", recipient_id, value.trim()),
         _ => format!("PayNow transfer to {}", recipient_id),
     };
     let recipient_description = format!("PayNow transfer from {}", sender_product.account_number);
 
-    sqlx::query_as::<_, Transaction>(
-        r#"
-        INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
-        VALUES ($1, 'paynow_transfer_out', $2, $3, $4)
-        RETURNING id, product_id, transaction_type, amount_cents, balance_after_cents, description, created_at
-        "#,
+    sqlx::query(
+        "INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description) VALUES ($1, 'paynow_transfer_out', $2, $3, $4)"
     )
-    .bind(sender_product.id)
-    .bind(amount_cents)
-    .bind(sender_new_balance)
-    .bind(sender_description)
-    .fetch_one(&mut *tx)
-    .await?;
+    .bind(sender_product.id).bind(amount_cents).bind(sender_new_balance).bind(sender_description)
+    .execute(&mut *tx).await?;
 
-    sqlx::query_as::<_, Transaction>(
-        r#"
-        INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description)
-        VALUES ($1, 'paynow_transfer_in', $2, $3, $4)
-        RETURNING id, product_id, transaction_type, amount_cents, balance_after_cents, description, created_at
-        "#,
+    sqlx::query(
+        "INSERT INTO transactions (product_id, transaction_type, amount_cents, balance_after_cents, description) VALUES ($1, 'paynow_transfer_in', $2, $3, $4)"
     )
-    .bind(recipient_product.id)
-    .bind(amount_cents)
-    .bind(recipient_new_balance)
-    .bind(recipient_description)
-    .fetch_one(&mut *tx)
-    .await?;
+    .bind(recipient_product.id).bind(amount_cents).bind(recipient_new_balance).bind(recipient_description)
+    .execute(&mut *tx).await?;
 
     tx.commit().await?;
     Ok((true, None))

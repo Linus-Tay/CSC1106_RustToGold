@@ -8,4 +8,5 @@ pub struct CardApplicationForm {
     pub linked_account_id: String,
     pub card_type: String,
     pub display_name: Option<String>,
+    pub pin_number: String
 }

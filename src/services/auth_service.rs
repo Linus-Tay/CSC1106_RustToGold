@@ -2,7 +2,7 @@
 
 use crate::forms::{AccountCreationForm, LoginForm};
 use crate::models::{KnownDevice, User};
-use crate::repositories::{customer_repository, known_device_repository, user_repository};
+use crate::repositories::{customer_repository, user_repository};
 use crate::services;
 use crate::views::templates::Account2FAEmailTemplate;
 use actix_web::Error;
@@ -99,7 +99,8 @@ pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, Str
 // Runs business logic for authenticate device.
 pub async fn authenticate_device(db: &PgPool, raw_token: &str) -> Result<KnownDevice, String> {
     let hashed_token = hash_device_token(raw_token);
-    let device = known_device_repository::find_device_by_hashed_token(db, &hashed_token)
+    println!("{}", hashed_token);
+    let device = customer_repository::find_device_by_hashed_token(db, &hashed_token)
         .await
         .map_err(|error| {
             eprintln!("LOGIN device lookup failed: {error:?}");
@@ -108,10 +109,11 @@ pub async fn authenticate_device(db: &PgPool, raw_token: &str) -> Result<KnownDe
         .ok_or_else(|| "Not known device".to_string())?;
 
     if device.is_active() == false {
+        println!("is it this?");
         return Err("Device is not active".to_string())
     }
 
-    known_device_repository::update_last_login(db, &hashed_token)
+    customer_repository::update_known_device_last_used(db, &device.id)
         .await
         .map_err(|error| {
             eprintln!(
@@ -127,7 +129,7 @@ pub async fn authenticate_device(db: &PgPool, raw_token: &str) -> Result<KnownDe
 // Runs business logic to add trusted device.
 pub async fn add_trusted_device(db: &PgPool, user_id: &Uuid, raw_token: &str) -> Result<KnownDevice, String> {
     let hashed_token = hash_device_token(raw_token);
-    let device = known_device_repository::create_known_device(db,  user_id, &hashed_token)
+    let device = customer_repository::create_known_device(db,  user_id, &hashed_token)
         .await
         .map_err(|error| {
             eprintln!("Failed to add trusted device: {error:?}");
@@ -160,7 +162,7 @@ pub async fn generate_and_send_2fa(db: &PgPool, user_id: &Uuid) -> Result<(), St
         user.username.clone()
     );
     let template = Account2FAEmailTemplate {
-        verification_code: verification_code,
+        verification_code: verification_code.clone(),
     };
 
     println!(
@@ -172,12 +174,41 @@ pub async fn generate_and_send_2fa(db: &PgPool, user_id: &Uuid) -> Result<(), St
         return Err("failed to send 2fa email".to_string())
     }
 
+    customer_repository::create_otp_code(db, &user.id, &verification_code)
+    .await
+    .map_err(|e| {
+        eprintln!("2FA add failed for {user_id}: {e:?}");
+        "Could not add 2fa code".to_string()
+    })?;
+
     Ok(())
 }
 
 // Runs business logic to trigger 2FA email.
-pub async fn verify_2fa(db: &PgPool, 2fa_code: &str, user_id: &Uuid) -> Result<bool, String> {
+pub async fn verify_2fa(db: &PgPool, otp_code: &str, user_id: &Uuid) -> Result<(), String> {
     
+    let otp_code = customer_repository::get_otp_code(db, otp_code)
+    .await
+    .map_err(|_| {
+        eprintln!("Failed to retrieve / validate 2fa code");
+        "failed to validate 2fa code".to_string()
+    })?
+    .ok_or_else(|| "Invalid code".to_string())?;
+
+    customer_repository::delete_otp_code(db, &otp_code.id)
+    .await
+    .map_err(|e| {
+        eprintln!("failed to delete 2fa code: {}", e.to_string());
+        "failed to delete 2fa code".to_string()
+    })?;
+
+    if otp_code.is_active() == false {
+        return Err("The code has expired.".to_string());
+    }
+
+    if otp_code.get_user_id() != *user_id {
+        return Err("Invalid code".to_string());
+    }
 
     Ok(())
 }

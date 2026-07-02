@@ -6,7 +6,7 @@ use uuid::Uuid;
 // Domain record used by services, repositories and templates.
 pub struct KnownDevice {
     pub id: Uuid,
-    pub hashed_token: String,
+    pub token_hash: String,
     pub user_id: Uuid,
     pub last_used: DateTime<Utc>,
 }

@@ -205,8 +205,6 @@ pub struct LoginTemplate {
 pub struct TwoFactorAuthTemplate {
     pub error: String,
     pub has_error: bool,
-    pub success: String,
-    pub has_success: bool,
 }
 
 #[derive(Template)]
@@ -343,9 +341,7 @@ pub struct PayNowTemplate {
     pub error: String,
     pub has_error: bool,
     pub success: String,
-    pub has_success: bool,
-    pub nric: String,
-    pub phone: String
+    pub has_success: bool
 }
 
 #[derive(Template)]
@@ -360,9 +356,6 @@ pub struct PayNowRegisterTemplate {
     pub success: String,
     pub error: String
 }
-
-
-
 
 // #[derive(Template)]
 // #[template(path = "customer/profile.html")]
@@ -615,4 +608,59 @@ pub struct AdminFixedDepositPlansTemplate {
     pub has_success: bool,
 }
 
+
+#[derive(Template)]
+#[template(path = "atm/index.html")]
+pub struct ATMPageTemplate {
+    pub has_error: bool,
+    pub error: String
+}
+
+#[derive(Template)]
+#[template(path = "atm/pin.html")]
+pub struct ATMPinTemplate {
+    pub has_error: bool,
+    pub error: String
+}
+
+
+#[derive(Template)]
+#[template(path = "atm/menu.html")]
+pub struct ATMMenuTemplate {
+    pub account_balance: String,
+    pub card_number_last_4: String
+}
+
+#[derive(Template)]
+#[template(path = "atm/deposit.html")]
+pub struct ATMDepositTemplate {
+    pub card_number_last_4: String,
+    pub error: String,
+    pub has_error: bool
+}
+
+#[derive(Template)]
+#[template(path = "atm/deposit-success.html")]
+pub struct ATMDepositSuccessTemplate {
+    pub card_number_last_4: String,
+    pub amount: String,
+    pub account_balance: String
+}
+
+#[derive(Template)]
+#[template(path = "atm/withdraw.html")]
+pub struct ATMWithdrawalTemplate {
+    pub card_number_last_4: String,
+    pub account_balance: String,
+    pub error: String,
+    pub has_error: bool
+}
+
+#[derive(Template)]
+#[template(path = "atm/withdraw-success.html")]
+pub struct ATMWithdrawalSuccessTemplate {
+    pub card_number_last_4: String,
+    pub amount: String,
+    pub account_balance: String
+}
 

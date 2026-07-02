@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RustToGold ATM — Main Menu</title>
+<link rel="stylesheet" href="/static/css/atm.css">
+</head>
+<body>
+
+<div class="atm-machine">
+
+  <div class="atm-brandbar">
+    <div class="atm-brand">
+      <span class="mark"></span>
+      RustToGold <span class="sub">ATM Network</span>
+    </div>
+    <div class="atm-clock"><span class="status-dot"></span><span id="clock">--:--</span></div>
+  </div>
+
+  <div class="atm-body">
+
+    <div class="fkey-col left">
+      <div class="fkey-slot"><a class="fkey" href="/deposit" id="k1">F1</a></div>
+      <div class="fkey-slot"><a class="fkey" href="/withdraw" id="k2">F2</a></div>
+      <!-- <div class="fkey-slot"><a class="fkey" href="/unlock" id="k3">F3</a></div> -->
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F3</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F4</button></div>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen">
+        <div class="screen-topline">
+          <span>CARD: <span id="cardMasked">•••• •••• •••• {{ card_number_last_4 }}</span></span>
+          <span>SESSION: AUTHENTICATED</span>
+        </div>
+
+        <div class="screen-content">
+          <h1 class="screen-title">Main Menu</h1>
+          <p class="screen-subtitle">Select a transaction below, or press the matching side key.</p>
+
+          <div class="balance-card">
+            <div class="b-label">Available Balance</div>
+            <div class="b-amount">{{ account_balance }}</div>
+            <div class="b-card">RustToGold Checking · Card ending <span id="cardTail">{{ card_number_last_4 }}</span></div>
+          </div>
+
+          <div class="menu-list">
+            <a class="menu-row" id="rowDeposit" href="/deposit">
+              <span class="m-left">
+                <span class="m-icon">↓</span>
+                <span>
+                  <span class="m-title">Deposit Money</span><br>
+                  <span class="m-desc">Add cash or checks to your account</span>
+                </span>
+              </span>
+              <span class="m-key">F1</span>
+            </a>
+
+            <a class="menu-row" id="rowWithdraw" href="/withdraw">
+              <span class="m-left">
+                <span class="m-icon">↑</span>
+                <span>
+                  <span class="m-title">Withdraw Money</span><br>
+                  <span class="m-desc">Take out cash from your account</span>
+                </span>
+              </span>
+              <span class="m-key">F2</span>
+            </a>
+
+            <!-- <a class="menu-row" id="rowUnlock" href="/unlock">
+              <span class="m-left">
+                <span class="m-icon">🔓</span>
+                <span>
+                  <span class="m-title">Unlock Funds</span><br>
+                  <span class="m-desc">Unlock locked funds</span>
+                </span>
+              </span>
+              <span class="m-key">F3</span>
+            </a> -->
+          </div>
+
+          <div></div>
+
+          <div class="btn-row">
+            <a href="/eject" class="btn btn-danger">Eject Card &amp; End Session</a>
+          </div>
+        </div>
+
+        <p class="screen-footnote">For your security, this session will automatically end after 90 seconds of inactivity.</p>
+      </div>
+    </div>
+
+    <div class="fkey-col right">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F5</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F6</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F7</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F8</button></div>
+    </div>
+
+  </div>
+
+  <div class="slot-row">
+    <div class="slot"><div class="opening active"></div><div class="label">Card Slot</div></div>
+    <div class="slot"><div class="opening"></div><div class="label">Receipt</div></div>
+    <div class="slot"><div class="opening"></div><div class="label">Cash</div></div>
+  </div>
+
+</div>
+
+<script>
+  function tick(){
+    var d = new Date();
+    var h = d.getHours() % 12 || 12;
+    var m = d.getMinutes().toString().padStart(2,'0');
+    var ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+    document.getElementById('clock').textContent = h + ':' + m + ' ' + ampm;
+  }
+  tick(); setInterval(tick, 15000);
+
+  // // carry the card number forward as a query string to each feature page,
+  // // and display the masked number / last 4 digits on screen
+  // var params = new URLSearchParams(window.location.search);
+  // var card = (params.get('card') || '').replace(/\D/g,'');
+  // var tail = card.length >= 4 ? card.slice(-4) : '••••';
+
+  // document.getElementById('cardMasked').textContent = '•••• •••• •••• ' + tail;
+  // document.getElementById('cardTail').textContent = tail;
+
+  // ['rowDeposit','rowWithdraw','rowUnlock'].forEach(function(id){
+  //   var el = document.getElementById(id);
+  //   el.href = el.getAttribute('href') + (card ? ('?card=' + card) : '');
+  // });
+  // document.getElementById('k1').href = document.getElementById('rowDeposit').href;
+  // document.getElementById('k2').href = document.getElementById('rowWithdraw').href;
+  // document.getElementById('k3').href = document.getElementById('rowUnlock').href;
+</script>
+
+</body>
+</html>

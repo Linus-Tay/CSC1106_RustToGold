@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RustToGold ATM — Withdrawal Complete</title>
+<link rel="stylesheet" href="/static/css/atm.css">
+</head>
+<body>
+
+<div class="atm-machine">
+
+  <div class="atm-brandbar">
+    <div class="atm-brand">
+      <span class="mark"></span>
+      RustToGold <span class="sub">ATM Network</span>
+    </div>
+    <div class="atm-clock"><span class="status-dot"></span><span id="clock">--:--</span></div>
+  </div>
+
+  <div class="atm-body">
+
+    <div class="fkey-col left">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F1</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F2</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F3</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F4</button></div>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen">
+        <div class="screen-topline">
+          <span>CARD: <span id="cardMasked">•••• •••• •••• {{ card_number_last_4 }}</span></span>
+          <span>WITHDRAW · COMPLETE</span>
+        </div>
+
+        <div class="screen-content">
+          <div class="status-icon ok">✓</div>
+          <h1 class="screen-title" style="text-align:center;">Please Take Your Cash</h1>
+          <p class="screen-subtitle" style="text-align:center;">Your cash is available at the dispenser below. Please also take your receipt.</p>
+
+          <div class="receipt">
+            <div class="r-row r-center"><strong>RUSTTOGOLD ATM RECEIPT</strong></div>
+            <div class="r-row r-center" id="receiptTime">—</div>
+            <div class="r-divider"></div>
+            <div class="r-row"><span>Transaction</span><span>WITHDRAWAL</span></div>
+            <div class="r-row"><span>Card</span><span id="receiptCard">•••• •••• •••• {{ card_number_last_4 }}</span></div>
+            <div class="r-row"><span>Terminal</span><span>04</span></div>
+            <div class="r-row r-total"><span>Amount Dispensed</span><span id="receiptAmount">${{ amount }}</span></div>
+            <div class="r-row"><span>Remaining Balance</span><span id="receiptBalance">{{ account_balance }}</span></div>
+            <div class="r-divider"></div>
+            <div class="r-row r-center">Keep this receipt for your records</div>
+          </div>
+
+          <div class="btn-row">
+            <a href="/menu" class="btn btn-secondary">← Another Transaction</a>
+            <a href="/eject" class="btn btn-primary">Finish &amp; Eject Card</a>
+          </div>
+        </div>
+
+        <p class="screen-footnote">Thank you for banking with RustToGold.</p>
+      </div>
+    </div>
+
+    <div class="fkey-col right">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F5</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F6</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F7</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F8</button></div>
+    </div>
+
+  </div>
+
+  <div class="slot-row">
+    <div class="slot"><div class="opening"></div><div class="label">Card Slot</div></div>
+    <div class="slot"><div class="opening active"></div><div class="label">Receipt</div></div>
+    <div class="slot"><div class="opening active"></div><div class="label">Cash Out</div></div>
+  </div>
+
+</div>
+
+<script>
+  function tick(){
+    var d = new Date();
+    var h = d.getHours() % 12 || 12;
+    var m = d.getMinutes().toString().padStart(2,'0');
+    var ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+    document.getElementById('clock').textContent = h + ':' + m + ' ' + ampm;
+  }
+  tick(); setInterval(tick, 15000);
+</script>
+
+</body>
+</html>

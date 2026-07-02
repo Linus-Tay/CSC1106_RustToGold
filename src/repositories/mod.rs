@@ -13,4 +13,3 @@ pub mod statement_repository;
 pub mod transaction_repository;
 pub mod transaction_control_repository;
 pub mod user_repository;
-pub mod known_device_repository;

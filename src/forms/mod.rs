@@ -13,6 +13,7 @@ pub mod paynow_forms;
 pub mod profile_forms;
 pub mod statement_forms;
 pub mod transaction_control_forms;
+pub mod atm_forms;
 
 pub use self::account_forms::DepositForm;
 pub use self::auth_forms::{AccountCreationForm, LoginForm};

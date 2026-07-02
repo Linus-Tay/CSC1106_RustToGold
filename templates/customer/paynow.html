@@ -20,8 +20,8 @@
           <h1>Send money by PayNow.</h1>
           <p>You have registered PayNow with us. Transfers now only need a recipent mobile number or NRIC / FIN number and amount.</p>
           {% else %}
-          <h1>Register your PayNow number first.</h1>
-          <p>Send money just with a mobile number or NRIC / FIN number</p>
+          <h1>Register your PayNow with us first.</h1>
+          <p>You can manage and register your PayNow under Profile</p>
           {% endif %}
         </div>
         <div class="paynow-status-card">
@@ -57,7 +57,7 @@
 
           <div class="customer-card__body">
             <form class="form-grid" action="/customer/paynow/transfer" method="post">
-              <input type="hidden" name="recipient_type" value="phone_number" />
+              <!-- <input type="hidden" name="recipient_type" value="phone_number" /> -->
 
               <div class="form-field form-field--full">
                 <label class="form-label" for="from_product_id">From PayNow Account</label>
@@ -69,8 +69,17 @@
                 <p class="form-help">This is the account RustToGold will debit for the PayNow transfer.</p>
               </div>
 
+              <div class="form-field form-field--full">
+                <label class="form-label" for="recipient_type">Recipient PayNow Type</label>
+                <select class="form-input" id="recipient_type" name="recipient_type" required>
+                  <option value="phone_number">Phone Number</option>
+                  <option value="phone_number">NRIC / FIN</option>
+                </select>
+                <p class="form-help">This is the account RustToGold will debit for the PayNow transfer.</p>
+              </div>
+
               <div class="form-field">
-                <label class="form-label" for="recipient_id">Recipient PayNow Number</label>
+                <label class="form-label" for="recipient_id">Recipient PayNow ID</label>
                 <input class="form-input" id="recipient_id" name="recipient_id" inputmode="numeric" placeholder="91234567" required />
               </div>
 
@@ -88,104 +97,6 @@
             </form>
           </div>
         </section>
-        {% else %}
-        <section class="customer-card paynow-panel paynow-panel--register paynow-register-only">
-          <div class="customer-card__header customer-card__header--with-icon">
-            <span class="panel-icon"><i data-lucide="badge-plus"></i></span>
-            <div>
-              <p class="customer-kicker">Register</p>
-              <h2>Register PayNow Number</h2>
-              <p>Choose how you'd like to be identified, then pick the account to link it to.</p>
-            </div>
-          </div>
-
-          <div class="customer-card__body">
-            {% if has_accounts %}
-            <form class="form-grid paynow-number-form" action="/customer/paynow/register" method="post" id="paynow-register-form">
-              <div class="form-field form-field--full">
-                <label class="form-label" for="paynow_type_select">PayNow Type</label>
-                <select
-                  class="form-input form-input--large"
-                  id="paynow_type_select"
-                  name="paynow_type"
-                  data-phone="{{ phone }}"
-                  data-nric="{{ nric }}"
-                  required
-                >
-                  <option value="" disabled selected>Select PayNow type</option>
-                  <option value="phone_number">Phone Number</option>
-                  <option value="nric">NRIC</option>
-                </select>
-                <p class="form-help">Choose whether to register using your mobile number or NRIC.</p>
-              </div>
-
-              <div class="form-field form-field--full">
-                <label class="form-label" for="paynow_id_display">Your PayNow ID</label>
-                <input
-                  class="form-input form-input--large"
-                  id="paynow_id_display"
-                  type="text"
-                  placeholder="Select a PayNow type first"
-                  disabled
-                />
-                <input type="hidden" id="paynow_id" name="paynow_id" value="" />
-                <p class="form-help">This is pulled from your account and can't be edited here.</p>
-              </div>
-
-              <div class="form-field form-field--full">
-                <label class="form-label" for="linked_product_id">Link to Account</label>
-                <select class="form-input form-input--large" id="linked_product_id" name="linked_product_id" required>
-                  {% for account in accounts %}
-                  <option value="{{ account.id }}">{{ account.product_id_display() }} · {{ account.account_number }}</option>
-                  {% endfor %}
-                </select>
-                <p class="form-help">This account will receive incoming PayNow transfers.</p>
-              </div>
-
-              <button class="c-button c-button--primary" type="submit"><i data-lucide="badge-plus"></i> Register PayNow</button>
-            </form>
-            {% else %}
-            <div class="empty-state empty-state--small">
-              <div class="empty-state__icon"><i data-lucide="wallet"></i></div>
-              <h3>No active account found</h3>
-              <p>You need an active bank account before registering PayNow.</p>
-            </div>
-            {% endif %}
-          </div>
-        </section>
-        <!-- <section class="customer-card paynow-panel paynow-panel--register paynow-register-only">
-          <div class="customer-card__header customer-card__header--with-icon">
-            <span class="panel-icon"><i data-lucide="badge-plus"></i></span>
-            <div>
-              <p class="customer-kicker">Register</p>
-              <h2>Register PayNow Number</h2>
-              <p>Enter your Singapore mobile number. RustToGold will link it to your first active account.</p>
-            </div>
-          </div>
-
-          <div class="customer-card__body">
-            {% if has_accounts %}
-            <form class="form-grid paynow-number-form" action="/customer/paynow/register" method="post">
-              <input type="hidden" name="paynow_type" value="phone_number" />
-              {% for account in accounts %}{% if loop.first %}<input type="hidden" name="linked_product_id" value="{{ account.id }}" />{% endif %}{% endfor %}
-
-              <div class="form-field form-field--full">
-                <label class="form-label" for="paynow_id">Your PayNow Mobile Number</label>
-                <input class="form-input form-input--large" id="paynow_id" name="paynow_id" inputmode="numeric" placeholder="91234567" required />
-                <p class="form-help">Use an 8-digit Singapore mobile number starting with 8 or 9.</p>
-              </div>
-
-              <button class="c-button c-button--primary" type="submit"><i data-lucide="badge-plus"></i> Register PayNow</button>
-            </form>
-            {% else %}
-            <div class="empty-state empty-state--small">
-              <div class="empty-state__icon"><i data-lucide="wallet"></i></div>
-              <h3>No active account found</h3>
-              <p>You need an active bank account before registering PayNow.</p>
-            </div>
-            {% endif %}
-          </div>
-        </section> -->
         {% endif %}
 
         <section class="customer-card paynow-panel paynow-panel--records">
@@ -215,7 +126,7 @@
             <div class="paynow-locked-state">
               <div><i data-lucide="lock-keyhole"></i></div>
               <h3>Transfer locked</h3>
-              <p>Register your PayNow mobile number first. The transfer form will appear after registration.</p>
+              <p>Register your <strong><a href="/customer/profile#paynow">PayNow</a></strong> to start transferring funds with your phone number or NRIC / FIN number.</p>
             </div>
             {% endif %}
           </div>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RustToGold ATM — Withdraw Money</title>
+<link rel="stylesheet" href="/static/css/atm.css">
+</head>
+<body>
+
+<div class="atm-machine">
+
+  <div class="atm-brandbar">
+    <div class="atm-brand">
+      <span class="mark"></span>
+      RustToGold <span class="sub">ATM Network</span>
+    </div>
+    <div class="atm-clock"><span class="status-dot"></span><span id="clock">--:--</span></div>
+  </div>
+
+  <div class="atm-body">
+
+    <div class="fkey-col left">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F1</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F2</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F3</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F4</button></div>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen">
+
+        {% if has_error %}
+        <div class="atm-alert" role="alert" id="atmAlert">
+          <span class="a-icon">!</span>
+          <div class="a-body">{{ error }}</div>
+          <button type="button" class="a-close" onclick="document.getElementById('atmAlert').remove()" aria-label="Dismiss">✕</button>
+        </div>
+        {% endif %}
+
+        <div class="screen-topline">
+          <span>CARD: <span id="cardMasked">•••• •••• •••• {{ card_number_last_4 }}</span></span>
+          <span>WITHDRAW</span>
+        </div>
+
+        <div class="screen-content">
+          <h1 class="screen-title">Withdraw Money</h1>
+          <p class="screen-subtitle">Choose an amount below. This terminal dispenses $20, $50 and $100 notes.</p>
+
+          <div class="balance-card">
+            <div class="b-label">Available Balance</div>
+            <div class="b-amount">{{ account_balance }}</div>
+          </div>
+
+          <form id="withdrawForm" action="/withdraw" method="post">
+            <input type="hidden" id="cardHidden" name="card" value="">
+
+            <label class="field-label">Withdrawal Amount</label>
+            <div class="amount-display"><span class="cur">$</span><span id="amountText">0.00</span></div>
+            <input type="hidden" id="amount" name="amount" value="0.00" required>
+
+            <div class="quick-amounts">
+              <button type="button" class="qa" data-set="20">$20</button>
+              <button type="button" class="qa" data-set="40">$40</button>
+              <button type="button" class="qa" data-set="60">$60</button>
+              <button type="button" class="qa" data-set="100">$100</button>
+              <button type="button" class="qa" data-set="200">$200</button>
+              <button type="button" id="qaCustom">Custom</button>
+            </div>
+
+            <div id="customWrap" class="hidden">
+              <label class="field-label" for="customAmount">Custom Amount (SGD, multiples of $20)</label>
+              <input class="field-input" type="number" id="customAmount" min="20" step="20" placeholder="0.00">
+            </div>
+
+            <p class="field-error hidden" id="limitError">This exceeds your available balance or daily limit.</p>
+
+            <div class="btn-row">
+              <a href="/menu" class="btn btn-secondary">← Back to Menu</a>
+              <button type="submit" class="btn btn-primary" id="confirmBtn" disabled>Confirm Withdrawal</button>
+            </div>
+          </form>
+        </div>
+
+        <p class="screen-footnote">Please take your cash and card promptly after this transaction.</p>
+      </div>
+    </div>
+
+    <div class="fkey-col right">
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F5</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F6</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F7</button></div>
+      <div class="fkey-slot"><button class="fkey disabled" tabindex="-1">F8</button></div>
+    </div>
+
+  </div>
+
+  <div class="slot-row">
+    <div class="slot"><div class="opening"></div><div class="label">Card Slot</div></div>
+    <div class="slot"><div class="opening"></div><div class="label">Receipt</div></div>
+    <div class="slot"><div class="opening active"></div><div class="label">Cash Out</div></div>
+  </div>
+
+</div>
+
+<script>
+  function tick(){
+    var d = new Date();
+    var h = d.getHours() % 12 || 12;
+    var m = d.getMinutes().toString().padStart(2,'0');
+    var ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+    document.getElementById('clock').textContent = h + ':' + m + ' ' + ampm;
+  }
+  tick(); setInterval(tick, 15000);
+
+  var BALANCE = parseFloat("{{ account_balance }}".replace("$", ""));
+
+  var total = 0;
+  var amountText = document.getElementById('amountText');
+  var amountField = document.getElementById('amount');
+  var confirmBtn = document.getElementById('confirmBtn');
+  var limitError = document.getElementById('limitError');
+
+  function render(){
+    amountText.textContent = total.toFixed(2);
+    amountField.value = total.toFixed(2);
+    var overLimit = total > BALANCE;
+    limitError.classList.toggle('hidden', !overLimit);
+    confirmBtn.disabled = total <= 0 || overLimit;
+  }
+
+  document.querySelectorAll('.qa').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      total = parseFloat(btn.dataset.set);
+      render();
+    });
+  });
+
+  var customWrap = document.getElementById('customWrap');
+  var customInput = document.getElementById('customAmount');
+  document.getElementById('qaCustom').addEventListener('click', function(){
+    customWrap.classList.toggle('hidden');
+    if (!customWrap.classList.contains('hidden')) customInput.focus();
+  });
+  customInput.addEventListener('input', function(){
+    total = parseFloat(customInput.value) || 0;
+    render();
+  });
+
+  render();
+</script>
+
+</body>
+</html>
