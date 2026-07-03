@@ -195,13 +195,13 @@ pub async fn withdraw_fixed_deposit(
     let fd = sqlx::query_as::<_, FixedDeposit>(
         r#"
         SELECT fd.id, fd.customer_id, fd.funding_product_id, fd.plan_id,
-               COALESCE(p.plan_name, 'Fixed Deposit Plan') AS plan_name,
-               fd.principal_cents, fd.annual_rate_bps, fd.tenure_months, fd.interest_cents,
-               fd.maturity_date, fd.status, fd.created_at, fd.updated_at
+            COALESCE(p.plan_name, 'Fixed Deposit Plan') AS plan_name,
+            fd.principal_cents, fd.annual_rate_bps, fd.tenure_months, fd.interest_cents,
+            fd.maturity_date, fd.status, fd.created_at, fd.updated_at
         FROM fixed_deposits fd
         LEFT JOIN fixed_deposit_plans p ON p.id = fd.plan_id
         WHERE fd.id = $1 AND fd.customer_id = $2
-        FOR UPDATE
+        FOR UPDATE OF fd
         "#,
     )
     .bind(fixed_deposit_id)
