@@ -18,6 +18,8 @@ DROP TABLE IF EXISTS registered_paynow CASCADE;
 DROP TABLE IF EXISTS account_creation_links CASCADE;
 DROP TABLE IF EXISTS customer_products CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS known_devices CASCADE;
+DROP TABLE IF EXISTS otp_codes CASCADE;
 DROP TABLE IF EXISTS customers CASCADE;
 
 CREATE TABLE customers (
@@ -303,7 +305,7 @@ CREATE TABLE known_devices (
     token_hash          TEXT NOT NULL,
     user_id             UUID NULL REFERENCES users(id) ON DELETE CASCADE,
     last_used           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 CREATE UNIQUE INDEX idx_customers_active_nric_unique
     ON customers (lower(nric))
