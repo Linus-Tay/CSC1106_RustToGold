@@ -44,7 +44,7 @@ pub async fn login(
     data: web::Data<AppState>,
     session: Session,
     form: web::Form<LoginForm>,
-    req: HttpRequest // <-- FIXED: Changed from HttpResponse to HttpRequest
+    req: HttpRequest
 ) -> Result<HttpResponse> {
     match services::authenticate_user(&data.db, form.into_inner()).await {
         Ok(user) if user.is_customer() => {
@@ -124,18 +124,16 @@ pub async fn verify_2fa(
                 }
 
                 let my_cookie = Cookie::build("device_id", raw_token)
-                .path("/") // Makes it available across the whole site
-                .secure(false) // Only send over HTTPS
-                .http_only(true) // Protects from XSS
+                .path("/")
+                .secure(false)
+                .http_only(true)
                 .finish();
 
-                // 3. Build the redirect response and attach the cookie
                 return Ok(HttpResponse::Found()
                     .append_header((header::LOCATION, "/customer/dashboard"))
                     .cookie(my_cookie)
                     .finish());
-
-                //return Ok(redirect("/customer/dashboard")); 
+                
             }
             Err(error) => render(TwoFactorAuthTemplate {
                 error,
