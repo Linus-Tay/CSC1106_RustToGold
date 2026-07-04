@@ -39,7 +39,7 @@
         {% endif %}
 
         <div class="screen-topline">
-          <span>CARD: <span id="cardMasked">•••• ••••</span></span>
+          <span>CARD: <span id="cardMasked">•••• •••• •••• {{ card_number_last_4 }}</span></span>
           <span>SESSION: CARD READ</span>
         </div>
 
@@ -57,7 +57,6 @@
               <span class="dot"></span>
             </div>
 
-            <!-- hidden real input kept in sync, in case a physical keyboard is used -->
             <input
               type="password"
               id="pin"
@@ -121,15 +120,6 @@
   }
   tick(); setInterval(tick, 15000);
 
-  // pull the card number forward from the previous screen (query string)
-  var params = new URLSearchParams(window.location.search);
-  var card = (params.get('card') || '').replace(/\D/g,'');
-  document.getElementById('cardHidden').value = card;
-  document.getElementById('cardMasked').textContent = card.length >= 4
-    ? '•••• •••• •••• ' + card.slice(-4)
-    : '•••• •••• •••• ••••';
-
-  // on-screen keypad -> fills the pin value and lights up dots
   var pin = '';
   var pinInput = document.getElementById('pin');
   var dots = document.querySelectorAll('#pinDots .dot');

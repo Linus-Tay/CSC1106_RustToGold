@@ -1,5 +1,3 @@
-// Model layer: domain structs plus small display helpers used by services and templates.
-
 use super::formatting::title_case_code;
 use super::Money;
 use chrono::{DateTime, Utc};
@@ -7,7 +5,6 @@ use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
-// Domain record used by services, repositories and templates.
 pub struct Product {
     pub id: Uuid,
     pub customer_id: Uuid,
@@ -21,32 +18,32 @@ pub struct Product {
 }
 
 impl Product {
-    // Formats the value for display in templates.
+    // Formats the value for display
     pub fn id_display(&self) -> String {
         self.id.to_string()
     }
 
-    // Formats the value for display in templates.
+    // Formats the value for display
     pub fn balance_display(&self) -> String {
         Money::from_cents(self.balance_cents).display()
     }
 
-    // Formats the value for display in templates.
+    // Formats the value for display
     pub fn product_id_display(&self) -> String {
         title_case_code(&self.product_id)
     }
 
-    // Formats the value for display in templates.
+    // Formats the value for display
     pub fn status_display(&self) -> String {
         title_case_code(self.status.as_str())
     }
 
-    // Returns whether this record can receive deposit.
+    // Returns whether this record can receive deposit
     pub fn can_receive_deposit(&self, amount: Money) -> bool {
         self.status == "active" && amount.cents() > 0
     }
 
-    // Returns the customer id field used by services.
+    // Returns the customer id field
     pub fn get_customer_id(&self) -> Uuid {
         self.customer_id
     }

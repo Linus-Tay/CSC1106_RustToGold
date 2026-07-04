@@ -1,9 +1,6 @@
-// Form layer: request payload structs received from HTML forms.
-
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-// Form payload for the DepositForm request.
 pub struct DepositForm {
     pub amount: String,
     pub description: String,
@@ -11,7 +8,6 @@ pub struct DepositForm {
 }
 
 #[derive(Debug, Deserialize)]
-// Form payload for the TransferForm request.
 pub struct TransferForm {
     pub amount: String,
     pub method: String,
@@ -21,7 +17,6 @@ pub struct TransferForm {
 }
 
 #[derive(Debug, Deserialize)]
-// Form payload for the CreateBankAccountForm request.
 pub struct CreateBankAccountForm {
     pub account_type: String,
     pub nickname: String,

@@ -1,5 +1,3 @@
-// Repository layer: isolates SQLx queries so services do not depend on raw database code.
-
 use crate::models::Card;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -21,7 +19,7 @@ pub async fn list_cards_by_customer(db: &PgPool, customer_id: Uuid) -> Result<Ve
     .await
 }
 
-// Find active card by linked product
+// Find active card by linked product ID
 pub async fn find_card_by_linked_account(db: &PgPool, linked_product_id: Uuid) -> Result<Option<Card>, sqlx::Error> {
     sqlx::query_as::<_, Card>(
         r#"
@@ -37,7 +35,7 @@ pub async fn find_card_by_linked_account(db: &PgPool, linked_product_id: Uuid) -
     .await
 }
 
-// Reads list cards by customer data from the database.
+// Get the active card using card number
 pub async fn find_active_by_card_number(db: &PgPool, card_number: &str) -> Result<Option<Card>, sqlx::Error> {
     sqlx::query_as::<_, Card>(
         r#"
@@ -54,7 +52,7 @@ pub async fn find_active_by_card_number(db: &PgPool, card_number: &str) -> Resul
     .await
 }
 
-// Reads list cards by customer data from the database.
+// Get the active card using card ID
 pub async fn find_active_by_card_id(db: &PgPool, card_id: &Uuid) -> Result<Option<Card>, sqlx::Error> {
     sqlx::query_as::<_, Card>(
         r#"
@@ -70,8 +68,7 @@ pub async fn find_active_by_card_id(db: &PgPool, card_id: &Uuid) -> Result<Optio
     .fetch_optional(db)
     .await
 }
-
-// Persists the create card database change.
+// Creates the card in the database
 pub async fn create_card(
     db: &PgPool,
     customer_id: Uuid,
@@ -100,7 +97,7 @@ pub async fn create_card(
     .await
 }
 
-// Persists the set card status database change.
+// Updates the card status
 pub async fn set_card_status(
     db: &PgPool,
     customer_id: Uuid,

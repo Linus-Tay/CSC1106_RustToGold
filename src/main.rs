@@ -16,7 +16,6 @@ use config::Config;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 #[derive(Clone)]
-// Data carrier for the AppState workflow.
 pub struct AppState {
     pub db: PgPool,
 }

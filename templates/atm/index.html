@@ -47,9 +47,6 @@
           <h1 class="screen-title">Welcome</h1>
           <p class="screen-subtitle">Insert your debit card to begin. This terminal accepts RustToGold debit cards only.</p>
 
-          <!-- This form simulates the card reader. In production this step happens
-               automatically when a physical card is inserted; here the customer
-               types the card number to simulate insertion. -->
           <form action="/card/verify" method="post">
             <label class="field-label" for="cardNumber">Debit Card Number</label>
             <input
@@ -111,7 +108,6 @@
   }
   tick(); setInterval(tick, 15000);
 
-  // light formatting assist — groups digits into 4s as the customer types
   var input = document.getElementById('cardNumber');
   input.addEventListener('input', function(){
     var digits = input.value.replace(/\D/g,'').slice(0,16);

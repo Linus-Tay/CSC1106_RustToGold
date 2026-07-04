@@ -1,5 +1,3 @@
-// Controller layer: handles HTTP/session flow and delegates business rules to services.
-
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_customer};
 use crate::forms::account_forms::{CreateBankAccountForm, TransferForm};
@@ -13,7 +11,6 @@ use crate::views::{
 use crate::AppState;
 use crate::models::{Product};
 use actix_session::Session;
-use actix_web::web::service;
 use actix_web::{web, HttpResponse, Result};
 
 // Handles the display money without symbol request.
@@ -94,7 +91,7 @@ fn savings_application_state(accounts: &[Product]) -> SavingsApplicationState {
     }
 }
 
-// Renders the dashboard screen with data prepared by the service layer.
+// Renders the dashboard screen
 pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -131,7 +128,7 @@ pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<Ht
     }
 }
 
-// Handles the create bank account form action and redirects after the service result.
+// Handles the create bank account form action
 pub async fn create_bank_account(
     data: web::Data<AppState>,
     session: Session,
@@ -174,7 +171,7 @@ pub async fn create_bank_account(
     }
 }
 
-// Renders the deposit page screen with data prepared by the service layer.
+// Renders the deposit page
 pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -199,7 +196,7 @@ pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result
     })
 }
 
-// Handles the deposit form action and redirects after the service result.
+// Handles the deposit form action
 pub async fn deposit(
     app_state: web::Data<AppState>,
     session: Session,
@@ -253,7 +250,7 @@ pub async fn deposit(
     }
 }
 
-// Renders the transfer page screen with data prepared by the service layer.
+// Renders the transfer page
 pub async fn transfer_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -276,7 +273,7 @@ pub async fn transfer_page(data: web::Data<AppState>, session: Session) -> Resul
     })
 }
 
-// Handles the transfer form action and redirects after the service result.
+// Handles the transfer form action
 pub async fn transfer(
     app_state: web::Data<AppState>,
     session: Session,
@@ -316,7 +313,7 @@ pub async fn transfer(
     }
 }
 
-// Handles the transactions request.
+// Handles the transactions request
 pub async fn transactions(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -332,7 +329,7 @@ pub async fn transactions(data: web::Data<AppState>, session: Session) -> Result
     }
 }
 
-// Renders the statements page screen with data prepared by the service layer.
+// Renders the statements page
 pub async fn statements_page(
     data: web::Data<AppState>,
     session: Session,
@@ -359,7 +356,7 @@ pub async fn statements_page(
     }
 }
 
-// Handles the download statement pdf request.
+// Handles the download statement pdf action
 pub async fn download_statement_pdf(
     data: web::Data<AppState>,
     session: Session,
@@ -383,7 +380,7 @@ pub async fn download_statement_pdf(
     }
 }
 
-// Handles the loan activity request.
+// Handles the loan activity request
 pub async fn loan_activity(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -408,7 +405,7 @@ pub async fn loan_activity(data: web::Data<AppState>, session: Session) -> Resul
     }
 }
 
-// Handles the fixed deposit activity request.
+// Handles the fixed deposit activity request
 pub async fn fixed_deposit_activity(
     data: web::Data<AppState>,
     session: Session,
@@ -436,7 +433,7 @@ pub async fn fixed_deposit_activity(
     }
 }
 
-// Renders the cards page screen with data prepared by the service layer.
+// Renders the cards page
 pub async fn cards_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -459,7 +456,7 @@ pub async fn cards_page(data: web::Data<AppState>, session: Session) -> Result<H
     }
 }
 
-// Handles the create card form action and redirects after the service result.
+// Handles the create card form action
 pub async fn create_card(
     data: web::Data<AppState>,
     session: Session,
@@ -489,7 +486,7 @@ pub async fn create_card(
     }
 }
 
-// Handles the freeze card form action and redirects after the service result.
+// Handles the freeze card action
 pub async fn freeze_card(
     data: web::Data<AppState>,
     session: Session,
@@ -507,7 +504,7 @@ pub async fn freeze_card(
     Ok(redirect("/customer/cards"))
 }
 
-// Handles the activate card form action and redirects after the service result.
+// Handles the activate card action
 pub async fn activate_card(
     data: web::Data<AppState>,
     session: Session,
@@ -525,7 +522,7 @@ pub async fn activate_card(
     Ok(redirect("/customer/cards"))
 }
 
-// Handles the render paynow dashboard request.
+// Handles the render paynow dashboard request
 async fn render_paynow_dashboard(
     data: &web::Data<AppState>,
     customer_id: uuid::Uuid,
@@ -547,7 +544,7 @@ async fn render_paynow_dashboard(
     }
 }
 
-// Renders the paynow page screen with data prepared by the service layer.
+// Renders the paynow page
 pub async fn paynow_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -557,7 +554,7 @@ pub async fn paynow_page(data: web::Data<AppState>, session: Session) -> Result<
     render_paynow_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
 }
 
-// Renders the register paynow page screen with data prepared by the service layer.
+// Renders the register paynow page
 pub async fn register_paynow_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -585,13 +582,10 @@ pub async fn register_paynow_page(data: web::Data<AppState>, session: Session) -
         nric: customer.nric,
         phone: customer.phone_number
     })
-    
-
-    //render_paynow_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
 }
 
 
-// Handles the register paynow form action and redirects after the service result.
+// Handles the register paynow form action
 pub async fn register_paynow(
     data: web::Data<AppState>,
     session: Session,
@@ -639,7 +633,7 @@ pub async fn register_paynow(
     }
 }
 
-// Handles the transfer paynow form action and redirects after the service result.
+// Handles the transfer paynow form action
 pub async fn transfer_paynow(
     data: web::Data<AppState>,
     session: Session,
@@ -666,7 +660,7 @@ pub async fn transfer_paynow(
 }
 
 
-// Handles the unlink paynow form action and redirects after the service result.
+// Handles the unlink paynow form action
 pub async fn unlink_paynow(
     data: web::Data<AppState>,
     session: Session,
@@ -689,7 +683,7 @@ pub async fn unlink_paynow(
     }
 }
 
-// Renders the profile page screen with data prepared by the service layer.
+// Renders the profile page
 pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -710,46 +704,10 @@ pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result
         },
     };
 
-    // let active_paynow = paynow_dashboard
-    //     .registrations
-    //     .iter()
-    //     .find(|registration| registration.status == "active" && registration.paynow_type == "phone_number");
-
     let date_of_birth = customer.date_of_birth_display();
     let last_login = user.last_login_display();
-    // let paynow_id = active_paynow
-    //     .map(|registration| registration.paynow_id.clone())
-    //     .unwrap_or_default();
-    // let paynow_linked_product_id = active_paynow
-    //     .map(|registration| registration.linked_account_id.to_string())
-    //     .unwrap_or_default();
-    //let has_paynow = !paynow_id.is_empty();
     let accounts = paynow_dashboard.accounts;
     let has_accounts = !accounts.is_empty();
-
-    // render(ProfileTemplate {
-    //     full_name: customer.full_name,
-    //     email: customer.email,
-    //     phone: customer.phone_number,
-    //     date_of_birth,
-    //     last_login,
-    //     accounts,
-    //     has_accounts,
-    //     paynow_id,
-    //     paynow_linked_product_id,
-    //     has_paynow,
-    // })
-
-    //     render(ProfileTemplate {
-    //     full_name: customer.full_name,
-    //     email: customer.email,
-    //     phone: customer.phone_number,
-    //     date_of_birth,
-    //     last_login,
-    //     accounts,
-    //     has_accounts,
-    //     paynow_links: vec![], // TODO: replace with real query, e.g. fetch_paynow_links(&pool, customer.id).await?
-    // })
 
     render(ProfileTemplate {
         full_name: customer.full_name,
@@ -763,7 +721,7 @@ pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result
     })
 }
 
-// Handles the update profile form action and redirects after the service result.
+// Handles the update profile form action
 pub async fn update_profile(
     data: web::Data<AppState>,
     session: Session,
@@ -781,7 +739,7 @@ pub async fn update_profile(
     }
 }
 
-// Handles the render transaction controls dashboard request.
+// Handles the render transaction controls dashboard request
 async fn render_transaction_controls_dashboard(
     data: &web::Data<AppState>,
     customer_id: uuid::Uuid,
@@ -802,7 +760,7 @@ async fn render_transaction_controls_dashboard(
     }
 }
 
-// Renders the transaction controls page screen with data prepared by the service layer.
+// Renders the transaction controls page
 pub async fn transaction_controls_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -812,7 +770,7 @@ pub async fn transaction_controls_page(data: web::Data<AppState>, session: Sessi
     render_transaction_controls_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
 }
 
-// Handles the update transaction limit form action and redirects after the service result.
+// Handles the update transaction limit form action
 pub async fn update_transaction_limit(
     data: web::Data<AppState>,
     session: Session,
@@ -836,7 +794,7 @@ pub async fn update_transaction_limit(
     }
 }
 
-// Handles the update money lock form action and redirects after the service result.
+// Handles the update money lock form action
 pub async fn update_money_lock(
     data: web::Data<AppState>,
     session: Session,
@@ -863,7 +821,7 @@ pub async fn update_money_lock(
     }
 }
 
-// Handles the render giro dashboard request.
+// Handles the render giro dashboard request
 async fn render_giro_dashboard(
     data: &web::Data<AppState>,
     customer_id: uuid::Uuid,
@@ -885,7 +843,7 @@ async fn render_giro_dashboard(
     }
 }
 
-// Renders the giro page screen with data prepared by the service layer.
+// Renders the giro page
 pub async fn giro_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -895,7 +853,7 @@ pub async fn giro_page(data: web::Data<AppState>, session: Session) -> Result<Ht
     render_giro_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
 }
 
-// Handles the create giro arrangement form action and redirects after the service result.
+// Handles the create giro arrangement form action
 pub async fn create_giro_arrangement(
     data: web::Data<AppState>,
     session: Session,
@@ -913,7 +871,7 @@ pub async fn create_giro_arrangement(
     }
 }
 
-// Handles the cancel giro arrangement form action and redirects after the service result.
+// Handles the cancel giro arrangement form action
 pub async fn cancel_giro_arrangement(
     data: web::Data<AppState>,
     session: Session,

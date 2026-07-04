@@ -34,16 +34,11 @@ pub use self::fixed_deposit_controller::{
 };
 
 pub use self::error_controller::{forbidden, not_found};
-// pub use self::fixed_deposit_controller::{
-//     admin_fixed_deposit_plans_page, admin_fixed_deposits_page, create_fixed_deposit,
-//     create_fixed_deposit_plan, fixed_deposit_new_page, fixed_deposits_page,
-//     update_fixed_deposit_plan, withdraw_fixed_deposit,
-// };
 pub use self::home_loan_controller::{
     admin_home_loans_page, approve_home_loan, create_home_loan_application, home_loan_apply_page,
     home_loans_page, pay_home_loan, reject_home_loan,
 };
 pub use self::loan_controller::{create_personal_loan, loan_apply_page, loans_page, pay_loan};
-pub use self::onboard_controller::{account_creation, account_creation_init, account_creation_submit, legacy_signup_path_redirect, legacy_signup_redirect, onboarding, onboarding_entry_redirect, step1_post, step2_post, step3_post, step4_post, submit};
+pub use self::onboard_controller::{account_creation, account_creation_init, account_creation_submit, onboarding, onboarding_entry_redirect, step1_post, step2_post, step3_post, step4_post, submit};
 pub use self::public_controller::{about_page, banking_page, contact_page, faq_page, home, security_page};
 pub use self::atm_controller::{atm_page, pin_page, card_validation, pin_validation, menu_page, atm_deposit_page, atm_deposit, atm_withdrawal_page, atm_withdraw, eject};

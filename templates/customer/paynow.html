@@ -57,7 +57,6 @@
 
           <div class="customer-card__body">
             <form class="form-grid" action="/customer/paynow/transfer" method="post">
-              <!-- <input type="hidden" name="recipient_type" value="phone_number" /> -->
 
               <div class="form-field form-field--full">
                 <label class="form-label" for="from_product_id">From PayNow Account</label>
@@ -73,7 +72,7 @@
                 <label class="form-label" for="recipient_type">Recipient PayNow Type</label>
                 <select class="form-input" id="recipient_type" name="recipient_type" required>
                   <option value="phone_number">Phone Number</option>
-                  <option value="phone_number">NRIC / FIN</option>
+                  <option value="nric">NRIC / FIN</option>
                 </select>
                 <p class="form-help">This is the account RustToGold will debit for the PayNow transfer.</p>
               </div>
@@ -139,17 +138,13 @@
   <script src="/static/js/app.js"></script>
   <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // 1. Get the dropdown (wherever it is) and the text display (in your section)
     const dropdown = document.getElementById("from_product_id");
     const accountDisplay = document.getElementById("paynow_linked_account");
     const identifierDisplay = document.getElementById("paynow_identifier")
 
-    // 2. Make sure both exist on the page before trying to do anything
     if (dropdown && accountDisplay && identifierDisplay) {
       
-      // 3. Listen for the dropdown to change
       dropdown.addEventListener("change", (event) => {
-        // 4. Update the text in the section with the value from the dropdown
         targetValue = event.target.value;
         accountNo = targetValue.split("/")[0]
         identifier = targetValue.split("/")[1]
@@ -158,6 +153,20 @@
         identifierDisplay.innerHTML = `<strong>${identifier}</strong>`
       });
       
+    }
+
+    const recipientTypeDropdown = document.getElementById("recipient_type")
+    const recipientIdDisplay = document.getElementById("recipient_id")
+
+    if (recipientTypeDropdown && recipientIdDisplay) {
+      recipientTypeDropdown.addEventListener("change", (event) => {
+        if (recipientTypeDropdown.value == "phone_number") {
+          recipientIdDisplay.placeholder = "91234567"
+        }
+        else {
+          recipientIdDisplay.placeholder = "T1234567A"
+        }
+      })
     }
   });
 </script>

@@ -1,29 +1,8 @@
-// Repository layer: isolates SQLx queries so services do not depend on raw database code.
-
 use crate::models::{Product, Transaction};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
-// Reads get product by user id and product id data from the database.
-pub async fn get_product_by_user_id_and_product_id(
-    db: &PgPool,
-    customer_id: &Uuid,
-    product_id: &str,
-) -> Result<Option<Product>, sqlx::Error> {
-    sqlx::query_as::<_, Product>(
-        r#"
-        SELECT id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
-        FROM customer_products
-        WHERE product_id = $1 AND customer_id = $2
-        "#,
-    )
-    .bind(product_id)
-    .bind(customer_id)
-    .fetch_optional(db)
-    .await
-}
-
-// Reads get product by account number data from the database.
+// Get product by account number
 pub async fn get_product_by_account_number(
     db: &PgPool,
     account_number: &str,
@@ -61,7 +40,7 @@ pub async fn list_products_by_customer(
     .await
 }
 
-// Reads list active products by customer data from the database.
+// Get all products linked to customer
 pub async fn list_active_products_by_customer(
     db: &PgPool,
     customer_id: &Uuid,
@@ -80,7 +59,7 @@ pub async fn list_active_products_by_customer(
 }
 
 
-// Reads get active product for customer by id data from the database.
+// Get active product using customer ID and product ID
 pub async fn get_active_product_for_customer_by_id(
     db: &PgPool,
     customer_id: Uuid,
@@ -99,7 +78,7 @@ pub async fn get_active_product_for_customer_by_id(
     .await
 }
 
-// Reads get active product for customer by account number data from the database.
+// Get active product using customer ID and account number
 pub async fn get_active_product_for_customer_by_account_number(
     db: &PgPool,
     customer_id: &Uuid,
@@ -118,7 +97,7 @@ pub async fn get_active_product_for_customer_by_account_number(
     .await
 }
 
-// Persists the insert product database change.
+// Adds a new product for customer
 pub async fn insert_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -141,31 +120,7 @@ pub async fn insert_product(
     .await
 }
 
-
-// Persists the insert active product database change.
-pub async fn insert_active_product(
-    db: &PgPool,
-    customer_id: &Uuid,
-    product_id: &str,
-    product_type: &str,
-    account_number: &str,
-) -> Result<Product, sqlx::Error> {
-    sqlx::query_as::<_, Product>(
-        r#"
-        INSERT INTO customer_products (customer_id, product_id, product_type, account_number, balance_cents, status)
-        VALUES ($1, $2, $3, $4, 0, 'active')
-        RETURNING id, customer_id, account_number, product_id, product_type, balance_cents, status, created_at, updated_at
-        "#,
-    )
-    .bind(customer_id)
-    .bind(product_id)
-    .bind(product_type)
-    .bind(account_number)
-    .fetch_one(db)
-    .await
-}
-
-// Persists the deposit into product database change.
+// Deposit money into product
 pub async fn deposit_into_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -208,7 +163,7 @@ pub async fn deposit_into_product(
     Ok((updated_product, transaction))
 }
 
-// Persists the deposit into product database change.
+// Withdraw money from product
 pub async fn withdraw_from_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -256,7 +211,7 @@ pub async fn withdraw_from_product(
     Ok(Ok((updated_product, transaction)))
 }
 
-// Persists the transfer database change.
+// Transfers money from one product to the other
 pub async fn transfer(
     db: &PgPool,
     sender_account_number: &str,
@@ -353,7 +308,7 @@ pub async fn transfer(
     Ok((true, None))
 }
 
-// Reads get first product by customer id data from the database.
+// Gets the first product created using customer ID
 pub async fn get_first_product_by_customer_id(
     db: &PgPool,
     customer_id: &Uuid,
@@ -372,7 +327,7 @@ pub async fn get_first_product_by_customer_id(
     .await
 }
 
-// Persists the lock product database change.
+// Locks a product to ensure concurrent safe updates
 async fn lock_product(
     tx: &mut DbTransaction<'_, Postgres>,
     customer_id: &Uuid,

@@ -1,24 +1,17 @@
-// Controller layer: handles HTTP/session flow and delegates business rules to services.
-
 use crate::controllers::session_guard::redirect;
 use crate::forms::atm_forms::{CardInsertionForm, PinValidationForm, ATMDepositForm};
 use crate::repositories::{card_repository, product_repository};
 use crate::services;
-use crate::views::renderer::render_html;
 use crate::views::templates::{
-    ATMDepositSuccessTemplate, ATMDepositTemplate, ATMMenuTemplate, ATMPageTemplate, ATMPinTemplate, ATMWithdrawalSuccessTemplate, ATMWithdrawalTemplate, AccountCreationSetupTemplate, AccountCreationSuccessTemplate, OnboardingAccountTemplate, OnboardingContactTemplate, OnboardingEmploymentTemplate, OnboardingPersonalTemplate, OnboardingReviewTemplate,
+    ATMDepositSuccessTemplate, ATMDepositTemplate, ATMMenuTemplate, ATMPageTemplate, ATMPinTemplate, ATMWithdrawalSuccessTemplate, ATMWithdrawalTemplate,
 };
-use crate::views::{render, ErrorTemplate, NotFoundTemplate, OnboardingResultTemplate};
+use crate::views::{render};
 use crate::AppState;
 use actix_session::Session;
-use actix_web::cookie::Cookie;
-use actix_web::cookie::time::Duration;
 use actix_web::{web, HttpResponse, Result};
-use askama::DynTemplate;
-use serde::Deserialize;
 
 // Renders the index ATM page.
-pub async fn atm_page(session: Session) -> Result<HttpResponse> {
+pub async fn atm_page() -> Result<HttpResponse> {
     render_index(false, String::new())
 }
 
@@ -47,7 +40,8 @@ pub async fn pin_page(session: Session) -> Result<HttpResponse> {
     if let Ok(Some(card_number)) = session.get::<String>("card_number") {
         render(ATMPinTemplate {
             has_error: false,
-            error: String::new()
+            error: String::new(),
+            card_number_last_4: card_number[card_number.len() - 4..].to_string()
         })
     }
     else {
@@ -56,7 +50,7 @@ pub async fn pin_page(session: Session) -> Result<HttpResponse> {
 
 }
 
-// Handles card insertion flow.
+// Handles pin validation flow.
 pub async fn pin_validation(
     data: web::Data<AppState>,
     session: Session,
@@ -75,7 +69,8 @@ pub async fn pin_validation(
             _ => {
                 render(ATMPinTemplate {
                     has_error: true,
-                    error: "Invalid pin".to_string()
+                    error: "Invalid pin".to_string(),
+                    card_number_last_4: card_number[card_number.len() - 4..].to_string()
                 })
             }
         }
@@ -116,12 +111,13 @@ pub async fn menu_page(data: web::Data<AppState>, session: Session) -> Result<Ht
      }
 }
 
+// Handles card ejection and purge the session
 pub async fn eject(session: Session) -> Result<HttpResponse> {
     session.purge();
     Ok(redirect("/"))
 }
 
-// Renders the ATM pin page.
+// Renders the ATM deposit page.
 pub async fn atm_deposit_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     if let Ok(Some(card_id)) = session.get::<String>("card_id") {
 
@@ -148,6 +144,7 @@ pub async fn atm_deposit_page(data: web::Data<AppState>, session: Session) -> Re
     }
 }
 
+// Handles atm deposit logic
 pub async fn atm_deposit(data: web::Data<AppState>, form: web::Form<ATMDepositForm>, session: Session) -> Result<HttpResponse> {
     let form = form.into_inner();
     let amount = form.amount;
@@ -186,7 +183,7 @@ pub async fn atm_deposit(data: web::Data<AppState>, form: web::Form<ATMDepositFo
     }
 }
 
-// Renders the ATM pin page.
+// Renders the ATM withdrawal page.
 pub async fn atm_withdrawal_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     if let Ok(Some(card_id)) = session.get::<String>("card_id") {
 
@@ -222,6 +219,7 @@ pub async fn atm_withdrawal_page(data: web::Data<AppState>, session: Session) ->
     }
 }
 
+// Handles atm withdrawal logic
 pub async fn atm_withdraw(data: web::Data<AppState>, form: web::Form<ATMDepositForm>, session: Session) -> Result<HttpResponse> {
     let form = form.into_inner();
     let amount = form.amount;
@@ -269,7 +267,7 @@ pub async fn atm_withdraw(data: web::Data<AppState>, form: web::Form<ATMDepositF
 }
 
 
-
+// Renders the index page
 fn render_index(has_error: bool, error_message: String) -> Result<HttpResponse> {
     return render(ATMPageTemplate {
         has_error: has_error,

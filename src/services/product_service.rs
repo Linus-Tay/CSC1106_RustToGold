@@ -1,8 +1,5 @@
-// Service layer: keeps banking validation and workflow rules away from templates and SQL.
-
 use crate::forms::account_forms::TransferForm;
 use crate::forms::DepositForm;
-use crate::forms::atm_forms::ATMDepositForm;
 use crate::models::product::ProductWorkflow;
 use crate::models::{Money, Product};
 use crate::repositories::product_repository;
@@ -12,44 +9,7 @@ use rand::{rng, RngExt};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-// Validates and coordinates the create product workflow.
-pub async fn create_product(
-    db: &PgPool,
-    customer_id: Uuid,
-    product_id: String,
-    product_type: String,
-) -> Result<Product, String> {
-    let existing_product = product_repository::get_product_by_user_id_and_product_id(
-        db,
-        &customer_id,
-        &product_id,
-    )
-    .await
-    .map_err(|error| error.to_string())?;
-
-    if existing_product.is_some() {
-        return Err("This product already exists for this customer.".to_string());
-    }
-
-    let account_number = generate_account_number(db).await;
-
-    product_repository::insert_product(db, &customer_id, &product_id, &product_type, &account_number)
-        .await
-        .map_err(|error| error.to_string())
-}
-
-
-// Returns customer products records in the shape needed by the UI.
-pub async fn list_customer_products(
-    db: &PgPool,
-    customer_id: Uuid,
-) -> Result<Vec<Product>, String> {
-    product_repository::list_products_by_customer(db, &customer_id)
-        .await
-        .map_err(|_| "Could not load your bank accounts.".to_string())
-}
-
-// Returns active customer products records in the shape needed by the UI.
+// Returns a list of active customer products
 pub async fn list_active_customer_products(
     db: &PgPool,
     customer_id: Uuid,
@@ -59,7 +19,7 @@ pub async fn list_active_customer_products(
         .map_err(|_| "Could not load your active bank accounts.".to_string())
 }
 
-/// Submits a new account product as pending so admin approval remains part of the flow.
+// Create a new product
 pub async fn create_bank_account(
     db: &PgPool,
     customer_id: Uuid,
@@ -108,24 +68,18 @@ pub async fn create_bank_account(
     })
 }
 
-// Loads active product by account number data and applies page-level business rules.
-pub async fn load_active_product_by_account_number(
-    db: &PgPool,
-    customer_id: Uuid,
-    account_number: &str,
-) -> Result<Product, String> {
-    product_repository::get_active_product_for_customer_by_account_number(db, &customer_id, account_number)
-        .await
-        .map_err(|_| "Selected account is not active or does not belong to you.".to_string())
-}
-
-// Runs business logic for deposit.
+// Calls repo to deposit money into bank account
 pub async fn deposit(
     app_state: &AppState,
     customer_id: Uuid,
     form: DepositForm,
 ) -> Result<Product, String> {
     let amount = Money::parse_dollars(&form.amount)?;
+
+    if amount.cents() <= 0 {
+        return Err("You can only deposit positive value".to_string());
+    }
+
     if amount.cents() > 1_000_000_00 {
         return Err("Single customer deposits are capped at $1,000,000.00.".to_string());
     }
@@ -163,7 +117,7 @@ pub async fn deposit(
     Ok(updated_product)
 }
 
-// Runs business logic for atm deposit.
+// Handles the atm deposit and calls repo to do deposit of money into bank account via ATM simulation
 pub async fn atm_deposit(
     app_state: &AppState,
     customer_id: Uuid,
@@ -171,6 +125,11 @@ pub async fn atm_deposit(
     account_number: &str
 ) -> Result<Product, String> {
     let amount = Money::parse_dollars(&amount)?;
+
+    if amount.cents() <= 0 {
+        return Err("You can only deposit positive value".to_string());
+    }
+
     if amount.cents() > 1_000_000_00 {
         return Err("Single customer deposits are capped at $1,000,000.00.".to_string());
     }
@@ -205,7 +164,7 @@ pub async fn atm_deposit(
     Ok(updated_product)
 }
 
-// Runs business logic for atm withdrawal.
+// Handles ATM withdrawal logic and calls repo to remove moeny from bank account
 pub async fn atm_withdraw(
     app_state: &AppState,
     customer_id: Uuid,
@@ -231,6 +190,10 @@ pub async fn atm_withdraw(
         return Err("Insufficient balance for withdrawal".to_string());
     }
 
+    if amount.cents() <= 0 {
+        return Err("You can only withdraw positive value".to_string());
+    }
+
     let (updated_product, _) = product_repository::withdraw_from_product(
         &app_state.db,
         &customer_id,
@@ -244,7 +207,7 @@ pub async fn atm_withdraw(
     Ok(updated_product)
 }
 
-/// Handles account-to-account transfers and skips limit counting for own-account movement.
+// Calls repo to handle money transfer from one bank account to the other
 pub async fn transfer(
     app_state: &AppState,
     customer_id: Uuid,
@@ -283,9 +246,11 @@ pub async fn transfer(
         return Err("Both accounts must be active before a transfer can be made.".to_string());
     }
 
-    let is_own_account_transfer = recipient_product.customer_id == customer_id;
+    if amount.cents() <= 0 {
+        return Err("You can only transfer positive value".to_string());
+    }
 
-    // Own-account transfers stay under the same customer, so they do not use the daily external transfer limit.
+    let is_own_account_transfer = recipient_product.customer_id == customer_id;
     crate::services::transaction_control_service::validate_outgoing_transaction(
         &app_state.db,
         customer_id,
@@ -315,7 +280,7 @@ pub async fn transfer(
     }
 }
 
-// Runs business logic for luhn check digit.
+// Uses luhn algo to validate account number
 fn luhn_check_digit(number: &str) -> u32 {
     let sum: u32 = number
         .chars()
@@ -338,7 +303,7 @@ fn luhn_check_digit(number: &str) -> u32 {
     (10 - (sum % 10)) % 10
 }
 
-// Runs business logic for generate account number.
+// Generate a random account number
 pub async fn generate_account_number(db: &PgPool) -> String {
     let mut rng = rng();
     let prefix = "7282";

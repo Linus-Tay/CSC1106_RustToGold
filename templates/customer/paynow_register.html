@@ -76,11 +76,8 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="/static/js/app.js"></script>
 
- <!-- JavaScript to handle the dynamic field update -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Askama expects these to match fields in your Rust Template struct perfectly.
-      // Make sure your struct has `nric` and `mobile_number` as Strings or &str.
       const userData = {
         nric: "{{ nric }}",
         mobile: "{{ phone }}"

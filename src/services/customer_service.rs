@@ -1,5 +1,3 @@
-// Service layer: keeps banking validation and workflow rules away from templates and SQL.
-
 use crate::forms::OnboardingForm;
 use crate::models::{Customer, Product};
 use crate::repositories::customer_repository::NewCustomer;
@@ -12,7 +10,7 @@ use sqlx::PgPool;
 use std::env;
 use uuid::Uuid;
 
-// Runs business logic for onboarding base url.
+// Ensure the onboarding url is clean and valid, otherwise redirect to main page
 fn onboarding_base_url() -> String {
     env::var("ONBOARDING_BASE_URL").or_else(|_| env::var("APP_BASE_URL"))
         .ok()
@@ -21,13 +19,7 @@ fn onboarding_base_url() -> String {
         .unwrap_or_else(|| "http://127.0.0.1:3000".to_string())
 }
 
-// Validates and coordinates the create customer workflow.
-pub async fn create_customer(db: &PgPool, form: OnboardingForm) -> Result<Customer, String> {
-    let (customer, _) = create_customer_with_product(db, &form, "savings".to_string()).await?;
-    Ok(customer)
-}
-
-// Validates and coordinates the create customer with product workflow.
+// Calls the repo to create a customer with linked product info
 pub async fn create_customer_with_product(
     db: &PgPool,
     form: &OnboardingForm,
@@ -112,7 +104,7 @@ pub async fn create_customer_with_product(
     Ok(result)
 }
 
-// Validates and coordinates the approve customer with product workflow.
+// Approve customer and the linked product
 pub async fn approve_customer_with_product(
     app_state: &AppState,
     customer_id: Uuid,
@@ -176,7 +168,7 @@ pub async fn approve_customer_with_product(
     Ok((customer, product))
 }
 
-// Checks account creation link rules before the workflow continues.
+// Calls repo to check if the account creation link is valid
 pub async fn validate_account_creation_link(
     app_state: &AppState,
     account_creation_link: &str,
@@ -197,7 +189,7 @@ pub async fn validate_account_creation_link(
     Ok(link.is_valid())
 }
 
-// Runs business logic for get customer by account creation link.
+// Gets the customer info using account creation link
 pub async fn get_customer_by_account_creation_link(
     app_state: &AppState,
     account_creation_link: &str,
@@ -225,7 +217,7 @@ pub async fn get_customer_by_account_creation_link(
         })
 }
 
-// Validates and coordinates the invalidate account creation link workflow.
+// Calls the repo to invalidate the account creation link once used
 pub async fn invalidate_account_creation_link(
     app_state: &AppState,
     account_creation_link: &str,

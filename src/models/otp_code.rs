@@ -3,7 +3,6 @@ use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
-// Domain record used by services, repositories and templates.
 pub struct OTPCode {
     pub id: Uuid,
     pub user_id: Uuid,
@@ -18,6 +17,7 @@ impl OTPCode {
         self.expires_at > Utc::now()
     }
 
+    // Returns the user id
     pub fn get_user_id(&self) -> Uuid {
         self.user_id
     }

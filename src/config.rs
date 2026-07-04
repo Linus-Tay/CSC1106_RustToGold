@@ -3,7 +3,6 @@
 use std::env;
 
 #[derive(Debug, Clone)]
-// Data carrier for the Config workflow.
 pub struct Config {
     pub database_url: String,
     pub session_secret: String,

@@ -1,11 +1,8 @@
-// Model layer: domain structs plus small display helpers used by services and templates.
-
 use chrono::{DateTime, NaiveDate, Utc};
 use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
-// Domain record used by services, repositories and templates.
 pub struct Customer {
     pub id: Uuid,
     pub full_name: String,
@@ -31,12 +28,12 @@ pub struct Customer {
 }
 
 impl Customer {
-    // Formats the value for display in templates.
+    // Formats the value for display
     pub fn date_of_birth_display(&self) -> String {
         self.date_of_birth.format("%d %b %Y").to_string()
     }
 
-    // Formats the value for display in templates.
+    // Formats the value for display
     pub fn joined_display(&self) -> String {
         self.created_at.format("%d %b %Y").to_string()
     }

@@ -10,7 +10,6 @@ pub mod home_loan_service;
 pub mod giro_service;
 pub mod loan_service;
 pub mod monitoring_service;
-pub mod onboard_service;
 pub mod paynow_service;
 pub mod product_service;
 pub mod profile_service;

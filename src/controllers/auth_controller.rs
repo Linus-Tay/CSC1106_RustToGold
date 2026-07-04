@@ -1,5 +1,3 @@
-// Controller layer: handles HTTP/session flow and delegates business rules to services.
-
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{
     admin_session_user_id, clear_admin_session, clear_customer_session, customer_session_user_id,
@@ -10,15 +8,14 @@ use crate::forms::auth_forms::TwoFactorForm;
 use crate::repositories::user_repository;
 use crate::services::{self, authenticate_device};
 use crate::views::templates::TwoFactorAuthTemplate;
-use crate::views::{AdminLoginTemplate, ErrorTemplate, LoginTemplate, NotFoundTemplate, render};
+use crate::views::{AdminLoginTemplate, LoginTemplate, NotFoundTemplate, render};
 use crate::AppState;
 use actix_session::Session;
 use actix_web::cookie::Cookie;
-use actix_web::http::{Error, header};
+use actix_web::http::header;
 use actix_web::{web, HttpResponse, Result, HttpRequest};
-use sha2::{Sha256, Digest};
 
-// Renders the login page screen with data prepared by the service layer.
+// Renders the login page
 pub async fn login_page(session: Session) -> Result<HttpResponse> {
     if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
@@ -30,7 +27,7 @@ pub async fn login_page(session: Session) -> Result<HttpResponse> {
     })
 }
 
-// Renders the admin login page screen with data prepared by the service layer.
+// Renders the admin login page
 pub async fn admin_login_page(session: Session) -> Result<HttpResponse> {
     if admin_session_user_id(&session).is_some() {
         return Ok(redirect("/admin/dashboard"));
@@ -81,7 +78,8 @@ pub async fn login(
     }
 }
 
-pub async fn twofactor_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
+// Renders the two factor page
+pub async fn twofactor_page(session: Session) -> Result<HttpResponse> {
     if let Ok(Some(pending_user_id)) = session.get::<String>("pending_2fa_user_id") {
         println!("{}", pending_user_id);
         render(TwoFactorAuthTemplate {

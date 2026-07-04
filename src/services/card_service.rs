@@ -1,5 +1,3 @@
-// Service layer: keeps banking validation and workflow rules away from templates and SQL.
-
 use crate::forms::CardApplicationForm;
 use crate::models::{Card, Product};
 use crate::repositories::{card_repository, product_repository};
@@ -13,7 +11,6 @@ use argon2::{
     Argon2
 };
 
-// Data carrier for the CardDashboardData workflow.
 pub struct CardDashboardData {
     pub cards: Vec<Card>,
     pub has_cards: bool,
@@ -21,7 +18,7 @@ pub struct CardDashboardData {
     pub has_accounts: bool,
 }
 
-// Loads card dashboard data and applies page-level business rules.
+// Gets all the active cards for the customer to load the dashboard
 pub async fn load_card_dashboard(db: &PgPool, customer_id: Uuid) -> Result<CardDashboardData, String> {
     let cards = card_repository::list_cards_by_customer(db, customer_id)
         .await
@@ -41,7 +38,7 @@ pub async fn load_card_dashboard(db: &PgPool, customer_id: Uuid) -> Result<CardD
     })
 }
 
-// Validates and coordinates the create card workflow.
+// Calls the repo to create the card
 pub async fn create_card(db: &PgPool, customer_id: Uuid, form: CardApplicationForm) -> Result<Card, String> {
     let linked_product_id = Uuid::parse_str(form.linked_account_id.trim())
         .map_err(|_| "Choose a valid account to link this card to.".to_string())?;
@@ -92,7 +89,7 @@ pub async fn create_card(db: &PgPool, customer_id: Uuid, form: CardApplicationFo
         })
 }
 
-// Validates and coordinates the set card status workflow.
+// Calls the repo to update the card status
 pub async fn set_card_status(db: &PgPool, customer_id: Uuid, card_id: Uuid, status: &str) -> Result<(), String> {
     let status = match status {
         "active" => "active",
@@ -127,7 +124,7 @@ pub async fn authenticate_card(db: &PgPool, card_number: &str, pin: &str) -> Res
     }
 }
 
-/// Hashes the raw PIN (e.g., "1234") into a secure string.
+// Hashes the raw PIN (e.g., "1234") into a secure string.
 pub fn hash_pin(pin: &str) -> Result<String, String> {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
@@ -139,7 +136,7 @@ pub fn hash_pin(pin: &str) -> Result<String, String> {
     Ok(password_hash.to_string())
 }
 
-/// Verifies a raw PIN against the hashed string stored in your database.
+// Verifies a raw PIN against the hashed string stored in your database.
 pub fn verify_pin(raw_pin: &str, stored_hash: &str) -> bool {
     let parsed_hash = match PasswordHash::new(stored_hash) {
         Ok(hash) => hash,
@@ -151,6 +148,7 @@ pub fn verify_pin(raw_pin: &str, stored_hash: &str) -> bool {
         .is_ok()
 }
 
+// Generate a fake card number using the account number
 pub fn generate_card_from_account(account_number: &str) -> String {
     let bin = "400000"; 
     
@@ -167,6 +165,7 @@ pub fn generate_card_from_account(account_number: &str) -> String {
     format!("{}{}", partial_pan, check_digit)
 }
 
+// Uses the luhn algo to validate the card number
 fn calculate_luhn(partial_pan: &str) -> u32 {
     let mut sum = 0;
     let mut double = true; 

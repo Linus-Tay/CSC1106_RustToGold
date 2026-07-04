@@ -1,11 +1,9 @@
-// Repository layer: isolates SQLx queries so services do not depend on raw database code.
-
 use crate::models::{AccountCreationLink, Customer, KnownDevice, OTPCode, Product};
 use chrono::{Duration, NaiveDate, Utc};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
-// Data carrier for the NewCustomer workflow.
+// Template to store new customer info, this is done as some fields can be left empty, so we use another struct to hold valid data, 'a is used as this struct lifetime only need to exist while creating the customer
 pub struct NewCustomer<'a> {
     pub full_name: &'a str,
     pub nric: &'a str,
@@ -35,7 +33,7 @@ const CUSTOMER_SELECT: &str = r#"
     FROM customers
 "#;
 
-// Reads get customer by nric data from the database.
+// Gets customer using NRIC
 pub async fn get_customer_by_nric(
     db: &PgPool,
     nric: &str,
@@ -48,7 +46,7 @@ pub async fn get_customer_by_nric(
 }
 
 
-// Reads get non rejected customer by nric data from the database.
+// Gets non rejected customer using NRIC
 pub async fn get_non_rejected_customer_by_nric(
     db: &PgPool,
     nric: &str,
@@ -60,7 +58,7 @@ pub async fn get_non_rejected_customer_by_nric(
         .await
 }
 
-// Reads get non rejected customer by email data from the database.
+// Gets non rejected customer using email
 pub async fn get_non_rejected_customer_by_email(
     db: &PgPool,
     email: &str,
@@ -72,7 +70,7 @@ pub async fn get_non_rejected_customer_by_email(
         .await
 }
 
-// Reads get customer by id data from the database.
+// Gets customer using ID
 pub async fn get_customer_by_id(db: &PgPool, id: &Uuid) -> Result<Customer, sqlx::Error> {
     let query = format!("{} WHERE id = $1", CUSTOMER_SELECT);
     sqlx::query_as::<_, Customer>(&query)
@@ -81,48 +79,7 @@ pub async fn get_customer_by_id(db: &PgPool, id: &Uuid) -> Result<Customer, sqlx
         .await
 }
 
-// Persists the create customer database change.
-pub async fn create_customer(
-    db: &PgPool,
-    new_customer: &NewCustomer<'_>,
-) -> Result<Customer, sqlx::Error> {
-    sqlx::query_as::<_, Customer>(
-        r#"
-        INSERT INTO customers (
-            full_name, nric, date_of_birth, gender, nationality, residency, race,
-            email, phone_number, residential_address, mailing_address, preferred_contact,
-            employment_status, occupation, employer_name, industry, monthly_income_range, kyc_status
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, COALESCE($18, 'pending'))
-        RETURNING id, full_name, nric, date_of_birth, gender, nationality, residency, race,
-                  email, phone_number, residential_address, mailing_address, preferred_contact,
-                  employment_status, occupation, employer_name, industry, monthly_income_range,
-                  kyc_status, created_at, updated_at
-        "#,
-    )
-    .bind(new_customer.full_name)
-    .bind(new_customer.nric)
-    .bind(new_customer.date_of_birth)
-    .bind(new_customer.gender)
-    .bind(new_customer.nationality)
-    .bind(new_customer.residency)
-    .bind(new_customer.race)
-    .bind(new_customer.email)
-    .bind(new_customer.phone_number)
-    .bind(new_customer.residential_address)
-    .bind(new_customer.mailing_address)
-    .bind(new_customer.preferred_contact)
-    .bind(new_customer.employment_status)
-    .bind(new_customer.occupation)
-    .bind(new_customer.employer_name)
-    .bind(new_customer.industry)
-    .bind(new_customer.monthly_income_range)
-    .bind(new_customer.kyc_status)
-    .fetch_one(db)
-    .await
-}
-
-// Persists the create customer and product database change.
+// Creates the customer and product
 pub async fn create_customer_and_product(
     db: &PgPool,
     new_customer: &NewCustomer<'_>,
@@ -186,53 +143,7 @@ pub async fn create_customer_and_product(
     Ok((customer, product))
 }
 
-// Persists the update customer database change.
-pub async fn update_customer(
-    db: &PgPool,
-    uuid: Uuid,
-    new_info: &NewCustomer<'_>,
-) -> Result<Customer, sqlx::Error> {
-    sqlx::query_as::<_, Customer>(
-        r#"
-        UPDATE customers
-        SET full_name = $1, nric = $2, date_of_birth = $3, gender = $4, nationality = $5,
-            residency = $6, race = $7, email = $8, phone_number = $9, residential_address = $10,
-            mailing_address = $11, preferred_contact = $12, employment_status = $13,
-            occupation = $14, employer_name = $15, industry = $16, monthly_income_range = $17,
-            kyc_status = COALESCE($18, kyc_status), updated_at = NOW()
-        WHERE id = $19
-        RETURNING id, full_name, nric, date_of_birth, gender, nationality, residency, race,
-                  email, phone_number, residential_address, mailing_address, preferred_contact,
-                  employment_status, occupation, employer_name, industry, monthly_income_range,
-                  kyc_status, created_at, updated_at
-        "#,
-    )
-    .bind(new_info.full_name)
-    .bind(new_info.nric)
-    .bind(new_info.date_of_birth)
-    .bind(new_info.gender)
-    .bind(new_info.nationality)
-    .bind(new_info.residency)
-    .bind(new_info.race)
-    .bind(new_info.email)
-    .bind(new_info.phone_number)
-    .bind(new_info.residential_address)
-    .bind(new_info.mailing_address)
-    .bind(new_info.preferred_contact)
-    .bind(new_info.employment_status)
-    .bind(new_info.occupation)
-    .bind(new_info.employer_name)
-    .bind(new_info.industry)
-    .bind(new_info.monthly_income_range)
-    .bind(new_info.kyc_status)
-    .bind(uuid)
-    .fetch_one(db)
-    .await
-}
-
-
-
-// Persists the update basic profile database change.
+// Updates editable info such as full name and phone number
 pub async fn update_basic_profile(
     db: &PgPool,
     customer_id: Uuid,
@@ -259,25 +170,7 @@ pub async fn update_basic_profile(
     .await
 }
 
-// Persists the approve customer database change.
-pub async fn approve_customer(db: &PgPool, account_id: &Uuid) -> Result<Customer, sqlx::Error> {
-    sqlx::query_as::<_, Customer>(
-        r#"
-        UPDATE customers
-        SET kyc_status = 'approved', updated_at = NOW()
-        WHERE id = $1 AND kyc_status = 'pending'
-        RETURNING id, full_name, nric, date_of_birth, gender, nationality, residency, race,
-                  email, phone_number, residential_address, mailing_address, preferred_contact,
-                  employment_status, occupation, employer_name, industry, monthly_income_range,
-                  kyc_status, created_at, updated_at
-        "#,
-    )
-    .bind(account_id)
-    .fetch_one(db)
-    .await
-}
-
-// Persists the approve customer and product database change.
+// Updates the customer and the product linked to them
 pub async fn approve_customer_and_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -317,7 +210,7 @@ pub async fn approve_customer_and_product(
     Ok((updated_customer, updated_product))
 }
 
-// Persists the create user account creation link for customer database change.
+// Creates the unqiue account creation link so customer can use it to create their online banking user account
 pub async fn create_user_account_creation_link_for_customer(
     db: &PgPool,
     customer_id: &Uuid,
@@ -335,7 +228,7 @@ pub async fn create_user_account_creation_link_for_customer(
     .await
 }
 
-// Reads get account creation link data from the database.
+// Gets the unique account creation link using the link_id
 pub async fn get_account_creation_link(
     db: &PgPool,
     account_creation_link: &Uuid,
@@ -352,7 +245,7 @@ pub async fn get_account_creation_link(
     .await
 }
 
-// Executes the database operation for invalidate account creation link.
+// Invalidates the account creation link after user uses them
 pub async fn invalidate_account_creation_link(
     db: &PgPool,
     account_creation_link: &Uuid,
@@ -370,57 +263,7 @@ pub async fn invalidate_account_creation_link(
     .await
 }
 
-// Persists the create customer profile for user database change.
-pub async fn create_customer_profile_for_user(
-    db: &PgPool,
-    customer_id: Uuid,
-    full_name: &str,
-    nric: &str,
-    date_of_birth: NaiveDate,
-    nationality: &str,
-    residency: &str,
-    email: &str,
-    phone_number: &str,
-    residential_address: &str,
-    mailing_address: Option<&str>,
-    employment_status: &str,
-    occupation: Option<&str>,
-    employer_name: Option<&str>,
-    monthly_income_range: Option<&str>,
-) -> Result<Customer, sqlx::Error> {
-    sqlx::query_as::<_, Customer>(
-        r#"
-        INSERT INTO customers (
-            id, full_name, nric, date_of_birth, gender, nationality, residency, race,
-            email, phone_number, residential_address, mailing_address, preferred_contact,
-            employment_status, occupation, employer_name, industry, monthly_income_range, kyc_status
-        )
-        VALUES ($1, $2, $3, $4, 'Not collected', $5, $6, NULL, $7, $8, $9, $10, NULL, $11, $12, $13, NULL, $14, 'pending')
-        RETURNING id, full_name, nric, date_of_birth, gender, nationality, residency, race,
-                  email, phone_number, residential_address, mailing_address, preferred_contact,
-                  employment_status, occupation, employer_name, industry, monthly_income_range,
-                  kyc_status, created_at, updated_at
-        "#,
-    )
-    .bind(customer_id)
-    .bind(full_name)
-    .bind(nric)
-    .bind(date_of_birth)
-    .bind(nationality)
-    .bind(residency)
-    .bind(email)
-    .bind(phone_number)
-    .bind(residential_address)
-    .bind(mailing_address)
-    .bind(employment_status)
-    .bind(occupation)
-    .bind(employer_name)
-    .bind(monthly_income_range)
-    .fetch_one(db)
-    .await
-}
-
-// Reads find user by email data from the database.
+// Gets the device by the hashed device token to check for known devices
 pub async fn find_device_by_hashed_token(db: &PgPool, hashed_token: &str) -> Result<Option<KnownDevice>, sqlx::Error> {
     sqlx::query_as::<_, KnownDevice>(r#"
         SELECT id, token_hash, user_id, last_used
@@ -433,7 +276,7 @@ pub async fn find_device_by_hashed_token(db: &PgPool, hashed_token: &str) -> Res
 }
 
 
-// Backwards-compatible name for older imports. Customer identity belongs to customers, not users.
+// Create a known device
 pub async fn create_known_device(
     db: &PgPool,
     user_id: &Uuid,
@@ -452,7 +295,7 @@ pub async fn create_known_device(
     .await
 }
 
-// Persists the update last login database change.
+// Modify the last used timing for a known device
 pub async fn update_known_device_last_used(db: &PgPool, id: &Uuid) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE known_devices SET last_used = NOW() WHERE id = $1")
         .bind(id)
@@ -462,7 +305,7 @@ pub async fn update_known_device_last_used(db: &PgPool, id: &Uuid) -> Result<(),
     Ok(())
 }
 
-// Reads find user by email data from the database.
+// Gets the OTP code obj using the code id
 pub async fn get_otp_code(db: &PgPool, code: &str) -> Result<Option<OTPCode>, sqlx::Error> {
     sqlx::query_as::<_, OTPCode>(r#"
         SELECT id, user_id, code, expires_at, created_at
@@ -475,7 +318,7 @@ pub async fn get_otp_code(db: &PgPool, code: &str) -> Result<Option<OTPCode>, sq
     .await
 }
 
-// Reads find user by username data from the database.
+// Deletes otp code once used
 pub async fn delete_otp_code(db: &PgPool, id: &Uuid) -> Result<(), sqlx::Error> {
     sqlx::query(r#"
         DELETE FROM otp_codes
@@ -488,7 +331,7 @@ pub async fn delete_otp_code(db: &PgPool, id: &Uuid) -> Result<(), sqlx::Error> 
     Ok(())
 }
 
-// Backwards-compatible name for older imports. Customer identity belongs to customers, not users.
+// Creates a new otp code
 pub async fn create_otp_code(
     db: &PgPool,
     user_id: &Uuid,

@@ -1,5 +1,3 @@
-// Repository layer: isolates SQLx queries so services do not depend on raw database code.
-
 use crate::models::{PayNowRegistration, Product, Transaction};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -27,7 +25,7 @@ pub async fn list_by_customer(
     .await
 }
 
-// Reads find active by identifier data from the database.
+// Gets active paynow account using paynow type and paynow ID
 pub async fn find_active_by_identifier(
     db: &PgPool,
     paynow_type: &str,
@@ -52,6 +50,7 @@ pub async fn find_active_by_identifier(
     .await
 }
 
+// Gets active paynow account linked to the product ID
 pub async fn find_active_by_product_id(
     db: &PgPool,
     product_id: &uuid::Uuid
@@ -73,26 +72,7 @@ pub async fn find_active_by_product_id(
     .await
 }
 
-// Reads find active by identifier data from the database.
-pub async fn find_active_by_id(
-    db: &PgPool,
-    paynow_id: &Uuid
-) -> Result<Option<PayNowRegistration>, sqlx::Error> {
-    sqlx::query_as::<_, PayNowRegistration>(
-        r#"
-        SELECT pr.id, pr.customer_id, pr.paynow_type, pr.paynow_id,
-               pr.linked_account_id, cp.account_number, cp.product_id,
-               cp.balance_cents, pr.status, pr.registered_at
-        FROM registered_paynow pr
-        JOIN customer_products cp ON cp.id = pr.linked_account_id
-        WHERE pr.id = $1
-        "#,
-    )
-    .bind(paynow_id)
-    .fetch_optional(db)
-    .await
-}
-
+// Set linked paynow account to inactive
 pub async fn set_paynow_to_inactive(
     db: &PgPool,
     paynow_id: &Uuid
@@ -118,7 +98,7 @@ pub async fn set_paynow_to_inactive(
     .await
 }
 
-// Persists the insert registration database change.
+// Adds a new paynow acocunt
 pub async fn insert_registration(
     db: &PgPool,
     customer_id: Uuid,
@@ -149,7 +129,7 @@ pub async fn insert_registration(
 }
 
 
-// Executes the database operation for upsert phone registration.
+// Adds or update a linked paynow account
 pub async fn upsert_phone_registration(
     db: &PgPool,
     customer_id: Uuid,
@@ -207,7 +187,7 @@ pub async fn upsert_phone_registration(
 }
 
 
-// Executes the database operation for execute paynow transfer.
+// Use to transfer money from one paynow account to the other
 pub async fn execute_paynow_transfer(
     db: &PgPool,
     sender_customer_id: Uuid,
@@ -217,8 +197,6 @@ pub async fn execute_paynow_transfer(
     amount_cents: i64,
     note: Option<&str>,
 ) -> Result<(bool, Option<String>), sqlx::Error> {
-    
-    // 1. SECURITY: Prevent negative or zero amounts immediately
     if amount_cents <= 0 {
         return Ok((false, Some("Transfer amount must be greater than zero.".to_string())));
     }
@@ -252,14 +230,12 @@ pub async fn execute_paynow_transfer(
         return Ok((false, Some("You cannot transfer to your own PayNow registration.".to_string())));
     }
 
-    // 3. DEADLOCK PREVENTION: Sort the IDs to guarantee lock order
     let (first_lock_id, second_lock_id) = if sender_product_id < recipient.account_id {
         (sender_product_id, recipient.account_id)
     } else {
         (recipient.account_id, sender_product_id)
     };
 
-    // 4. Lock both rows in the deterministic order
     let locked_accounts = sqlx::query_as::<_, Product>(
         r#"
         SELECT id, customer_id, account_number, product_id, product_type,
@@ -274,16 +250,13 @@ pub async fn execute_paynow_transfer(
     .fetch_all(&mut *tx)
     .await?;
 
-    // Ensure both accounts are still active and found
     if locked_accounts.len() != 2 {
         return Ok((false, Some("One or both accounts are unavailable.".to_string())));
     }
 
-    // Extract sender and recipient from the locked rows
     let sender_product = locked_accounts.iter().find(|a| a.id == sender_product_id).unwrap();
     let recipient_product = locked_accounts.iter().find(|a| a.id == recipient.account_id).unwrap();
 
-    // 5. Check ownership and balance
     if sender_product.customer_id != sender_customer_id {
         return Ok((false, Some("Choose an active account that belongs to you.".to_string())));
     }
@@ -295,7 +268,6 @@ pub async fn execute_paynow_transfer(
     let sender_new_balance = sender_product.balance_cents - amount_cents;
     let recipient_new_balance = recipient_product.balance_cents + amount_cents;
 
-    // 6. Execute Updates (Can be done in parallel or sequentially safely now)
     sqlx::query("UPDATE customer_products SET balance_cents = $1, updated_at = NOW() WHERE id = $2")
         .bind(sender_new_balance)
         .bind(sender_product.id)
@@ -306,7 +278,6 @@ pub async fn execute_paynow_transfer(
         .bind(recipient_product.id)
         .execute(&mut *tx).await?;
 
-    // 7. Insert transaction records (Removed RETURNING and query_as)
     let sender_description = match note {
         Some(value) if !value.trim().is_empty() => format!("PayNow transfer to {}: {}", recipient_id, value.trim()),
         _ => format!("PayNow transfer to {}", recipient_id),
