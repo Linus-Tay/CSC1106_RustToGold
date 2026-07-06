@@ -1,5 +1,4 @@
 use crate::forms::account_forms::TransferForm;
-use crate::forms::DepositForm;
 use crate::models::product::ProductWorkflow;
 use crate::models::{Money, Product};
 use crate::repositories::product_repository;
@@ -9,7 +8,7 @@ use rand::{rng, RngExt};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-// Returns a list of active customer products
+// Load list active customer products
 pub async fn list_active_customer_products(
     db: &PgPool,
     customer_id: Uuid,
@@ -19,7 +18,7 @@ pub async fn list_active_customer_products(
         .map_err(|_| "Could not load your active bank accounts.".to_string())
 }
 
-// Create a new product
+// Handle create bank account
 pub async fn create_bank_account(
     db: &PgPool,
     customer_id: Uuid,
@@ -31,7 +30,7 @@ pub async fn create_bank_account(
         _ => return Err("Choose a valid bank account product.".to_string()),
     };
 
-    // Prevent duplicate or excessive account applications.
+    // Prevent duplicate or excessive account applications
     let active_accounts = product_repository::list_active_products_by_customer(db, &customer_id)
         .await
         .map_err(|_| "Could not check your existing bank accounts.".to_string())?;
@@ -44,7 +43,7 @@ pub async fn create_bank_account(
         .await
         .map_err(|_| "Could not check your existing bank account products.".to_string())?;
 
-    // Pending, active and frozen accounts all count as already applied.
+    // Pending, active and frozen accounts all count as already applied
     if existing_accounts
         .iter()
         .any(|account| account.product_id == product_id && account.status != "closed")
@@ -68,56 +67,7 @@ pub async fn create_bank_account(
     })
 }
 
-// Calls repo to deposit money into bank account
-pub async fn deposit(
-    app_state: &AppState,
-    customer_id: Uuid,
-    form: DepositForm,
-) -> Result<Product, String> {
-    let amount = Money::parse_dollars(&form.amount)?;
-
-    if amount.cents() <= 0 {
-        return Err("You can only deposit positive value".to_string());
-    }
-
-    if amount.cents() > 1_000_000_00 {
-        return Err("Single customer deposits are capped at $1,000,000.00.".to_string());
-    }
-
-    let description = clean_optional_text(&form.description);
-    let account_number = &form.account_number;
-
-    let current_product = product_repository::get_product_by_account_number(&app_state.db, account_number)
-        .await
-        .map_err(|_| "Could not load your bank account.".to_string())?
-        .ok_or_else(|| "No bank account was found under this number.".to_string())?;
-
-    if current_product.get_customer_id() != customer_id {
-        return Err("You cannot deposit to an account that is not owned by you.".to_string());
-    }
-
-    if !current_product.is_open_for_customer_actions() {
-        return Err("This account is not open for deposits.".to_string());
-    }
-
-    if current_product.projected_balance_after_deposit(amount).is_none() {
-        return Err("This deposit cannot be applied to the account.".to_string());
-    }
-
-    let (updated_product, _) = product_repository::deposit_into_product(
-        &app_state.db,
-        &customer_id,
-        account_number,
-        amount.cents(),
-        description.as_deref(),
-    )
-    .await
-    .map_err(|_| "Deposit failed. Please try again later.".to_string())?;
-
-    Ok(updated_product)
-}
-
-// Handles the atm deposit and calls repo to do deposit of money into bank account via ATM simulation
+// Process atm deposit
 pub async fn atm_deposit(
     app_state: &AppState,
     customer_id: Uuid,
@@ -164,7 +114,7 @@ pub async fn atm_deposit(
     Ok(updated_product)
 }
 
-// Handles ATM withdrawal logic and calls repo to remove moeny from bank account
+// Process atm withdraw
 pub async fn atm_withdraw(
     app_state: &AppState,
     customer_id: Uuid,
@@ -207,7 +157,7 @@ pub async fn atm_withdraw(
     Ok(updated_product)
 }
 
-// Calls repo to handle money transfer from one bank account to the other
+// Handle transfer
 pub async fn transfer(
     app_state: &AppState,
     customer_id: Uuid,
@@ -280,7 +230,7 @@ pub async fn transfer(
     }
 }
 
-// Uses luhn algo to validate account number
+// Process luhn check digit
 fn luhn_check_digit(number: &str) -> u32 {
     let sum: u32 = number
         .chars()
@@ -303,7 +253,7 @@ fn luhn_check_digit(number: &str) -> u32 {
     (10 - (sum % 10)) % 10
 }
 
-// Generate a random account number
+// Build generate account number
 pub async fn generate_account_number(db: &PgPool) -> String {
     let mut rng = rng();
     let prefix = "7282";

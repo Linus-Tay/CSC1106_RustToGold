@@ -1,4 +1,3 @@
-// Service layer: business rules live here so controllers stay thin and repositories stay database-focused.
 pub mod account_service;
 pub mod admin_service;
 pub mod auth_service;
@@ -44,7 +43,10 @@ pub use self::home_loan_service::{
 pub use self::loan_service::{apply_personal_loan, load_loan_dashboard, pay_personal_loan};
 pub use self::monitoring_service::{load_high_value_monitoring_dashboard, update_high_value_alert_status};
 pub use self::paynow_service::{load_paynow_dashboard, register_paynow, transfer_paynow, PayNowDashboard, unlink_paynow};
-pub use self::product_service::{create_bank_account, deposit, generate_account_number, list_active_customer_products, transfer, atm_deposit, atm_withdraw};
+pub use self::product_service::{
+    atm_deposit, atm_withdraw, create_bank_account, generate_account_number,
+    list_active_customer_products, transfer,
+};
 pub use self::profile_service::update_customer_profile;
 pub use self::statement_service::{build_bank_statement, load_statement_page, render_statement_pdf, statement_pdf_filename};
 pub use self::transaction_control_service::{load_transaction_controls_page, update_daily_transaction_limit, update_money_lock};

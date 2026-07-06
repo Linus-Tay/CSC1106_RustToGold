@@ -1,14 +1,17 @@
-// View layer: Askama template structs and rendering helpers.
 
 pub mod renderer;
 pub mod templates;
 
 pub use self::renderer::render;
 pub use self::templates::{
-    AboutTemplate, AccountCreationEmailTemplate, AccountCreationSetupTemplate, AccountCreationSuccessTemplate, ApplicationReceivedEmailTemplate, OnboardingAccountTemplate, OnboardingContactTemplate, OnboardingEmploymentTemplate, OnboardingPersonalTemplate, OnboardingReviewTemplate, AdminAuditLogTemplate, AdminCustomerAccountsTemplate, AdminCustomerApplicationsTemplate, AdminDashboardTemplate, AdminFixedDepositPlansTemplate, AdminFixedDepositsTemplate, AdminHighValueMonitoringTemplate, AdminHomeLoansTemplate, AdminLoginTemplate, AdminPersonalLoansTemplate, AdminStaffTemplate,
-    BankingTemplate, ContactTemplate, CardDashboardTemplate, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate,
-    ErrorTemplate, FaqTemplate, FixedDepositCreateTemplate, FixedDepositDashboardTemplate, GiroTemplate,
-    ForbiddenTemplate, HomeLoanApplyTemplate, HomeLoanDashboardTemplate, HomeTemplate, LoginTemplate,
-    LoanApplyTemplate, LoanDashboardTemplate, NotFoundTemplate, OnboardingResultTemplate, OnboardingTemplate, PayNowTemplate, ProfileTemplate,
-    SecurityTemplate, StatementTemplate, TransactionControlsTemplate, TransactionsTemplate, TransferTemplate,
+    AboutTemplate, AdminAuditLogTemplate, AdminCustomerAccountsTemplate,
+    AdminCustomerApplicationsTemplate, AdminDashboardTemplate, AdminFixedDepositPlansTemplate,
+    AdminFixedDepositsTemplate, AdminHighValueMonitoringTemplate, AdminHomeLoansTemplate,
+    AdminLoginTemplate, AdminPersonalLoansTemplate, AdminStaffTemplate, BankingTemplate,
+    CardDashboardTemplate, ContactTemplate, CustomerActivityLogTemplate, DashboardTemplate,
+    ErrorTemplate, FaqTemplate, FixedDepositCreateTemplate, FixedDepositDashboardTemplate,
+    ForbiddenTemplate, GiroTemplate, HomeLoanApplyTemplate, HomeLoanDashboardTemplate,
+    HomeTemplate, LoanApplyTemplate, LoanDashboardTemplate, LoginTemplate, NotFoundTemplate,
+    OnboardingResultTemplate, PayNowTemplate, ProfileTemplate, SecurityTemplate,
+    StatementTemplate, TransactionControlsTemplate, TransactionsTemplate, TransferTemplate,
 };

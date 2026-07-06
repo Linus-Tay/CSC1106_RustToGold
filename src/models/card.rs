@@ -18,7 +18,7 @@ pub struct Card {
 }
 
 impl Card {
-    // Formats the value for display
+    // Format card type display
     pub fn card_type_display(&self) -> String {
         match self.card_type.as_str() {
             "debit" => "Everyday Debit Card".to_string(),
@@ -27,7 +27,7 @@ impl Card {
         }
     }
 
-    // Formats the value for display
+    // Format status display
     pub fn status_display(&self) -> String {
         match self.status.as_str() {
             "active" => "Active".to_string(),
@@ -37,17 +37,17 @@ impl Card {
         }
     }
 
-    // Returns whether this record is active
+    // Check is active
     pub fn is_active(&self) -> bool {
         self.status == "active"
     }
 
-    // Returns whether this record is frozen
+    // Check is frozen
     pub fn is_frozen(&self) -> bool {
         self.status == "frozen"
     }
 
-    // Formats the value for display 
+    // Format created at display
     pub fn created_at_display(&self) -> String {
         self.created_at.format("%d %b %Y").to_string()
     }

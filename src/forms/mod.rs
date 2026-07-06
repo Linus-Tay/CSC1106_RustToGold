@@ -1,4 +1,3 @@
-// Form layer: request payload structs received from HTML forms.
 
 pub mod account_forms;
 pub mod auth_forms;
@@ -15,7 +14,6 @@ pub mod statement_forms;
 pub mod transaction_control_forms;
 pub mod atm_forms;
 
-pub use self::account_forms::DepositForm;
 pub use self::auth_forms::{AccountCreationForm, LoginForm};
 pub use self::card_forms::CardApplicationForm;
 pub use self::fixed_deposit_forms::{

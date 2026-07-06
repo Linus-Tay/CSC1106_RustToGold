@@ -63,7 +63,7 @@
 
           <div class="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
             <h3 class="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.18em] text-[#0B1F3A]"><i data-lucide="lock-keyhole" class="h-4 w-4 text-[#1D4ED8]"></i> Product review</h3>
-            <p class="text-sm leading-6 text-slate-500">Inactive products are pending account applications. Activating them makes the account available for deposits, transfers, loans and fixed deposit funding.</p>
+            <p class="text-sm leading-6 text-slate-500">Inactive products are pending account applications. Activating them makes the account available for transfers, loans and fixed deposit funding.</p>
             <div class="mt-4 flex flex-wrap gap-2">
               {% if acc.can_activate_product() %}
               <form action="/admin/accounts/products/{{ acc.product_id }}/activate" method="post">

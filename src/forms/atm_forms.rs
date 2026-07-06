@@ -5,7 +5,6 @@ pub struct CardInsertionForm {
     pub card_number: String
 }
 
-
 #[derive(Debug, Deserialize)]
 pub struct PinValidationForm {
     pub pin: String

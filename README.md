@@ -97,7 +97,7 @@ SMTP_USERNAME=your_email@gmail.com
 SMTP_PASSWORD=your_16_character_gmail_app_password
 SMTP_FROM_EMAIL=your_email@gmail.com
 APP_BASE_URL=http://127.0.0.1:3000
-ONBOARDING_BASE_URL=http://127.0.0.1:3000
+APP_BASE_URL=http://127.0.0.1:3000
 ```
 
 ### 2.4 Run the database schema
@@ -180,7 +180,6 @@ SMTP_USERNAME=your_email@gmail.com
 SMTP_PASSWORD=your_16_character_gmail_app_password
 SMTP_FROM_EMAIL=your_email@gmail.com
 APP_BASE_URL=http://127.0.0.1:3000
-ONBOARDING_BASE_URL=http://127.0.0.1:3000
 ```
 
 For PostgreSQL using the `postgres` user and password:
@@ -196,7 +195,7 @@ SMTP_USERNAME=your_email@gmail.com
 SMTP_PASSWORD=your_16_character_gmail_app_password
 SMTP_FROM_EMAIL=your_email@gmail.com
 APP_BASE_URL=http://127.0.0.1:3000
-ONBOARDING_BASE_URL=http://127.0.0.1:3000
+APP_BASE_URL=http://127.0.0.1:3000
 ```
 
 ### 3.4 Run the database schema
@@ -269,7 +268,7 @@ SMTP_USERNAME=your_email@gmail.com
 SMTP_PASSWORD=your_16_character_gmail_app_password
 SMTP_FROM_EMAIL=your_email@gmail.com
 APP_BASE_URL=http://127.0.0.1:3000
-ONBOARDING_BASE_URL=http://127.0.0.1:3000
+APP_BASE_URL=http://127.0.0.1:3000
 ```
 
 Notes:
@@ -277,7 +276,7 @@ Notes:
 - Do not commit the real `.env` file.
 - Keep `.env.example` as placeholders only.
 - If an app password is exposed, delete it from Google Account settings and generate a new one.
-- `APP_BASE_URL` and `ONBOARDING_BASE_URL` control the base URL used in account-creation email links.
+- `APP_BASE_URL` and `APP_BASE_URL` control the base URL used in account-creation email links.
 
 
 ---
@@ -721,31 +720,3 @@ Use this flow for a complete walkthrough:
 20. Review audit logs.
 
 ---
-
-## 15. Submission Notes
-
-Do not include these in the final source ZIP:
-
-```text
-target/
-.env
-*.log
-.DS_Store
-src.zip
-templates.zip
-```
-
-Recommended source archive contents:
-
-```text
-Cargo.toml
-Cargo.lock
-README.md
-.env.example
-migrations/001_init.sql
-src/
-templates/
-static/
-```
-
-Required project materials depend on the course submission instructions, but the normal package includes source code, README, database schema, slides, report and recording.

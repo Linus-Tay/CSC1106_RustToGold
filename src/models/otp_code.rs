@@ -12,12 +12,12 @@ pub struct OTPCode {
 }
 
 impl OTPCode {
-    // Returns whether this device is active.
+    // Check is active
     pub fn is_active(&self) -> bool {
         self.expires_at > Utc::now()
     }
 
-    // Returns the user id
+    // Return get user id
     pub fn get_user_id(&self) -> Uuid {
         self.user_id
     }

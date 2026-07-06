@@ -1,4 +1,3 @@
-// Repository layer: isolates SQLx queries so services do not depend on raw database code.
 
 use crate::models::User;
 use sqlx::PgPool;
@@ -9,7 +8,7 @@ const USER_SELECT: &str = r#"
     FROM users
 "#;
 
-// Get user by their login details
+// Query find user by login
 pub async fn find_user_by_login(db: &PgPool, login: &str) -> Result<Option<User>, sqlx::Error> {
     let query = format!("{} WHERE lower(username) = lower($1) OR lower(email) = lower($1)", USER_SELECT);
     sqlx::query_as::<_, User>(&query)
@@ -18,7 +17,7 @@ pub async fn find_user_by_login(db: &PgPool, login: &str) -> Result<Option<User>
         .await
 }
 
-// Get user by their ID
+// Query find user by id
 pub async fn find_user_by_id(db: &PgPool, user_id: Uuid) -> Result<Option<User>, sqlx::Error> {
     let query = format!("{} WHERE id = $1", USER_SELECT);
     sqlx::query_as::<_, User>(&query)
@@ -27,7 +26,7 @@ pub async fn find_user_by_id(db: &PgPool, user_id: Uuid) -> Result<Option<User>,
         .await
 }
 
-// Creates a new user account
+// Persist create customer user
 pub async fn create_customer_user(
     db: &PgPool,
     customer_id: Uuid,
@@ -50,7 +49,7 @@ pub async fn create_customer_user(
     .await
 }
 
-// Updates last login for user
+// Persist update last login
 pub async fn update_last_login(db: &PgPool, user_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = $1")
         .bind(user_id)
@@ -60,7 +59,7 @@ pub async fn update_last_login(db: &PgPool, user_id: Uuid) -> Result<(), sqlx::E
     Ok(())
 }
 
-// Update password for user
+// Persist update password
 pub async fn update_password(
     db: &PgPool,
     user_id: Uuid,

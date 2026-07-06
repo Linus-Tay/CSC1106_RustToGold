@@ -1,37 +1,46 @@
-// Controller layer: handles HTTP/session flow and delegates business rules to services.
 
+use crate::controllers::session_guard::{admin_session_user_id, customer_session_user_id, redirect};
 use crate::views::{
     render, AboutTemplate, BankingTemplate, ContactTemplate, FaqTemplate, HomeTemplate,
     SecurityTemplate,
 };
+use actix_session::Session;
 use actix_web::{HttpResponse, Result};
 
-// Renders the home screen with data prepared by the service layer.
-pub async fn home() -> Result<HttpResponse> {
+// Render home
+pub async fn home(session: Session) -> Result<HttpResponse> {
+    if customer_session_user_id(&session).is_some() {
+        return Ok(redirect("/customer/dashboard"));
+    }
+
+    if admin_session_user_id(&session).is_some() {
+        return Ok(redirect("/admin/dashboard"));
+    }
+
     render(HomeTemplate)
 }
 
-// Renders the banking page screen with data prepared by the service layer.
+// Render banking page
 pub async fn banking_page() -> Result<HttpResponse> {
     render(BankingTemplate)
 }
 
-// Renders the security page screen with data prepared by the service layer.
+// Render security page
 pub async fn security_page() -> Result<HttpResponse> {
     render(SecurityTemplate)
 }
 
-// Renders the about page screen with data prepared by the service layer.
+// Render about page
 pub async fn about_page() -> Result<HttpResponse> {
     render(AboutTemplate)
 }
 
-// Renders the faq page screen with data prepared by the service layer.
+// Render faq page
 pub async fn faq_page() -> Result<HttpResponse> {
     render(FaqTemplate)
 }
 
-// Renders the contact page screen with data prepared by the service layer.
+// Render contact page
 pub async fn contact_page() -> Result<HttpResponse> {
     render(ContactTemplate)
 }

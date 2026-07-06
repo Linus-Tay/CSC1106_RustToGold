@@ -1,4 +1,3 @@
-// Service layer: keeps banking validation and workflow rules away from templates and SQL.
 
 use crate::models::{
     AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication,
@@ -13,7 +12,7 @@ use argon2::{
 use sqlx::PgPool;
 use uuid::Uuid;
 
-// Loads admin dashboard data and applies page-level business rules.
+// Load load admin dashboard
 pub async fn load_admin_dashboard(db: &PgPool) -> Result<AdminDashboardSummary, String> {
     admin_repository::dashboard_summary(db)
         .await
@@ -23,7 +22,7 @@ pub async fn load_admin_dashboard(db: &PgPool) -> Result<AdminDashboardSummary, 
         })
 }
 
-// Returns admin customer applications records in the shape needed by the UI.
+// Load list admin customer applications
 pub async fn list_admin_customer_applications(
     db: &PgPool,
 ) -> Result<Vec<AdminCustomerApplication>, String> {
@@ -35,7 +34,7 @@ pub async fn list_admin_customer_applications(
         })
 }
 
-// Validates and coordinates the approve customer application workflow.
+// Handle approve customer application
 pub async fn approve_customer_application(
     app_state: &AppState,
     staff_user_id: Uuid,
@@ -62,7 +61,7 @@ pub async fn approve_customer_application(
     Ok(())
 }
 
-// Validates and coordinates the reject customer application workflow.
+// Handle reject customer application
 pub async fn reject_customer_application(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -88,7 +87,7 @@ pub async fn reject_customer_application(
     Ok(())
 }
 
-// Returns admin personal loans records in the shape needed by the UI.
+// Load list admin personal loans
 pub async fn list_admin_personal_loans(
     db: &PgPool,
 ) -> Result<Vec<AdminPersonalLoanRecord>, String> {
@@ -100,7 +99,7 @@ pub async fn list_admin_personal_loans(
         })
 }
 
-// Returns admin home loans records in the shape needed by the UI.
+// Load list admin home loans
 pub async fn list_admin_home_loans(db: &PgPool) -> Result<Vec<AdminHomeLoanRecord>, String> {
     admin_repository::list_home_loans(db)
         .await
@@ -110,7 +109,7 @@ pub async fn list_admin_home_loans(db: &PgPool) -> Result<Vec<AdminHomeLoanRecor
         })
 }
 
-// Validates and coordinates the approve personal loan workflow.
+// Handle approve personal loan
 pub async fn approve_personal_loan(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -124,7 +123,7 @@ pub async fn approve_personal_loan(
         })
 }
 
-// Validates and coordinates the reject personal loan workflow.
+// Handle reject personal loan
 pub async fn reject_personal_loan(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -138,7 +137,7 @@ pub async fn reject_personal_loan(
         })
 }
 
-// Returns admin staff records in the shape needed by the UI.
+// Load list admin staff
 pub async fn list_admin_staff(db: &PgPool) -> Result<Vec<AdminStaffUser>, String> {
     admin_repository::list_staff_users(db)
         .await
@@ -148,7 +147,7 @@ pub async fn list_admin_staff(db: &PgPool) -> Result<Vec<AdminStaffUser>, String
         })
 }
 
-// Validates and coordinates the create staff user workflow.
+// Handle create staff user
 pub async fn create_staff_user(
     db: &PgPool,
     actor_user_id: Uuid,
@@ -188,7 +187,7 @@ pub async fn create_staff_user(
     })
 }
 
-// Validates and coordinates the update staff user workflow.
+// Handle update staff user
 pub async fn update_staff_user(
     db: &PgPool,
     actor_user_id: Uuid,
@@ -238,7 +237,7 @@ pub async fn update_staff_user(
     })
 }
 
-// Runs business logic for delete staff user.
+// Handle delete staff user
 pub async fn delete_staff_user(
     db: &PgPool,
     actor_user_id: Uuid,
@@ -256,7 +255,7 @@ pub async fn delete_staff_user(
         })
 }
 
-// Returns admin customer accounts records in the shape needed by the UI.
+// Load list admin customer accounts
 pub async fn list_admin_customer_accounts(
     db: &PgPool,
 ) -> Result<Vec<AdminCustomerAccountRecord>, String> {
@@ -268,7 +267,7 @@ pub async fn list_admin_customer_accounts(
         })
 }
 
-// Validates and coordinates the set customer user status workflow.
+// Process set customer user status
 pub async fn set_customer_user_status(
     db: &PgPool,
     actor_user_id: Uuid,
@@ -284,7 +283,7 @@ pub async fn set_customer_user_status(
         })
 }
 
-// Validates and coordinates the set customer product status workflow.
+// Process set customer product status
 pub async fn set_customer_product_status(
     db: &PgPool,
     actor_user_id: Uuid,
@@ -300,7 +299,7 @@ pub async fn set_customer_product_status(
         })
 }
 
-// Returns audit logs records in the shape needed by the UI.
+// Load list audit logs
 pub async fn list_audit_logs(db: &PgPool) -> Result<Vec<AdminAuditLogRecord>, String> {
     admin_repository::list_audit_logs(db)
         .await
@@ -310,7 +309,7 @@ pub async fn list_audit_logs(db: &PgPool) -> Result<Vec<AdminAuditLogRecord>, St
         })
 }
 
-// Checks staff fields rules before the workflow continues.
+// Validate validate staff fields
 fn validate_staff_fields(username: &str, full_name: &str, email: &str, phone_number: &str) -> Result<(), String> {
     if username.len() < 4 {
         return Err("Staff username must be at least 4 characters.".to_string());
@@ -327,7 +326,7 @@ fn validate_staff_fields(username: &str, full_name: &str, email: &str, phone_num
     Ok(())
 }
 
-// Normalises staff role before validation or storage.
+// Process normalise staff role
 fn normalise_staff_role(value: &str) -> Result<&'static str, String> {
     match value.trim() {
         "admin" => Ok("admin"),
@@ -336,7 +335,7 @@ fn normalise_staff_role(value: &str) -> Result<&'static str, String> {
     }
 }
 
-// Normalises user status before validation or storage.
+// Process normalise user status
 fn normalise_user_status(value: &str) -> Result<&'static str, String> {
     match value.trim() {
         "active" => Ok("active"),
@@ -346,7 +345,7 @@ fn normalise_user_status(value: &str) -> Result<&'static str, String> {
     }
 }
 
-// Normalises product status before validation or storage.
+// Process normalise product status
 fn normalise_product_status(value: &str) -> Result<&'static str, String> {
     match value.trim() {
         "active" => Ok("active"),
@@ -357,7 +356,7 @@ fn normalise_product_status(value: &str) -> Result<&'static str, String> {
     }
 }
 
-// Hashes sensitive input before it is stored.
+// Process hash password
 fn hash_password(password: &str) -> Result<String, String> {
     let salt = SaltString::generate(&mut OsRng);
     Argon2::default()

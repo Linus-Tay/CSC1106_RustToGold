@@ -1,4 +1,3 @@
-// Repository layer: all direct SQLx database access is kept behind focused functions.
 pub mod admin_repository;
 pub mod card_repository;
 pub mod customer_repository;

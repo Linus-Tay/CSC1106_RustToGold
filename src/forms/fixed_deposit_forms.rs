@@ -1,9 +1,7 @@
-// Form layer: request payload structs received from HTML forms.
 
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-// Form payload for the CreateFixedDepositForm request.
 pub struct CreateFixedDepositForm {
     pub plan_id: i64,
     pub amount: String,
@@ -11,7 +9,6 @@ pub struct CreateFixedDepositForm {
 }
 
 #[derive(Debug, Deserialize)]
-// Form payload for the FixedDepositPlanForm request.
 pub struct FixedDepositPlanForm {
     pub plan_name: String,
     pub tenure_months: i32,
@@ -21,7 +18,6 @@ pub struct FixedDepositPlanForm {
 }
 
 #[derive(Debug, Deserialize)]
-// Form payload for the FixedDepositMessageQuery request.
 pub struct FixedDepositMessageQuery {
     pub created: Option<String>,
     pub withdrawn: Option<String>,

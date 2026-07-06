@@ -1,19 +1,19 @@
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_customer};
 use crate::forms::account_forms::{CreateBankAccountForm, TransferForm};
-use crate::forms::{CardApplicationForm, DepositForm, GiroArrangementForm, MoneyLockForm, PayNowRegisterForm, PayNowTransferForm, ProfileForm, StatementRequest, TransactionLimitForm};
+use crate::forms::{CardApplicationForm, GiroArrangementForm, MoneyLockForm, PayNowRegisterForm, PayNowTransferForm, ProfileForm, StatementRequest, TransactionLimitForm};
 use crate::repositories::customer_repository;
 use crate::services;
-use crate::views::templates::{PayNowRegisterTemplate};
+use crate::views::templates::PayNowRegisterTemplate;
 use crate::views::{
-    CardDashboardTemplate, CustomerActivityLogTemplate, DashboardTemplate, DepositTemplate, GiroTemplate, PayNowTemplate, ProfileTemplate, StatementTemplate, TransactionControlsTemplate, TransactionsTemplate, TransferTemplate, render,
+    CardDashboardTemplate, CustomerActivityLogTemplate, DashboardTemplate, GiroTemplate, PayNowTemplate, ProfileTemplate, StatementTemplate, TransactionControlsTemplate, TransactionsTemplate, TransferTemplate, render,
 };
 use crate::AppState;
-use crate::models::{Product};
+use crate::models::Product;
 use actix_session::Session;
 use actix_web::{web, HttpResponse, Result};
 
-// Handles the display money without symbol request.
+// Handle display money without symbol
 fn display_money_without_symbol(value: String) -> String {
     value.trim_start_matches('$').to_string()
 }
@@ -24,7 +24,7 @@ struct DashboardLimitSummary {
     remaining_today_display: String,
 }
 
-// Handles the load dashboard limit summary request.
+// Render load dashboard limit summary
 async fn load_dashboard_limit_summary(
     data: &web::Data<AppState>,
     customer_id: uuid::Uuid,
@@ -50,7 +50,7 @@ struct SavingsApplicationState {
     has_notice: bool,
 }
 
-// Handles the savings application state request.
+// Handle savings application state
 fn savings_application_state(accounts: &[Product]) -> SavingsApplicationState {
     let mut has_everyday_savings = false;
     let mut has_high_yield_savings = false;
@@ -91,7 +91,7 @@ fn savings_application_state(accounts: &[Product]) -> SavingsApplicationState {
     }
 }
 
-// Renders the dashboard screen
+// Render dashboard
 pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -128,7 +128,7 @@ pub async fn dashboard(data: web::Data<AppState>, session: Session) -> Result<Ht
     }
 }
 
-// Handles the create bank account form action
+// Handle create bank account
 pub async fn create_bank_account(
     data: web::Data<AppState>,
     session: Session,
@@ -171,86 +171,7 @@ pub async fn create_bank_account(
     }
 }
 
-// Renders the deposit page
-pub async fn deposit_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
-    let user = match require_customer(&data, &session).await {
-        Ok(user) => user,
-        Err(response) => return Ok(response),
-    };
-    let customer_id = user.customer_id_or_nil();
-
-    let accounts = match services::list_active_customer_products(&data.db, customer_id).await {
-        Ok(accounts) if !accounts.is_empty() => accounts,
-        _ => return render_error("Account unavailable", "No active bank account was found.".to_string()),
-    };
-
-    let account = accounts[0].clone();
-    render(DepositTemplate {
-        accounts,
-        selected_account_number: account.account_number.clone(),
-        balance: display_money_without_symbol(account.balance_display()),
-        error: String::new(),
-        has_error: false,
-        success: String::new(),
-        has_success: false,
-    })
-}
-
-// Handles the deposit form action
-pub async fn deposit(
-    app_state: web::Data<AppState>,
-    session: Session,
-    form: web::Form<DepositForm>,
-) -> Result<HttpResponse> {
-    let user = match require_customer(&app_state, &session).await {
-        Ok(user) => user,
-        Err(response) => return Ok(response),
-    };
-    let customer_id = user.customer_id_or_nil();
-
-    let form_data = form.into_inner();
-    let selected_account_number = form_data.account_number.clone();
-
-    match services::deposit(&app_state, customer_id, form_data).await {
-        Ok(account) => {
-            let accounts = services::list_active_customer_products(&app_state.db, customer_id)
-                .await
-                .unwrap_or_else(|_| vec![account.clone()]);
-            render(DepositTemplate {
-                accounts,
-                selected_account_number: account.account_number.clone(),
-                balance: display_money_without_symbol(account.balance_display()),
-                error: String::new(),
-                has_error: false,
-                success: "Deposit completed successfully.".to_string(),
-                has_success: true,
-            })
-        }
-        Err(error) => {
-            let accounts = match services::list_active_customer_products(&app_state.db, customer_id).await {
-                Ok(accounts) if !accounts.is_empty() => accounts,
-                _ => return render_error("Account unavailable", "No active bank account was found.".to_string()),
-            };
-            let selected = accounts
-                .iter()
-                .find(|account| account.account_number == selected_account_number)
-                .cloned()
-                .unwrap_or_else(|| accounts[0].clone());
-
-            render(DepositTemplate {
-                accounts,
-                selected_account_number,
-                balance: display_money_without_symbol(selected.balance_display()),
-                error,
-                has_error: true,
-                success: String::new(),
-                has_success: false,
-            })
-        }
-    }
-}
-
-// Renders the transfer page
+// Render transfer page
 pub async fn transfer_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -273,7 +194,7 @@ pub async fn transfer_page(data: web::Data<AppState>, session: Session) -> Resul
     })
 }
 
-// Handles the transfer form action
+// Handle transfer
 pub async fn transfer(
     app_state: web::Data<AppState>,
     session: Session,
@@ -313,7 +234,7 @@ pub async fn transfer(
     }
 }
 
-// Handles the transactions request
+// Handle transactions
 pub async fn transactions(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -329,7 +250,7 @@ pub async fn transactions(data: web::Data<AppState>, session: Session) -> Result
     }
 }
 
-// Renders the statements page
+// Render statements page
 pub async fn statements_page(
     data: web::Data<AppState>,
     session: Session,
@@ -356,7 +277,7 @@ pub async fn statements_page(
     }
 }
 
-// Handles the download statement pdf action
+// Handle download statement pdf
 pub async fn download_statement_pdf(
     data: web::Data<AppState>,
     session: Session,
@@ -380,7 +301,7 @@ pub async fn download_statement_pdf(
     }
 }
 
-// Handles the loan activity request
+// Handle loan activity
 pub async fn loan_activity(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -405,7 +326,7 @@ pub async fn loan_activity(data: web::Data<AppState>, session: Session) -> Resul
     }
 }
 
-// Handles the fixed deposit activity request
+// Handle fixed deposit activity
 pub async fn fixed_deposit_activity(
     data: web::Data<AppState>,
     session: Session,
@@ -433,7 +354,7 @@ pub async fn fixed_deposit_activity(
     }
 }
 
-// Renders the cards page
+// Render cards page
 pub async fn cards_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -456,7 +377,7 @@ pub async fn cards_page(data: web::Data<AppState>, session: Session) -> Result<H
     }
 }
 
-// Handles the create card form action
+// Handle create card
 pub async fn create_card(
     data: web::Data<AppState>,
     session: Session,
@@ -486,7 +407,7 @@ pub async fn create_card(
     }
 }
 
-// Handles the freeze card action
+// Handle freeze card
 pub async fn freeze_card(
     data: web::Data<AppState>,
     session: Session,
@@ -504,7 +425,7 @@ pub async fn freeze_card(
     Ok(redirect("/customer/cards"))
 }
 
-// Handles the activate card action
+// Handle activate card
 pub async fn activate_card(
     data: web::Data<AppState>,
     session: Session,
@@ -522,7 +443,7 @@ pub async fn activate_card(
     Ok(redirect("/customer/cards"))
 }
 
-// Handles the render paynow dashboard request
+// Render render paynow dashboard
 async fn render_paynow_dashboard(
     data: &web::Data<AppState>,
     customer_id: uuid::Uuid,
@@ -544,7 +465,7 @@ async fn render_paynow_dashboard(
     }
 }
 
-// Renders the paynow page
+// Render paynow page
 pub async fn paynow_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -554,7 +475,7 @@ pub async fn paynow_page(data: web::Data<AppState>, session: Session) -> Result<
     render_paynow_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
 }
 
-// Renders the register paynow page
+// Render register paynow page
 pub async fn register_paynow_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -565,7 +486,7 @@ pub async fn register_paynow_page(data: web::Data<AppState>, session: Session) -
 
     let customer = match  customer_repository::get_customer_by_id(&data.db, &customer_id).await {
         Ok(customer) => customer,
-        Err(e) => return render_error("Account unavailable", "No active bank account was found".to_string())
+        Err(_) => return render_error("Account unavailable", "No active bank account was found".to_string())
     };
 
     let accounts = match services::list_active_customer_products(&data.db, customer_id).await {
@@ -584,8 +505,7 @@ pub async fn register_paynow_page(data: web::Data<AppState>, session: Session) -
     })
 }
 
-
-// Handles the register paynow form action
+// Handle register paynow
 pub async fn register_paynow(
     data: web::Data<AppState>,
     session: Session,
@@ -599,7 +519,7 @@ pub async fn register_paynow(
 
     let customer = match  customer_repository::get_customer_by_id(&data.db, &customer_id).await {
         Ok(customer) => customer,
-        Err(e) => return render_error("Account unavailable", "No active bank account was found".to_string())
+        Err(_) => return render_error("Account unavailable", "No active bank account was found".to_string())
     };
 
     let accounts = match services::list_active_customer_products(&data.db, customer_id).await {
@@ -633,7 +553,7 @@ pub async fn register_paynow(
     }
 }
 
-// Handles the transfer paynow form action
+// Handle transfer paynow
 pub async fn transfer_paynow(
     data: web::Data<AppState>,
     session: Session,
@@ -659,18 +579,15 @@ pub async fn transfer_paynow(
     }
 }
 
-
-// Handles the unlink paynow form action
+// Handle unlink paynow
 pub async fn unlink_paynow(
     data: web::Data<AppState>,
     session: Session,
     paynow_id: web::Path<String>,
 ) -> Result<HttpResponse> {
-    let user = match require_customer(&data, &session).await {
-        Ok(user) => user,
-        Err(response) => return Ok(response),
-    };
-    let customer_id = user.customer_id_or_nil();
+    if let Err(response) = require_customer(&data, &session).await {
+        return Ok(response);
+    }
 
     let paynow_id = match uuid::Uuid::parse_str(&paynow_id.into_inner()) {
         Ok(value) => value,
@@ -679,11 +596,11 @@ pub async fn unlink_paynow(
 
     match services::unlink_paynow(&data.db, paynow_id).await {
         Ok(()) => Ok(redirect("/customer/profile")),
-        Err(error) => return render_error("PayNow Unlink", "Could not unlink your PayNow account.".to_string()),
+        Err(_) => return render_error("PayNow Unlink", "Could not unlink your PayNow account.".to_string()),
     }
 }
 
-// Renders the profile page
+// Render profile page
 pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -721,7 +638,7 @@ pub async fn profile_page(data: web::Data<AppState>, session: Session) -> Result
     })
 }
 
-// Handles the update profile form action
+// Handle update profile
 pub async fn update_profile(
     data: web::Data<AppState>,
     session: Session,
@@ -739,7 +656,7 @@ pub async fn update_profile(
     }
 }
 
-// Handles the render transaction controls dashboard request
+// Render render transaction controls dashboard
 async fn render_transaction_controls_dashboard(
     data: &web::Data<AppState>,
     customer_id: uuid::Uuid,
@@ -760,7 +677,7 @@ async fn render_transaction_controls_dashboard(
     }
 }
 
-// Renders the transaction controls page
+// Render transaction controls page
 pub async fn transaction_controls_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -770,7 +687,7 @@ pub async fn transaction_controls_page(data: web::Data<AppState>, session: Sessi
     render_transaction_controls_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
 }
 
-// Handles the update transaction limit form action
+// Handle update transaction limit
 pub async fn update_transaction_limit(
     data: web::Data<AppState>,
     session: Session,
@@ -794,7 +711,7 @@ pub async fn update_transaction_limit(
     }
 }
 
-// Handles the update money lock form action
+// Handle update money lock
 pub async fn update_money_lock(
     data: web::Data<AppState>,
     session: Session,
@@ -821,7 +738,7 @@ pub async fn update_money_lock(
     }
 }
 
-// Handles the render giro dashboard request
+// Render render giro dashboard
 async fn render_giro_dashboard(
     data: &web::Data<AppState>,
     customer_id: uuid::Uuid,
@@ -843,7 +760,7 @@ async fn render_giro_dashboard(
     }
 }
 
-// Renders the giro page
+// Render giro page
 pub async fn giro_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_customer(&data, &session).await {
         Ok(user) => user,
@@ -853,7 +770,7 @@ pub async fn giro_page(data: web::Data<AppState>, session: Session) -> Result<Ht
     render_giro_dashboard(&data, user.customer_id_or_nil(), String::new(), String::new()).await
 }
 
-// Handles the create giro arrangement form action
+// Handle create giro arrangement
 pub async fn create_giro_arrangement(
     data: web::Data<AppState>,
     session: Session,
@@ -871,7 +788,7 @@ pub async fn create_giro_arrangement(
     }
 }
 
-// Handles the cancel giro arrangement form action
+// Handle cancel giro arrangement
 pub async fn cancel_giro_arrangement(
     data: web::Data<AppState>,
     session: Session,

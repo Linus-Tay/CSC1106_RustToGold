@@ -1,4 +1,3 @@
-// Controller layer: maps routes to services and chooses which template/redirect to return.
 pub mod admin_controller;
 pub mod auth_controller;
 pub mod customer_controller;
@@ -21,7 +20,7 @@ pub use self::admin_controller::{
 pub use self::auth_controller::{admin_login, admin_login_page, admin_logout, login, login_page, logout, twofactor_page, verify_2fa};
 pub use self::customer_controller::{
     activate_card, cancel_giro_arrangement, cards_page, create_bank_account, create_card,
-    create_giro_arrangement, dashboard, deposit, deposit_page, download_statement_pdf,
+    create_giro_arrangement, dashboard, download_statement_pdf,
     fixed_deposit_activity, freeze_card, giro_page, loan_activity, paynow_page,
     profile_page, register_paynow, statements_page, transaction_controls_page,
     transactions, transfer, transfer_page, register_paynow_page, transfer_paynow, update_money_lock,

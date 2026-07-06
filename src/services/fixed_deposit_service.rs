@@ -1,4 +1,3 @@
-// Service layer: keeps banking validation and workflow rules away from templates and SQL.
 
 use crate::forms::{CreateFixedDepositForm, FixedDepositPlanForm};
 use crate::models::{
@@ -9,7 +8,6 @@ use chrono::{Duration, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-// Data carrier for the FixedDepositDashboard workflow.
 pub struct FixedDepositDashboard {
     pub account: Product,
     pub accounts: Vec<Product>,
@@ -17,7 +15,7 @@ pub struct FixedDepositDashboard {
     pub fixed_deposits: Vec<FixedDeposit>,
 }
 
-// Loads fixed deposit dashboard data and applies page-level business rules.
+// Load load fixed deposit dashboard
 pub async fn load_fixed_deposit_dashboard(
     db: &PgPool,
     customer_id: Uuid,
@@ -49,7 +47,7 @@ pub async fn load_fixed_deposit_dashboard(
     })
 }
 
-// Loads fixed deposit create page data and applies page-level business rules.
+// Load load fixed deposit create page
 pub async fn load_fixed_deposit_create_page(
     db: &PgPool,
     customer_id: Uuid,
@@ -70,7 +68,7 @@ pub async fn load_fixed_deposit_create_page(
     Ok((account, accounts, plans))
 }
 
-// Validates and coordinates the create fixed deposit workflow.
+// Handle create fixed deposit
 pub async fn create_fixed_deposit(
     db: &PgPool,
     customer_id: Uuid,
@@ -131,7 +129,7 @@ pub async fn create_fixed_deposit(
     })
 }
 
-// Validates and coordinates the withdraw fixed deposit workflow.
+// Handle withdraw fixed deposit
 pub async fn withdraw_fixed_deposit(
     db: &PgPool,
     customer_id: Uuid,
@@ -145,7 +143,7 @@ pub async fn withdraw_fixed_deposit(
         })
 }
 
-// Returns admin fixed deposits records in the shape needed by the UI.
+// Load list admin fixed deposits
 pub async fn list_admin_fixed_deposits(
     db: &PgPool,
 ) -> Result<Vec<FixedDepositAdminRecord>, String> {
@@ -154,14 +152,14 @@ pub async fn list_admin_fixed_deposits(
         .map_err(|_| "Could not load fixed deposit records.".to_string())
 }
 
-// Returns admin plans records in the shape needed by the UI.
+// Load list admin plans
 pub async fn list_admin_plans(db: &PgPool) -> Result<Vec<FixedDepositPlan>, String> {
     fixed_deposit_repository::list_all_plans(db)
         .await
         .map_err(|_| "Could not load fixed deposit plans.".to_string())
 }
 
-// Validates and coordinates the create plan workflow.
+// Handle create plan
 pub async fn create_plan(
     db: &PgPool,
     form: FixedDepositPlanForm,
@@ -190,7 +188,7 @@ pub async fn create_plan(
     })
 }
 
-// Validates and coordinates the update plan workflow.
+// Handle update plan
 pub async fn update_plan(
     db: &PgPool,
     plan_id: i64,
@@ -221,7 +219,7 @@ pub async fn update_plan(
     })
 }
 
-// Checks plan numbers rules before the workflow continues.
+// Validate validate plan numbers
 fn validate_plan_numbers(
     tenure_months: i32,
     annual_rate_bps: i32,
@@ -242,7 +240,7 @@ fn validate_plan_numbers(
     Ok(())
 }
 
-// Returns the stored money amount in cents.
+// Process projected interest cents
 fn projected_interest_cents(principal_cents: i64, annual_rate_bps: i32, tenure_months: i32) -> i64 {
     principal_cents
         .saturating_mul(annual_rate_bps as i64)

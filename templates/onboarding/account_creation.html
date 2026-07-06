@@ -243,7 +243,6 @@ function getScore(pw) {
   return Object.values(rules).filter(fn => fn(pw)).length;
 }
 
-// Visual Strength Meter Logic
 function updateStrength(pw) {
   if (!pw) {
     bars.forEach(b => { b.style.width = '0'; b.className = 'h-full rounded-full transition-all duration-300 w-0'; });
@@ -263,7 +262,6 @@ function updateStrength(pw) {
   strengthLabel.className = `text-xs font-bold ${score <= 2 ? 'text-red-500' : score === 3 ? 'text-amber-500' : score === 4 ? 'text-yellow-600' : 'text-emerald-600'}`;
 }
 
-// Visual Checklist Logic
 function updateRequirements(pw) {
   reqItems.forEach(item => {
     const rule = item.dataset.rule;
@@ -283,7 +281,6 @@ function updateRequirements(pw) {
   });
 }
 
-// Checking Confirm Password Matches
 function checkPasswordsMatch() {
   const pw = pwInput.value;
   const cpw = confirmInput.value;
@@ -304,7 +301,6 @@ function checkPasswordsMatch() {
   }
 }
 
-// Event Listeners for real-time visual updates
 pwInput.addEventListener('input', () => {
   updateStrength(pwInput.value);
   updateRequirements(pwInput.value);
@@ -313,7 +309,6 @@ pwInput.addEventListener('input', () => {
 
 confirmInput.addEventListener('input', checkPasswordsMatch);
 
-// Password Visibility Toggle
 toggleBtn.addEventListener('click', () => {
   const isText = pwInput.type === 'text';
   pwInput.type = isText ? 'password' : 'text';
@@ -321,7 +316,6 @@ toggleBtn.addEventListener('click', () => {
   eyeOffIcon.classList.toggle('hidden', isText);
 });
 
-// Radio 2FA styling logic
 document.querySelectorAll('input[name="two_fa_method"]').forEach(radio => {
   radio.addEventListener('change', () => {
     document.querySelectorAll('.2fa-option').forEach(label => {
@@ -334,11 +328,6 @@ document.querySelectorAll('input[name="two_fa_method"]').forEach(radio => {
   });
 });
 
-// Since we are using HTML5 validation natively, we DO NOT use e.preventDefault() 
-// unless we specifically need to catch something HTML5 misses. 
-// HTML5 misses the password match, but we solved that using setCustomValidity above!
-// So, the browser will seamlessly intercept the click, pop up the native error 
-// bubbles, or send the POST request to your API if all rules are met.
 </script>
 </body>
 </html>

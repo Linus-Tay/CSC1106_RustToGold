@@ -1,4 +1,3 @@
-// Model layer: domain structs plus small display helpers used by services and templates.
 
 pub(crate) fn title_case_code(value: &str) -> String {
     value

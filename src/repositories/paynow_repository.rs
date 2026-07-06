@@ -1,8 +1,8 @@
-use crate::models::{PayNowRegistration, Product, Transaction};
+use crate::models::{PayNowRegistration, Product};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-// Reads list by customer data from the database.
+// Query list by customer
 pub async fn list_by_customer(
     db: &PgPool,
     customer_id: Uuid,
@@ -25,7 +25,7 @@ pub async fn list_by_customer(
     .await
 }
 
-// Gets active paynow account using paynow type and paynow ID
+// Query find active by identifier
 pub async fn find_active_by_identifier(
     db: &PgPool,
     paynow_type: &str,
@@ -50,7 +50,7 @@ pub async fn find_active_by_identifier(
     .await
 }
 
-// Gets active paynow account linked to the product ID
+// Query find active by product id
 pub async fn find_active_by_product_id(
     db: &PgPool,
     product_id: &uuid::Uuid
@@ -72,7 +72,7 @@ pub async fn find_active_by_product_id(
     .await
 }
 
-// Set linked paynow account to inactive
+// Persist set paynow to inactive
 pub async fn set_paynow_to_inactive(
     db: &PgPool,
     paynow_id: &Uuid
@@ -98,7 +98,7 @@ pub async fn set_paynow_to_inactive(
     .await
 }
 
-// Adds a new paynow acocunt
+// Persist insert registration
 pub async fn insert_registration(
     db: &PgPool,
     customer_id: Uuid,
@@ -128,8 +128,7 @@ pub async fn insert_registration(
     .await
 }
 
-
-// Adds or update a linked paynow account
+// Query upsert phone registration
 pub async fn upsert_phone_registration(
     db: &PgPool,
     customer_id: Uuid,
@@ -186,8 +185,7 @@ pub async fn upsert_phone_registration(
     Ok(())
 }
 
-
-// Use to transfer money from one paynow account to the other
+// Query execute paynow transfer
 pub async fn execute_paynow_transfer(
     db: &PgPool,
     sender_customer_id: Uuid,
@@ -203,7 +201,6 @@ pub async fn execute_paynow_transfer(
 
     let mut tx = db.begin().await?;
 
-    // 2. Find Recipient Account ID (NO LOCK YET)
     let recipient_info = sqlx::query!(
         r#"
         SELECT cp.id AS account_id, cp.customer_id

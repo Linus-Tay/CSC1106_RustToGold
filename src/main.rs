@@ -1,4 +1,3 @@
-// Application entry point that wires configuration, routes, database and middleware.
 
 mod config;
 mod controllers;
@@ -21,7 +20,7 @@ pub struct AppState {
 }
 
 #[actix_web::main]
-// Starts the Actix server after the shared application state is ready.
+// Start Actix server
 async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().ok();
 

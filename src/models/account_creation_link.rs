@@ -12,17 +12,17 @@ pub struct AccountCreationLink {
 }
 
 impl AccountCreationLink {
-    // Returns whether this record is valid
+    // Check is valid
     pub fn is_valid(&self) -> bool {
         self.status == "pending" && self.expires_at > Utc::now()
     }
 
-    // Returns the link field
+    // Return get link
     pub fn get_link(&self) -> String {
         self.id.to_string()
     }
 
-    // Returns the customer id field
+    // Return get customer id
     pub fn get_customer_id(&self) -> Uuid {
         self.customer_id
     }

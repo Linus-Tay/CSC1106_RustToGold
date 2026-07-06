@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RustToGold | Deposit & Transfer History</title>
+  <title>RustToGold | Transfer History</title>
   {% include "partials/customer_assets.html" %}
 </head>
 <body class="customer-body">
@@ -16,8 +16,8 @@
         <div class="customer-card__header">
           <div>
             <p class="customer-kicker">Everyday Banking</p>
-            <h1>Deposit & Transfer History</h1>
-            <p>This page shows deposits, account transfers and PayNow movements. Loan and fixed deposit movements are separated into their own logs.</p>
+            <h1>Transfer History</h1>
+            <p>This page shows account transfers and PayNow movements. Loan and fixed deposit movements are separated into their own logs.</p>
           </div>
           <div class="hero-actions">
             <a class="c-button c-button--secondary" href="/customer/loan-activity"><i data-lucide="file-clock"></i> Loan Log</a>
@@ -41,7 +41,7 @@
                 </tr>
                 {% endfor %}
                 {% else %}
-                <tr><td colspan="6">No deposit, transfer or PayNow records yet. Use PayNow, Deposit Money or Transfer Money to create your first cash movement record.</td></tr>
+                <tr><td colspan="6">No transfer or PayNow records yet. Use PayNow or Transfer Money to create your first cash movement record.</td></tr>
                 {% endif %}
               </tbody>
             </table>

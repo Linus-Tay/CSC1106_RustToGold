@@ -1,11 +1,10 @@
-// Repository layer: isolates SQLx queries so services do not depend on raw database code.
 
 use crate::models::{FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, Product, Transaction};
 use chrono::NaiveDate;
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
-// Reads list active plans data from the database.
+// Query list active plans
 pub async fn list_active_plans(db: &PgPool) -> Result<Vec<FixedDepositPlan>, sqlx::Error> {
     sqlx::query_as::<_, FixedDepositPlan>(
         r#"
@@ -20,7 +19,7 @@ pub async fn list_active_plans(db: &PgPool) -> Result<Vec<FixedDepositPlan>, sql
     .await
 }
 
-// Reads list all plans data from the database.
+// Query list all plans
 pub async fn list_all_plans(db: &PgPool) -> Result<Vec<FixedDepositPlan>, sqlx::Error> {
     sqlx::query_as::<_, FixedDepositPlan>(
         r#"
@@ -34,7 +33,7 @@ pub async fn list_all_plans(db: &PgPool) -> Result<Vec<FixedDepositPlan>, sqlx::
     .await
 }
 
-// Reads find plan by id data from the database.
+// Query find plan by id
 pub async fn find_plan_by_id(db: &PgPool, plan_id: i64) -> Result<FixedDepositPlan, sqlx::Error> {
     sqlx::query_as::<_, FixedDepositPlan>(
         r#"
@@ -49,7 +48,7 @@ pub async fn find_plan_by_id(db: &PgPool, plan_id: i64) -> Result<FixedDepositPl
     .await
 }
 
-// Reads list fixed deposits by customer data from the database.
+// Query list fixed deposits by customer
 pub async fn list_fixed_deposits_by_customer(
     db: &PgPool,
     customer_id: Uuid,
@@ -71,7 +70,7 @@ pub async fn list_fixed_deposits_by_customer(
     .await
 }
 
-// Reads list all fixed deposit records data from the database.
+// Query list all fixed deposit records
 pub async fn list_all_fixed_deposit_records(
     db: &PgPool,
 ) -> Result<Vec<FixedDepositAdminRecord>, sqlx::Error> {
@@ -103,7 +102,7 @@ pub async fn list_all_fixed_deposit_records(
     .await
 }
 
-// Persists the create fixed deposit database change.
+// Persist create fixed deposit
 pub async fn create_fixed_deposit(
     db: &PgPool,
     customer_id: Uuid,
@@ -169,7 +168,7 @@ pub async fn create_fixed_deposit(
     Ok(fd)
 }
 
-// Executes the database operation for mark customer matured.
+// Persist mark customer matured
 pub async fn mark_customer_matured(db: &PgPool, customer_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query(
         r#"
@@ -184,7 +183,7 @@ pub async fn mark_customer_matured(db: &PgPool, customer_id: Uuid) -> Result<(),
     Ok(())
 }
 
-// Executes the database operation for withdraw fixed deposit.
+// Query withdraw fixed deposit
 pub async fn withdraw_fixed_deposit(
     db: &PgPool,
     customer_id: Uuid,
@@ -264,7 +263,7 @@ pub async fn withdraw_fixed_deposit(
     Ok(new_status.to_string())
 }
 
-// Persists the create plan database change.
+// Persist create plan
 pub async fn create_plan(
     db: &PgPool,
     plan_name: &str,
@@ -289,7 +288,7 @@ pub async fn create_plan(
     .await
 }
 
-// Persists the update plan database change.
+// Persist update plan
 pub async fn update_plan(
     db: &PgPool,
     plan_id: i64,
@@ -322,7 +321,7 @@ pub async fn update_plan(
     .await
 }
 
-// Persists the lock product by id database change.
+// Persist lock product by id
 async fn lock_product_by_id(
     tx: &mut DbTransaction<'_, Postgres>,
     customer_id: Uuid,
@@ -342,7 +341,7 @@ async fn lock_product_by_id(
     .await
 }
 
-// Persists the insert product transaction database change.
+// Persist insert product transaction
 async fn insert_product_transaction(
     tx: &mut DbTransaction<'_, Postgres>,
     product_id: Uuid,

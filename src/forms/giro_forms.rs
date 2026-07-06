@@ -1,9 +1,7 @@
-// Form layer: request payload structs received from HTML forms.
 
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-// Form payload for the GiroArrangementForm request.
 pub struct GiroArrangementForm {
     pub from_product_id: String,
     pub payee_name: String,

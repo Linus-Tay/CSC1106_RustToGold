@@ -1,6 +1,6 @@
--- RustToGold 001_init.sql
--- Fresh reset script for account applications, admin approval, online banking setup, and product modules.
--- WARNING: This drops and recreates local development tables.
+-- RustToGold 001 init sql
+-- Fresh reset script for account applications, admin approval, online banking setup, and product modules
+-- WARNING: This drops and recreates local development tables
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -49,8 +49,6 @@ CREATE TABLE customers (
         CHECK (kyc_status IN ('pending', 'approved', 'rejected'))
 );
 
--- Online banking users are created only after admin approval through an account-creation link.
--- Customer users map to customers. Staff/admin users keep customer_id empty.
 CREATE TABLE users (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id    UUID NULL REFERENCES customers(id) ON DELETE CASCADE,
@@ -74,8 +72,6 @@ CREATE TABLE users (
         CHECK ((role = 'customer' AND customer_id IS NOT NULL) OR (role <> 'customer' AND customer_id IS NULL))
 );
 
--- customer_products is the actual account record used by the app.
--- There is no separate bank_accounts table in this flow.
 CREATE TABLE customer_products (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id    UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
@@ -350,10 +346,6 @@ VALUES
     ('Growth 12 Month Deposit', 12, 325, 500000, TRUE),
     ('Premier 24 Month Deposit', 24, 380, 1000000, TRUE);
 
--- Seeded admin user for local setup.
--- Username: admin
--- Email: admin@rusttogold.test
--- Password: Admin@12345
 INSERT INTO users (username, full_name, email, phone_number, password_hash, role, status)
 VALUES (
     'admin',

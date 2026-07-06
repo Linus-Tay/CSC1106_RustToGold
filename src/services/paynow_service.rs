@@ -10,7 +10,7 @@ pub struct PayNowDashboard {
     pub registrations: Vec<PayNowRegistration>,
 }
 
-// Gets all the active registered paynow account to load the dashboard
+// Load load paynow dashboard
 pub async fn load_paynow_dashboard(
     db: &PgPool,
     customer_id: Uuid,
@@ -29,7 +29,7 @@ pub async fn load_paynow_dashboard(
     })
 }
 
-// Calls the repo to create a new registered paynow account
+// Handle register paynow
 pub async fn register_paynow(
     db: &PgPool,
     customer_id: Uuid,
@@ -96,13 +96,13 @@ pub async fn register_paynow(
     Ok(())
 }
 
-// Calls the repo to do money transfer for paynow accounts
+// Handle transfer paynow
 pub async fn transfer_paynow(
     db: &PgPool,
     customer_id: Uuid,
     form: PayNowTransferForm,
 ) -> Result<(), String> {
-    if let Some((account_number, paynow_id)) = form.from_product_id.split_once('/') {
+    if let Some((account_number, _paynow_id)) = form.from_product_id.split_once('/') {
 
         let recipient_type = normalise_paynow_type(&form.recipient_type)?;
         let recipient_id = normalise_paynow_identifier(&recipient_type, &form.recipient_id)?;
@@ -111,7 +111,7 @@ pub async fn transfer_paynow(
 
         let product = product_repository::get_product_by_account_number(db, account_number)
         .await
-        .map_err(|e| "Could not load your bank account".to_string())?
+        .map_err(|_| "Could not load your bank account".to_string())?
         .ok_or_else(|| "No bank account found".to_string())?;
 
         if amount.cents() > 50_000_00 {
@@ -153,7 +153,7 @@ pub async fn transfer_paynow(
     }
 }
 
-// Calls repo to set the paynow account to inactive
+// Handle unlink paynow
 pub async fn unlink_paynow(
     db: &PgPool,
     paynow_id: Uuid,
@@ -166,7 +166,7 @@ pub async fn unlink_paynow(
     Ok(())
 }
 
-// Normalises paynow type before validation or storage.
+// Process normalise paynow type
 fn normalise_paynow_type(input: &str) -> Result<String, String> {
     match input.trim() {
         "phone_number" => Ok("phone_number".to_string()),
@@ -175,7 +175,7 @@ fn normalise_paynow_type(input: &str) -> Result<String, String> {
     }
 }
 
-// Normalises paynow identifier before validation or storage.
+// Process normalise paynow identifier
 fn normalise_paynow_identifier(paynow_type: &str, input: &str) -> Result<String, String> {
     match paynow_type {
         "phone_number" => normalise_phone_number(input),
@@ -184,7 +184,7 @@ fn normalise_paynow_identifier(paynow_type: &str, input: &str) -> Result<String,
     }
 }
 
-// Normalises phone number before validation or storage.
+// Process normalise phone number
 fn normalise_phone_number(input: &str) -> Result<String, String> {
     let mut value = input
         .trim()
@@ -199,7 +199,7 @@ fn normalise_phone_number(input: &str) -> Result<String, String> {
         value = value[2..].to_string();
     }
 
-    // Singapore PayNow mobile numbers are stored as local 8-digit numbers.
+    // Singapore PayNow mobile numbers are stored as local 8-digit numbers
     if value.len() != 8 || !value.chars().all(|character| character.is_ascii_digit()) {
         return Err("Enter an 8-digit Singapore mobile number.".to_string());
     }
@@ -211,7 +211,7 @@ fn normalise_phone_number(input: &str) -> Result<String, String> {
     Ok(value)
 }
 
-// Normalises nric before validation or storage.
+// Process normalise nric
 fn normalise_nric(input: &str) -> Result<String, String> {
     let value = input.trim().replace(' ', "").replace('-', "").to_uppercase();
     let characters: Vec<char> = value.chars().collect();

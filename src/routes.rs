@@ -1,9 +1,8 @@
-// Central route registration for public, customer and admin pages.
 
-use crate::controllers::{self, atm_deposit};
+use crate::controllers;
 use actix_web::{guard, web};
 
-// Registers application routes with Actix Web.
+// Register application routes
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg
     .service(
@@ -61,8 +60,6 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                 web::scope("/customer")
                     .route("/dashboard", web::get().to(controllers::dashboard))
                     .route("/accounts/create", web::post().to(controllers::create_bank_account))
-                    .route("/deposit", web::get().to(controllers::deposit_page))
-                    .route("/deposit", web::post().to(controllers::deposit))
                     .route("/transfer", web::get().to(controllers::transfer_page))
                     .route("/transfer", web::post().to(controllers::transfer))
                     .route("/giro", web::get().to(controllers::giro_page))

@@ -1,4 +1,3 @@
-// Service layer: keeps banking validation and workflow rules away from templates and SQL.
 
 use crate::forms::{MoneyLockForm, TransactionLimitForm};
 use crate::models::{FraudAlert, Money, TransactionControl};
@@ -15,7 +14,6 @@ const RAPID_TRANSFER_COUNT_LIMIT: i64 = 5;
 const RAPID_TRANSFER_WINDOW_MINUTES: i64 = 10;
 const RAPID_TRANSFER_AMOUNT_CENTS: i64 = 20_000_00;
 
-// Data carrier for the TransactionControlsPageData workflow.
 pub struct TransactionControlsPageData {
     pub controls: TransactionControl,
     pub outgoing_today_cents: i64,
@@ -24,7 +22,7 @@ pub struct TransactionControlsPageData {
     pub alerts: Vec<FraudAlert>,
 }
 
-// Loads transaction controls page data and applies page-level business rules.
+// Load load transaction controls page
 pub async fn load_transaction_controls_page(
     db: &PgPool,
     customer_id: Uuid,
@@ -47,7 +45,7 @@ pub async fn load_transaction_controls_page(
     })
 }
 
-/// Updates the active daily limit and starts a 24-hour change cooldown.
+// Handle update daily transaction limit
 pub async fn update_daily_transaction_limit(
     db: &PgPool,
     customer_id: Uuid,
@@ -56,14 +54,14 @@ pub async fn update_daily_transaction_limit(
     let requested = Money::parse_dollars(&form.daily_limit)?;
     let requested_cents = requested.cents();
 
-    // Keep customer-defined limits inside a safe range for this banking flow.
+    // Keep customer-defined limits inside a safe range for this banking flow
     if !(MIN_DAILY_LIMIT_CENTS..=MAX_DAILY_LIMIT_CENTS).contains(&requested_cents) {
         return Err("Daily transaction limit must be between $100.00 and $50,000.00.".to_string());
     }
 
     let controls = load_effective_controls(db, customer_id).await?;
 
-    // The new limit takes effect now, but the customer cannot keep changing it repeatedly.
+    // The new limit takes effect now, but the customer cannot keep changing it repeatedly
     if controls
         .limit_change_effective_at
         .map(|value| value > Utc::now())
@@ -80,7 +78,7 @@ pub async fn update_daily_transaction_limit(
         .map_err(|_| "Could not update the daily transaction limit.".to_string())
 }
 
-/// Toggles Money Lock immediately after the customer confirms the action.
+// Handle update money lock
 pub async fn update_money_lock(
     db: &PgPool,
     customer_id: Uuid,
@@ -89,12 +87,12 @@ pub async fn update_money_lock(
     let controls = load_effective_controls(db, customer_id).await?;
 
     match form.action.as_str() {
-        // Locking should be instant because the customer is trying to protect funds.
+        // Locking should be instant because the customer is trying to protect funds
         "enable" => transaction_control_repository::enable_money_lock(db, customer_id)
             .await
             .map_err(|_| "Could not enable Money Lock.".to_string()),
         "request_unlock" | "disable" => {
-            // The account owner can unlock immediately after confirming the action.
+            // The account owner can unlock immediately after confirming the action
             if !controls.money_lock_enabled {
                 return Ok(controls);
             }
@@ -106,7 +104,7 @@ pub async fn update_money_lock(
     }
 }
 
-/// Central validation used before external money leaves a customer account.
+// Validate validate outgoing transaction
 pub async fn validate_outgoing_transaction(
     db: &PgPool,
     customer_id: Uuid,
@@ -122,7 +120,7 @@ pub async fn validate_outgoing_transaction(
         return Err("Transfer amount must be greater than $0.00.".to_string());
     }
 
-    // Money Lock is a customer-controlled block, so we return a clear error without sending it to AML monitoring.
+    // Money Lock is a customer-controlled block, so we return a clear error without sending it to AML monitoring
     if controls.money_lock_enabled {
         let message = "Money Lock is enabled. Outgoing transfers, PayNow transfers and GIRO setup are blocked until you unlock it.";
         return Err(message.to_string());
@@ -136,7 +134,7 @@ pub async fn validate_outgoing_transaction(
         .await
         .map_err(|_| "Could not verify today's transfer usage.".to_string())?;
 
-    // Daily limit is normal customer validation, not an AML admin alert.
+    // Daily limit is normal customer validation, not an AML admin alert
     if outgoing_today.saturating_add(amount_cents) > controls.daily_limit_cents {
         let message = format!(
             "This transfer exceeds your active daily limit of {}. Reduce the amount or update your transaction limit first.",
@@ -145,14 +143,14 @@ pub async fn validate_outgoing_transaction(
         return Err(message);
     }
 
-    // High-value transfers need a reference before they can be logged for review.
+    // High-value transfers need a reference before they can be logged for review
     let note_missing = note.map(|value| value.trim().is_empty()).unwrap_or(true);
     if amount_cents >= HIGH_VALUE_NOTE_CENTS && note_missing {
         let message = "For transfers of $10,000.00 or more, add a clear payment reference before submitting.";
         return Err(message.to_string());
     }
 
-    // Very large external transfers are held for manual review before money moves.
+    // Very large external transfers are held for manual review before money moves
     if amount_cents >= AML_HOLD_CENTS {
         let message = "This high-value transaction has been held for bank review. Please contact support or try a lower amount.";
         record_alert(db, customer_id, product_id, "HIGH_VALUE_REVIEW", "high", channel, amount_cents, message).await;
@@ -167,7 +165,7 @@ pub async fn validate_outgoing_transaction(
     .await
     .map_err(|_| "Could not verify recent transaction velocity.".to_string())?;
 
-    // Velocity rules catch repeated quick transfers that look abnormal.
+    // Velocity rules catch repeated quick transfers that look abnormal
     if recent_count >= RAPID_TRANSFER_COUNT_LIMIT {
         let message = "Too many outgoing transfers were attempted within 10 minutes. Please wait before trying again.";
         record_alert(db, customer_id, product_id, "VELOCITY_COUNT", "medium", channel, amount_cents, message).await;
@@ -182,14 +180,14 @@ pub async fn validate_outgoing_transaction(
     .await
     .map_err(|_| "Could not verify recent transfer amount.".to_string())?;
 
-    // Also block rapid transfers when the total amount spikes.
+    // Also block rapid transfers when the total amount spikes
     if recent_total.saturating_add(amount_cents) > RAPID_TRANSFER_AMOUNT_CENTS {
         let message = "Recent outgoing transfer amount is unusually high. Please wait before trying another transfer.";
         record_alert(db, customer_id, product_id, "VELOCITY_AMOUNT", "high", channel, amount_cents, message).await;
         return Err(message.to_string());
     }
 
-    // Allowed high-value external transfers are flagged for admin follow-up.
+    // Allowed high-value external transfers are flagged for admin follow-up
     if amount_cents >= HIGH_VALUE_NOTE_CENTS {
         let message = "High-value transaction completed and flagged for standard monitoring.";
         record_alert_with_status(
@@ -209,7 +207,7 @@ pub async fn validate_outgoing_transaction(
     Ok(())
 }
 
-// Loads effective controls data and applies page-level business rules.
+// Load load effective controls
 async fn load_effective_controls(db: &PgPool, customer_id: Uuid) -> Result<TransactionControl, String> {
     transaction_control_repository::get_or_create_controls(db, customer_id)
         .await
@@ -222,7 +220,7 @@ async fn load_effective_controls(db: &PgPool, customer_id: Uuid) -> Result<Trans
         .map_err(|_| "Could not load transaction controls.".to_string())
 }
 
-// Runs business logic for record alert.
+// Process record alert
 async fn record_alert(
     db: &PgPool,
     customer_id: Uuid,
@@ -246,7 +244,7 @@ async fn record_alert(
     .await;
 }
 
-// Runs business logic for record alert with status.
+// Process record alert with status
 async fn record_alert_with_status(
     db: &PgPool,
     customer_id: Uuid,

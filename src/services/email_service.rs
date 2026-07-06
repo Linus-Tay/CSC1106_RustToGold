@@ -1,4 +1,3 @@
-// Service layer: keeps banking validation and workflow rules away from templates and SQL.
 
 use askama::DynTemplate;
 use lettre::message::{header::ContentType, Message, SinglePart};
@@ -6,7 +5,7 @@ use lettre::transport::smtp::authentication::Credentials;
 use lettre::{AsyncSmtpTransport, AsyncTransport, Tokio1Executor};
 use std::{env, error::Error};
 
-// Runs business logic for read env.
+// Process read env
 fn read_env(name: &str) -> Option<String> {
     env::var(name)
         .ok()
@@ -14,7 +13,7 @@ fn read_env(name: &str) -> Option<String> {
         .filter(|value| !value.is_empty())
 }
 
-// Runs business logic for smtp missing message.
+// Process smtp missing message
 fn smtp_missing_message(to_email: &str, subject: &str, missing_key: &str) {
     eprintln!(
         "EMAIL NOT SENT: {missing_key} is not configured. To: {to_email}, Subject: {subject}"
@@ -24,7 +23,7 @@ fn smtp_missing_message(to_email: &str, subject: &str, missing_key: &str) {
     );
 }
 
-// Sends the template email notification through the configured mail setup.
+// Process send template email
 pub async fn send_template_email(
     to_email: &str,
     subject: &str,
@@ -34,7 +33,7 @@ pub async fn send_template_email(
     send_html_email(to_email, subject, html_body).await
 }
 
-// Sends the html email notification through the configured mail setup.
+// Process send html email
 pub async fn send_html_email(
     to_email: &str,
     subject: &str,

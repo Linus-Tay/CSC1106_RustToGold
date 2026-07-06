@@ -18,7 +18,7 @@ pub struct CardDashboardData {
     pub has_accounts: bool,
 }
 
-// Gets all the active cards for the customer to load the dashboard
+// Load load card dashboard
 pub async fn load_card_dashboard(db: &PgPool, customer_id: Uuid) -> Result<CardDashboardData, String> {
     let cards = card_repository::list_cards_by_customer(db, customer_id)
         .await
@@ -38,7 +38,7 @@ pub async fn load_card_dashboard(db: &PgPool, customer_id: Uuid) -> Result<CardD
     })
 }
 
-// Calls the repo to create the card
+// Handle create card
 pub async fn create_card(db: &PgPool, customer_id: Uuid, form: CardApplicationForm) -> Result<Card, String> {
     let linked_product_id = Uuid::parse_str(form.linked_account_id.trim())
         .map_err(|_| "Choose a valid account to link this card to.".to_string())?;
@@ -61,7 +61,7 @@ pub async fn create_card(db: &PgPool, customer_id: Uuid, form: CardApplicationFo
         .await
         .map_err(|_| "The selected account is not active or does not belong to you.".to_string())?;
 
-    if let Ok(Some(existing_linked_card)) = card_repository::find_card_by_linked_account(db, linked_product_id).await {
+    if let Ok(Some(_)) = card_repository::find_card_by_linked_account(db, linked_product_id).await {
         return Err("You already have an existing card".to_string());
     }
 
@@ -89,7 +89,7 @@ pub async fn create_card(db: &PgPool, customer_id: Uuid, form: CardApplicationFo
         })
 }
 
-// Calls the repo to update the card status
+// Process set card status
 pub async fn set_card_status(db: &PgPool, customer_id: Uuid, card_id: Uuid, status: &str) -> Result<(), String> {
     let status = match status {
         "active" => "active",
@@ -102,6 +102,7 @@ pub async fn set_card_status(db: &PgPool, customer_id: Uuid, card_id: Uuid, stat
         .map_err(|_| "Could not update card status.".to_string())
 }
 
+// Validate validate card
 pub async fn validate_card(db: &PgPool, card_number: &str) -> Result<Option<Card>, String> {
     let card = card_repository::find_active_by_card_number(db, card_number)
     .await
@@ -110,6 +111,7 @@ pub async fn validate_card(db: &PgPool, card_number: &str) -> Result<Option<Card
     Ok(card)
 }
 
+// Process authenticate card
 pub async fn authenticate_card(db: &PgPool, card_number: &str, pin: &str) -> Result<Card, String> {
     let card = card_repository::find_active_by_card_number(db, card_number)
         .await
@@ -124,7 +126,7 @@ pub async fn authenticate_card(db: &PgPool, card_number: &str, pin: &str) -> Res
     }
 }
 
-// Hashes the raw PIN (e.g., "1234") into a secure string.
+// Process hash pin
 pub fn hash_pin(pin: &str) -> Result<String, String> {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
@@ -136,7 +138,7 @@ pub fn hash_pin(pin: &str) -> Result<String, String> {
     Ok(password_hash.to_string())
 }
 
-// Verifies a raw PIN against the hashed string stored in your database.
+// Handle verify pin
 pub fn verify_pin(raw_pin: &str, stored_hash: &str) -> bool {
     let parsed_hash = match PasswordHash::new(stored_hash) {
         Ok(hash) => hash,
@@ -148,7 +150,7 @@ pub fn verify_pin(raw_pin: &str, stored_hash: &str) -> bool {
         .is_ok()
 }
 
-// Generate a fake card number using the account number
+// Build generate card from account
 pub fn generate_card_from_account(account_number: &str) -> String {
     let bin = "400000"; 
     
@@ -165,7 +167,7 @@ pub fn generate_card_from_account(account_number: &str) -> String {
     format!("{}{}", partial_pan, check_digit)
 }
 
-// Uses the luhn algo to validate the card number
+// Process calculate luhn
 fn calculate_luhn(partial_pan: &str) -> u32 {
     let mut sum = 0;
     let mut double = true; 

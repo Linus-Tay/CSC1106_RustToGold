@@ -3,7 +3,6 @@ use chrono::{Duration, NaiveDate, Utc};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
-// Template to store new customer info, this is done as some fields can be left empty, so we use another struct to hold valid data, 'a is used as this struct lifetime only need to exist while creating the customer
 pub struct NewCustomer<'a> {
     pub full_name: &'a str,
     pub nric: &'a str,
@@ -33,7 +32,7 @@ const CUSTOMER_SELECT: &str = r#"
     FROM customers
 "#;
 
-// Gets customer using NRIC
+// Query get customer by nric
 pub async fn get_customer_by_nric(
     db: &PgPool,
     nric: &str,
@@ -45,8 +44,7 @@ pub async fn get_customer_by_nric(
         .await
 }
 
-
-// Gets non rejected customer using NRIC
+// Query get non rejected customer by nric
 pub async fn get_non_rejected_customer_by_nric(
     db: &PgPool,
     nric: &str,
@@ -58,7 +56,7 @@ pub async fn get_non_rejected_customer_by_nric(
         .await
 }
 
-// Gets non rejected customer using email
+// Query get non rejected customer by email
 pub async fn get_non_rejected_customer_by_email(
     db: &PgPool,
     email: &str,
@@ -70,7 +68,37 @@ pub async fn get_non_rejected_customer_by_email(
         .await
 }
 
-// Gets customer using ID
+// Query release rejected customer identity conflicts
+pub async fn release_rejected_customer_identity_conflicts(
+    db: &PgPool,
+    nric: &str,
+    email: &str,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        UPDATE customers
+        SET nric = CASE
+                WHEN lower(nric) = lower($1) THEN CONCAT('REJECTED-', REPLACE(id::text, '-', ''))
+                ELSE nric
+            END,
+            email = CASE
+                WHEN lower(email) = lower($2) THEN CONCAT('rejected+', REPLACE(id::text, '-', ''), '@rusttogold.local')
+                ELSE email
+            END,
+            updated_at = NOW()
+        WHERE kyc_status = 'rejected'
+          AND (lower(nric) = lower($1) OR lower(email) = lower($2))
+        "#,
+    )
+    .bind(nric)
+    .bind(email)
+    .execute(db)
+    .await?;
+
+    Ok(())
+}
+
+// Query get customer by id
 pub async fn get_customer_by_id(db: &PgPool, id: &Uuid) -> Result<Customer, sqlx::Error> {
     let query = format!("{} WHERE id = $1", CUSTOMER_SELECT);
     sqlx::query_as::<_, Customer>(&query)
@@ -79,7 +107,7 @@ pub async fn get_customer_by_id(db: &PgPool, id: &Uuid) -> Result<Customer, sqlx
         .await
 }
 
-// Creates the customer and product
+// Persist create customer and product
 pub async fn create_customer_and_product(
     db: &PgPool,
     new_customer: &NewCustomer<'_>,
@@ -143,7 +171,7 @@ pub async fn create_customer_and_product(
     Ok((customer, product))
 }
 
-// Updates editable info such as full name and phone number
+// Persist update basic profile
 pub async fn update_basic_profile(
     db: &PgPool,
     customer_id: Uuid,
@@ -170,7 +198,7 @@ pub async fn update_basic_profile(
     .await
 }
 
-// Updates the customer and the product linked to them
+// Persist approve customer and product
 pub async fn approve_customer_and_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -210,7 +238,7 @@ pub async fn approve_customer_and_product(
     Ok((updated_customer, updated_product))
 }
 
-// Creates the unqiue account creation link so customer can use it to create their online banking user account
+// Persist create user account creation link for customer
 pub async fn create_user_account_creation_link_for_customer(
     db: &PgPool,
     customer_id: &Uuid,
@@ -228,7 +256,7 @@ pub async fn create_user_account_creation_link_for_customer(
     .await
 }
 
-// Gets the unique account creation link using the link_id
+// Query get account creation link
 pub async fn get_account_creation_link(
     db: &PgPool,
     account_creation_link: &Uuid,
@@ -245,7 +273,7 @@ pub async fn get_account_creation_link(
     .await
 }
 
-// Invalidates the account creation link after user uses them
+// Query invalidate account creation link
 pub async fn invalidate_account_creation_link(
     db: &PgPool,
     account_creation_link: &Uuid,
@@ -263,7 +291,7 @@ pub async fn invalidate_account_creation_link(
     .await
 }
 
-// Gets the device by the hashed device token to check for known devices
+// Query find device by hashed token
 pub async fn find_device_by_hashed_token(db: &PgPool, hashed_token: &str) -> Result<Option<KnownDevice>, sqlx::Error> {
     sqlx::query_as::<_, KnownDevice>(r#"
         SELECT id, token_hash, user_id, last_used
@@ -275,8 +303,7 @@ pub async fn find_device_by_hashed_token(db: &PgPool, hashed_token: &str) -> Res
     .await
 }
 
-
-// Create a known device
+// Persist create known device
 pub async fn create_known_device(
     db: &PgPool,
     user_id: &Uuid,
@@ -295,7 +322,7 @@ pub async fn create_known_device(
     .await
 }
 
-// Modify the last used timing for a known device
+// Persist update known device last used
 pub async fn update_known_device_last_used(db: &PgPool, id: &Uuid) -> Result<(), sqlx::Error> {
     sqlx::query("UPDATE known_devices SET last_used = NOW() WHERE id = $1")
         .bind(id)
@@ -305,7 +332,7 @@ pub async fn update_known_device_last_used(db: &PgPool, id: &Uuid) -> Result<(),
     Ok(())
 }
 
-// Gets the OTP code obj using the code id
+// Query get otp code
 pub async fn get_otp_code(db: &PgPool, code: &str) -> Result<Option<OTPCode>, sqlx::Error> {
     sqlx::query_as::<_, OTPCode>(r#"
         SELECT id, user_id, code, expires_at, created_at
@@ -318,7 +345,7 @@ pub async fn get_otp_code(db: &PgPool, code: &str) -> Result<Option<OTPCode>, sq
     .await
 }
 
-// Deletes otp code once used
+// Persist delete otp code
 pub async fn delete_otp_code(db: &PgPool, id: &Uuid) -> Result<(), sqlx::Error> {
     sqlx::query(r#"
         DELETE FROM otp_codes
@@ -331,7 +358,7 @@ pub async fn delete_otp_code(db: &PgPool, id: &Uuid) -> Result<(), sqlx::Error> 
     Ok(())
 }
 
-// Creates a new otp code
+// Persist create otp code
 pub async fn create_otp_code(
     db: &PgPool,
     user_id: &Uuid,

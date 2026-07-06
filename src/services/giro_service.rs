@@ -1,4 +1,3 @@
-// Service layer: keeps banking validation and workflow rules away from templates and SQL.
 
 use crate::forms::GiroArrangementForm;
 use crate::models::{GiroArrangement, Money, Product};
@@ -8,13 +7,12 @@ use chrono::{Duration, NaiveDate, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-// Data carrier for the GiroDashboard workflow.
 pub struct GiroDashboard {
     pub accounts: Vec<Product>,
     pub arrangements: Vec<GiroArrangement>,
 }
 
-// Loads giro dashboard data and applies page-level business rules.
+// Load load giro dashboard
 pub async fn load_giro_dashboard(
     db: &PgPool,
     customer_id: Uuid,
@@ -29,7 +27,7 @@ pub async fn load_giro_dashboard(
     Ok(GiroDashboard { accounts, arrangements })
 }
 
-// Validates and coordinates the create giro arrangement workflow.
+// Handle create giro arrangement
 pub async fn create_giro_arrangement(
     db: &PgPool,
     customer_id: Uuid,
@@ -38,7 +36,7 @@ pub async fn create_giro_arrangement(
     let from_product_id = Uuid::parse_str(form.from_product_id.trim())
         .map_err(|_| "Choose a valid source account.".to_string())?;
     let payee_name = form.payee_name.trim();
-    // GIRO should name the billing organisation clearly.
+    // GIRO should name the billing organisation clearly
     if payee_name.len() < 2 {
         return Err("Enter the billing organisation or payee name.".to_string());
     }
@@ -53,7 +51,7 @@ pub async fn create_giro_arrangement(
         .map_err(|_| "Could not check the recipient account.".to_string())?
         .ok_or_else(|| "No RustToGold account was found for this recipient number.".to_string())?;
 
-    // Keep GIRO as an external recurring payment, not self-transfer.
+    // Keep GIRO as an external recurring payment, not self-transfer
     if recipient.customer_id == customer_id {
         return Err("GIRO arrangements cannot be created to your own account.".to_string());
     }
@@ -62,7 +60,7 @@ pub async fn create_giro_arrangement(
     }
 
     let amount = Money::parse_dollars(&form.amount)?;
-    // Simple bank-like range for a standing instruction.
+    // Simple bank-like range for a standing instruction
     if amount.cents() < 1_00 {
         return Err("GIRO amount must be at least $1.00.".to_string());
     }
@@ -75,7 +73,7 @@ pub async fn create_giro_arrangement(
     let end_date = parse_end_date(&form.end_date, start_date)?;
     let note = clean_optional_text(&form.note);
 
-    // Reuse the same Money Lock, daily limit and fraud rules before setup.
+    // Reuse the same Money Lock, daily limit and fraud rules before setup
     transaction_control_service::validate_outgoing_transaction(
         db,
         customer_id,
@@ -108,7 +106,7 @@ pub async fn create_giro_arrangement(
     Ok(())
 }
 
-// Validates and coordinates the cancel giro arrangement workflow.
+// Handle cancel giro arrangement
 pub async fn cancel_giro_arrangement(
     db: &PgPool,
     customer_id: Uuid,
@@ -125,7 +123,7 @@ pub async fn cancel_giro_arrangement(
     }
 }
 
-// Normalises frequency before validation or storage.
+// Process normalise frequency
 fn normalise_frequency(input: &str) -> Result<String, String> {
     match input.trim() {
         "weekly" => Ok("weekly".to_string()),
@@ -134,12 +132,12 @@ fn normalise_frequency(input: &str) -> Result<String, String> {
     }
 }
 
-// Parses start date from form input into a safer internal value.
+// Validate parse start date
 fn parse_start_date(input: &str) -> Result<NaiveDate, String> {
     let date = NaiveDate::parse_from_str(input.trim(), "%Y-%m-%d")
         .map_err(|_| "Choose a valid GIRO start date.".to_string())?;
     let today = Utc::now().date_naive();
-    // Standing instructions should start today or later.
+    // Standing instructions should start today or later
     if date < today {
         return Err("GIRO start date cannot be in the past.".to_string());
     }
@@ -149,7 +147,7 @@ fn parse_start_date(input: &str) -> Result<NaiveDate, String> {
     Ok(date)
 }
 
-// Parses end date from form input into a safer internal value.
+// Validate parse end date
 fn parse_end_date(input: &str, start_date: NaiveDate) -> Result<Option<NaiveDate>, String> {
     let value = input.trim();
     if value.is_empty() {

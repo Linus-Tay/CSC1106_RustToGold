@@ -1,4 +1,3 @@
-// Repository layer: isolates SQLx queries so services do not depend on raw database code.
 
 use crate::models::{FraudAlert, TransactionControl};
 use sqlx::PgPool;
@@ -10,7 +9,7 @@ const CONTROL_SELECT: &str = r#"
     FROM transaction_controls
 "#;
 
-// Reads get or create controls data from the database.
+// Query get or create controls
 pub async fn get_or_create_controls(
     db: &PgPool,
     customer_id: Uuid,
@@ -33,7 +32,7 @@ pub async fn get_or_create_controls(
         .await
 }
 
-// Persists the apply ready cooldowns database change.
+// Persist apply ready cooldowns
 pub async fn apply_ready_cooldowns(
     db: &PgPool,
     customer_id: Uuid,
@@ -84,7 +83,7 @@ pub async fn apply_ready_cooldowns(
     Ok(())
 }
 
-// Persists the set daily limit immediate database change.
+// Persist set daily limit immediate
 pub async fn set_daily_limit_immediate(
     db: &PgPool,
     customer_id: Uuid,
@@ -108,17 +107,16 @@ pub async fn set_daily_limit_immediate(
     .await
 }
 
-// Persists the set daily limit pending database change.
+// Persist set daily limit pending
 pub async fn set_daily_limit_pending(
     db: &PgPool,
     customer_id: Uuid,
     pending_daily_limit_cents: i64,
 ) -> Result<TransactionControl, sqlx::Error> {
-    // Kept for older call sites: limit changes now apply first, then cooldown locks edits.
     set_daily_limit_immediate(db, customer_id, pending_daily_limit_cents).await
 }
 
-// Persists the enable money lock database change.
+// Query enable money lock
 pub async fn enable_money_lock(
     db: &PgPool,
     customer_id: Uuid,
@@ -140,7 +138,7 @@ pub async fn enable_money_lock(
     .await
 }
 
-// Persists the request money unlock database change.
+// Persist request money unlock
 pub async fn request_money_unlock(
     db: &PgPool,
     customer_id: Uuid,
@@ -162,7 +160,7 @@ pub async fn request_money_unlock(
     .await
 }
 
-// Reads sum outgoing today data from the database.
+// Query sum outgoing today
 pub async fn sum_outgoing_today(
     db: &PgPool,
     customer_id: Uuid,
@@ -182,7 +180,7 @@ pub async fn sum_outgoing_today(
     .await
 }
 
-// Reads count outgoing since minutes data from the database.
+// Query count outgoing since minutes
 pub async fn count_outgoing_since_minutes(
     db: &PgPool,
     customer_id: Uuid,
@@ -204,7 +202,7 @@ pub async fn count_outgoing_since_minutes(
     .await
 }
 
-// Reads sum outgoing since minutes data from the database.
+// Query sum outgoing since minutes
 pub async fn sum_outgoing_since_minutes(
     db: &PgPool,
     customer_id: Uuid,
@@ -226,7 +224,7 @@ pub async fn sum_outgoing_since_minutes(
     .await
 }
 
-// Persists the insert fraud alert database change.
+// Persist insert fraud alert
 pub async fn insert_fraud_alert(
     db: &PgPool,
     customer_id: Uuid,
@@ -251,7 +249,7 @@ pub async fn insert_fraud_alert(
     .await
 }
 
-// Persists the insert fraud alert with status database change.
+// Persist insert fraud alert with status
 pub async fn insert_fraud_alert_with_status(
     db: &PgPool,
     customer_id: Uuid,
@@ -283,7 +281,7 @@ pub async fn insert_fraud_alert_with_status(
     Ok(())
 }
 
-// Reads list recent alerts data from the database.
+// Query list recent alerts
 pub async fn list_recent_alerts(
     db: &PgPool,
     customer_id: Uuid,

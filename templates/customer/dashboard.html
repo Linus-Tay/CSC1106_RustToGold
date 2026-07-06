@@ -16,7 +16,7 @@
           <div>
             <p class="customer-kicker">Bank IDs</p>
             <h1>Your accounts</h1>
-            <p class="section-subtext">Hi {{ full_name }} — view your RustToGold bank accounts here. Source account selection happens inside deposits, transfers, PayNow, loans and fixed deposits.</p>
+            <p class="section-subtext">Hi {{ full_name }} — view your RustToGold bank accounts here. Source account selection happens inside transfers, PayNow, loans and fixed deposits.</p>
           </div>
           <div class="account-apply-actions">
             {% if can_apply_everyday_savings %}
@@ -94,11 +94,6 @@
             <strong>PayNow</strong>
             <small>Register one PayNow mobile number first, then send money using another PayNow number.</small>
           </a>
-          <a class="portal-action-card" href="/customer/deposit">
-            <span><i data-lucide="circle-dollar-sign"></i></span>
-            <strong>Deposit Money</strong>
-            <small>Select which active account receives the deposit.</small>
-          </a>
           <a class="portal-action-card" href="/customer/transfer">
             <span><i data-lucide="send"></i></span>
             <strong>Transfer Money</strong>
@@ -166,7 +161,7 @@
         </div>
 
         <div class="dashboard-log-grid dashboard-log-grid--rows dashboard-log-grid--review">
-          <a class="dashboard-log-link" href="/customer/transactions"><span><i data-lucide="receipt-text"></i></span><div><strong>Deposit & Transfer Log</strong><small>Deposits, transfers and PayNow movements.</small></div></a>
+          <a class="dashboard-log-link" href="/customer/transactions"><span><i data-lucide="receipt-text"></i></span><div><strong>Transfer Log</strong><small>Transfers, PayNow movements and account activity.</small></div></a>
           <a class="dashboard-log-link" href="/customer/loan-activity"><span><i data-lucide="file-clock"></i></span><div><strong>Loan Log</strong><small>Loan disbursements and repayments.</small></div></a>
           <a class="dashboard-log-link" href="/customer/fixed-deposit-activity"><span><i data-lucide="calendar-clock"></i></span><div><strong>Fixed Deposit Log</strong><small>FD openings, withdrawals and payouts.</small></div></a>
           <a class="dashboard-log-link dashboard-log-link--statement" href="/customer/statements"><span><i data-lucide="file-down"></i></span><div><strong>Bank Statements</strong><small>Preview and download a PDF statement for one account, capped at 3 months.</small></div></a>

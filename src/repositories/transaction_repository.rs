@@ -1,10 +1,9 @@
-// Repository layer: isolates SQLx queries so services do not depend on raw database code.
 
 use crate::models::Transaction;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-// Reads find recent transactions by customer id data from the database.
+// Query find recent transactions by customer id
 pub async fn find_recent_transactions_by_customer_id(
     db: &PgPool,
     customer_id: Uuid,
@@ -27,7 +26,7 @@ pub async fn find_recent_transactions_by_customer_id(
     .await
 }
 
-// Reads find customer cash transactions data from the database.
+// Query find customer cash transactions
 pub async fn find_customer_cash_transactions(
     db: &PgPool,
     customer_id: Uuid,
@@ -51,7 +50,7 @@ pub async fn find_customer_cash_transactions(
     .await
 }
 
-// Reads find customer loan transactions data from the database.
+// Query find customer loan transactions
 pub async fn find_customer_loan_transactions(
     db: &PgPool,
     customer_id: Uuid,
@@ -75,7 +74,7 @@ pub async fn find_customer_loan_transactions(
     .await
 }
 
-// Reads find customer fixed deposit transactions data from the database.
+// Query find customer fixed deposit transactions
 pub async fn find_customer_fixed_deposit_transactions(
     db: &PgPool,
     customer_id: Uuid,

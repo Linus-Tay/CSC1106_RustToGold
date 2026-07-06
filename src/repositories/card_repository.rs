@@ -2,7 +2,7 @@ use crate::models::Card;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-// Reads list cards by customer data from the database.
+// Query list cards by customer
 pub async fn list_cards_by_customer(db: &PgPool, customer_id: Uuid) -> Result<Vec<Card>, sqlx::Error> {
     sqlx::query_as::<_, Card>(
         r#"
@@ -19,7 +19,7 @@ pub async fn list_cards_by_customer(db: &PgPool, customer_id: Uuid) -> Result<Ve
     .await
 }
 
-// Find active card by linked product ID
+// Query find card by linked account
 pub async fn find_card_by_linked_account(db: &PgPool, linked_product_id: Uuid) -> Result<Option<Card>, sqlx::Error> {
     sqlx::query_as::<_, Card>(
         r#"
@@ -35,7 +35,7 @@ pub async fn find_card_by_linked_account(db: &PgPool, linked_product_id: Uuid) -
     .await
 }
 
-// Get the active card using card number
+// Query find active by card number
 pub async fn find_active_by_card_number(db: &PgPool, card_number: &str) -> Result<Option<Card>, sqlx::Error> {
     sqlx::query_as::<_, Card>(
         r#"
@@ -52,7 +52,7 @@ pub async fn find_active_by_card_number(db: &PgPool, card_number: &str) -> Resul
     .await
 }
 
-// Get the active card using card ID
+// Query find active by card id
 pub async fn find_active_by_card_id(db: &PgPool, card_id: &Uuid) -> Result<Option<Card>, sqlx::Error> {
     sqlx::query_as::<_, Card>(
         r#"
@@ -68,7 +68,7 @@ pub async fn find_active_by_card_id(db: &PgPool, card_id: &Uuid) -> Result<Optio
     .fetch_optional(db)
     .await
 }
-// Creates the card in the database
+// Persist create card
 pub async fn create_card(
     db: &PgPool,
     customer_id: Uuid,
@@ -97,7 +97,7 @@ pub async fn create_card(
     .await
 }
 
-// Updates the card status
+// Persist set card status
 pub async fn set_card_status(
     db: &PgPool,
     customer_id: Uuid,

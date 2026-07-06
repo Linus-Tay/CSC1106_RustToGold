@@ -1,4 +1,3 @@
-// Model layer: domain structs plus small display helpers used by services and templates.
 
 use super::Money;
 use chrono::{DateTime, Utc};
@@ -6,7 +5,6 @@ use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
-// Domain record used by services, repositories and templates.
 pub struct HomeLoanApplication {
     pub id: Uuid,
     pub customer_id: Uuid,
@@ -27,42 +25,42 @@ pub struct HomeLoanApplication {
 }
 
 impl HomeLoanApplication {
-    // Formats the value for display in templates.
+    // Format property value display
     pub fn property_value_display(&self) -> String {
         Money::from_cents(self.property_value_cents).display()
     }
 
-    // Formats the value for display in templates.
+    // Format down payment display
     pub fn down_payment_display(&self) -> String {
         Money::from_cents(self.down_payment_cents).display()
     }
 
-    // Formats the value for display in templates.
+    // Format loan amount display
     pub fn loan_amount_display(&self) -> String {
         Money::from_cents(self.loan_amount_cents).display()
     }
 
-    // Formats the value for display in templates.
+    // Format monthly payment display
     pub fn monthly_payment_display(&self) -> String {
         Money::from_cents(self.monthly_payment_cents).display()
     }
 
-    // Formats the value for display in templates.
+    // Format outstanding display
     pub fn outstanding_display(&self) -> String {
         Money::from_cents(self.outstanding_cents).display()
     }
 
-    // Returns the raw value used by form fields and validation.
+    // Handle outstanding plain
     pub fn outstanding_plain(&self) -> String {
         format!("{:.2}", self.outstanding_cents as f64 / 100.0)
     }
 
-    // Formats the value for display in templates.
+    // Format rate display
     pub fn rate_display(&self) -> String {
         format!("{:.2}%", self.annual_rate_bps as f64 / 100.0)
     }
 
-    // Formats the value for display in templates.
+    // Format status display
     pub fn status_display(&self) -> String {
         match self.status.as_str() {
             "pending" => "Pending Review".to_string(),
@@ -73,22 +71,22 @@ impl HomeLoanApplication {
         }
     }
 
-    // Formats the value for display in templates.
+    // Format created at display
     pub fn created_at_display(&self) -> String {
         self.created_at.format("%d %b %Y").to_string()
     }
 
-    // Returns whether this record is payable.
+    // Check is payable
     pub fn is_payable(&self) -> bool {
         self.status == "approved" && self.outstanding_cents > 0
     }
 
-    // Returns whether this record is pending.
+    // Check is pending
     pub fn is_pending(&self) -> bool {
         self.status == "pending"
     }
 
-    // Explains the down-payment hold in customer-facing language.
+    // Calculate down payment note
     pub fn down_payment_note(&self) -> &'static str {
         match self.status.as_str() {
             "pending" => "Down payment is reserved while the bank reviews this application.",
@@ -100,7 +98,6 @@ impl HomeLoanApplication {
 }
 
 #[derive(Debug, Clone)]
-// Domain record used by services, repositories and templates.
 pub struct HomeLoanSummary {
     pub total_outstanding_cents: i64,
     pub pending_count: usize,
@@ -108,7 +105,7 @@ pub struct HomeLoanSummary {
 }
 
 impl HomeLoanSummary {
-    // Builds the model value from applications.
+    // Build from applications
     pub fn from_applications(applications: &[HomeLoanApplication]) -> Self {
         let total_outstanding_cents = applications
             .iter()
@@ -131,12 +128,12 @@ impl HomeLoanSummary {
         }
     }
 
-    // Formats the value for display in templates.
+    // Format outstanding display
     pub fn outstanding_display(&self) -> String {
         Money::from_cents(self.total_outstanding_cents).display()
     }
 
-    // Formats the value for display in templates.
+    // Format total outstanding display
     pub fn total_outstanding_display(&self) -> String {
         self.outstanding_display()
     }

@@ -1,4 +1,3 @@
-// View layer: Askama template structs and rendering helpers.
 
 use crate::models::{
     AdminAuditLogRecord, AdminCustomerAccountRecord, AdminCustomerApplication, AdminDashboardSummary, AdminHomeLoanRecord, AdminPersonalLoanRecord, AdminStaffUser, Card, FixedDeposit, FixedDepositAdminRecord, FixedDepositPlan, FixedDepositSummary, FraudAlert, GiroArrangement, HighValueAlertRecord, HomeLoanApplication, HomeLoanSummary, PayNowRegistration, PersonalLoan, Product, StatementTransaction, Transaction, TransactionControl,
@@ -159,11 +158,9 @@ pub struct Account2FAEmailTemplate {
     pub verification_code: String,
 }
 
-
 #[derive(Template)]
 #[template(path = "email/application_received_email.html")]
 pub struct ApplicationReceivedEmailTemplate;
-
 
 #[derive(Template)]
 #[template(path = "admin/login.html")]
@@ -204,18 +201,6 @@ pub struct DashboardTemplate {
 }
 
 #[derive(Template)]
-#[template(path = "customer/deposit.html")]
-pub struct DepositTemplate {
-    pub accounts: Vec<Product>,
-    pub selected_account_number: String,
-    pub balance: String,
-    pub error: String,
-    pub has_error: bool,
-    pub success: String,
-    pub has_success: bool,
-}
-
-#[derive(Template)]
 #[template(path = "customer/transfer.html")]
 pub struct TransferTemplate {
     pub accounts: Vec<Product>,
@@ -224,7 +209,6 @@ pub struct TransferTemplate {
     pub error: String,
     pub has_error: bool,
 }
-
 
 #[derive(Template)]
 #[template(path = "customer/statements.html")]
@@ -260,7 +244,6 @@ pub struct CustomerActivityLogTemplate {
     pub has_transactions: bool,
 }
 
-
 #[derive(Template)]
 #[template(path = "customer/cards.html")]
 pub struct CardDashboardTemplate {
@@ -273,7 +256,6 @@ pub struct CardDashboardTemplate {
     pub success: String,
     pub has_success: bool,
 }
-
 
 #[derive(Template)]
 #[template(path = "customer/transaction_controls.html")]
@@ -406,8 +388,6 @@ pub struct AdminCustomerApplicationsTemplate {
     pub has_error: bool,
 }
 
-
-
 #[derive(Template)]
 #[template(path = "admin/high_value_monitoring.html")]
 pub struct AdminHighValueMonitoringTemplate {
@@ -511,7 +491,6 @@ pub struct AdminFixedDepositPlansTemplate {
     pub has_success: bool,
 }
 
-
 #[derive(Template)]
 #[template(path = "atm/index.html")]
 pub struct ATMPageTemplate {
@@ -526,7 +505,6 @@ pub struct ATMPinTemplate {
     pub error: String,
     pub card_number_last_4: String
 }
-
 
 #[derive(Template)]
 #[template(path = "atm/menu.html")]

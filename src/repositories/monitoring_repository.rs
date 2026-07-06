@@ -1,4 +1,3 @@
-// Repository layer: isolates SQLx queries so services do not depend on raw database code.
 
 use crate::models::HighValueAlertRecord;
 use sqlx::PgPool;
@@ -27,7 +26,7 @@ const HIGH_VALUE_ALERT_SELECT: &str = r#"
     LEFT JOIN customer_products cp ON cp.id = fa.product_id
 "#;
 
-// Reads list high value alerts data from the database.
+// Query list high value alerts
 pub async fn list_high_value_alerts(
     db: &PgPool,
 ) -> Result<Vec<HighValueAlertRecord>, sqlx::Error> {
@@ -50,7 +49,7 @@ pub async fn list_high_value_alerts(
         .await
 }
 
-// Persists the clear alert database change.
+// Persist clear alert
 pub async fn clear_alert(
     db: &PgPool,
     actor_user_id: Uuid,

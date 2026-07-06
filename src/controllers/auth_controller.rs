@@ -15,7 +15,7 @@ use actix_web::cookie::Cookie;
 use actix_web::http::header;
 use actix_web::{web, HttpResponse, Result, HttpRequest};
 
-// Renders the login page
+// Render login page
 pub async fn login_page(session: Session) -> Result<HttpResponse> {
     if customer_session_user_id(&session).is_some() {
         return Ok(redirect("/customer/dashboard"));
@@ -27,7 +27,7 @@ pub async fn login_page(session: Session) -> Result<HttpResponse> {
     })
 }
 
-// Renders the admin login page
+// Render admin login page
 pub async fn admin_login_page(session: Session) -> Result<HttpResponse> {
     if admin_session_user_id(&session).is_some() {
         return Ok(redirect("/admin/dashboard"));
@@ -39,7 +39,7 @@ pub async fn admin_login_page(session: Session) -> Result<HttpResponse> {
     })
 }
 
-// Handles login session flow.
+// Handle login
 pub async fn login(
     data: web::Data<AppState>,
     session: Session,
@@ -59,7 +59,7 @@ pub async fn login(
 
             match services::generate_and_send_2fa(&data.db, &user.id).await {
                 Ok(()) => (),
-                Err(e) => {
+                Err(_) => {
                     return render_error("Two Factor Authentication", "Unable to send 2FA".to_string())
                 }
             };
@@ -78,7 +78,7 @@ pub async fn login(
     }
 }
 
-// Renders the two factor page
+// Render twofactor page
 pub async fn twofactor_page(session: Session) -> Result<HttpResponse> {
     if let Ok(Some(pending_user_id)) = session.get::<String>("pending_2fa_user_id") {
         println!("{}", pending_user_id);
@@ -92,12 +92,11 @@ pub async fn twofactor_page(session: Session) -> Result<HttpResponse> {
     }
 }
 
-// Handles 2fa verification
+// Handle verify 2fa
 pub async fn verify_2fa(
     data: web::Data<AppState>,
     session: Session,
     form: web::Form<TwoFactorForm>,
-    req: HttpRequest
 ) -> Result<HttpResponse> {
 
     if let Ok(Some(pending_user_id)) = session.get::<String>("pending_2fa_user_id") {
@@ -147,7 +146,7 @@ pub async fn verify_2fa(
     }
 }
 
-// Handles admin login session flow.
+// Handle admin login
 pub async fn admin_login(
     data: web::Data<AppState>,
     session: Session,
@@ -169,13 +168,13 @@ pub async fn admin_login(
     }
 }
 
-// Handles logout session flow.
+// Handle logout
 pub async fn logout(session: Session) -> Result<HttpResponse> {
     clear_customer_session(&session);
     Ok(redirect("/"))
 }
 
-// Handles admin logout session flow.
+// Handle admin logout
 pub async fn admin_logout(session: Session) -> Result<HttpResponse> {
     clear_admin_session(&session);
     Ok(redirect("/admin/login"))

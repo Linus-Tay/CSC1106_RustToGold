@@ -2,7 +2,7 @@ use crate::models::{Product, Transaction};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
-// Get product by account number
+// Query get product by account number
 pub async fn get_product_by_account_number(
     db: &PgPool,
     account_number: &str,
@@ -19,8 +19,7 @@ pub async fn get_product_by_account_number(
     .await
 }
 
-
-// Reads list products by customer data from the database.
+// Query list products by customer
 pub async fn list_products_by_customer(
     db: &PgPool,
     customer_id: &Uuid,
@@ -40,7 +39,7 @@ pub async fn list_products_by_customer(
     .await
 }
 
-// Get all products linked to customer
+// Query list active products by customer
 pub async fn list_active_products_by_customer(
     db: &PgPool,
     customer_id: &Uuid,
@@ -58,8 +57,7 @@ pub async fn list_active_products_by_customer(
     .await
 }
 
-
-// Get active product using customer ID and product ID
+// Query get active product for customer by id
 pub async fn get_active_product_for_customer_by_id(
     db: &PgPool,
     customer_id: Uuid,
@@ -78,7 +76,7 @@ pub async fn get_active_product_for_customer_by_id(
     .await
 }
 
-// Get active product using customer ID and account number
+// Query get active product for customer by account number
 pub async fn get_active_product_for_customer_by_account_number(
     db: &PgPool,
     customer_id: &Uuid,
@@ -97,7 +95,7 @@ pub async fn get_active_product_for_customer_by_account_number(
     .await
 }
 
-// Adds a new product for customer
+// Persist insert product
 pub async fn insert_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -120,7 +118,7 @@ pub async fn insert_product(
     .await
 }
 
-// Deposit money into product
+// Query deposit into product
 pub async fn deposit_into_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -163,7 +161,7 @@ pub async fn deposit_into_product(
     Ok((updated_product, transaction))
 }
 
-// Withdraw money from product
+// Query withdraw from product
 pub async fn withdraw_from_product(
     db: &PgPool,
     customer_id: &Uuid,
@@ -211,7 +209,7 @@ pub async fn withdraw_from_product(
     Ok(Ok((updated_product, transaction)))
 }
 
-// Transfers money from one product to the other
+// Query transfer
 pub async fn transfer(
     db: &PgPool,
     sender_account_number: &str,
@@ -308,7 +306,7 @@ pub async fn transfer(
     Ok((true, None))
 }
 
-// Gets the first product created using customer ID
+// Query get first product by customer id
 pub async fn get_first_product_by_customer_id(
     db: &PgPool,
     customer_id: &Uuid,
@@ -327,7 +325,7 @@ pub async fn get_first_product_by_customer_id(
     .await
 }
 
-// Locks a product to ensure concurrent safe updates
+// Persist lock product
 async fn lock_product(
     tx: &mut DbTransaction<'_, Postgres>,
     customer_id: &Uuid,

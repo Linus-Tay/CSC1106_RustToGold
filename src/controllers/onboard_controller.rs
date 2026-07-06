@@ -1,4 +1,4 @@
-use crate::controllers::session_guard::redirect;
+use crate::controllers::session_guard::{admin_session_user_id, customer_session_user_id, redirect};
 use crate::forms::auth_forms::AccountCreationForm;
 use crate::forms::onboard_forms::{Step3Form, Step4Form};
 use crate::forms::{OnboardingForm, Step1Form, Step2Form};
@@ -23,17 +23,29 @@ pub struct AccountCreationQueryParams {
     link: String,
 }
 
-// Handles the onboarding entry redirect request
-pub async fn onboarding_entry_redirect(_session: Session) -> Result<HttpResponse> {
+// Handle onboarding entry redirect
+pub async fn onboarding_entry_redirect(session: Session) -> Result<HttpResponse> {
+    if let Some(response) = logged_in_redirect(&session) {
+        return Ok(response);
+    }
+
     Ok(redirect("/onboarding/account"))
 }
 
-// Handles the logged in redirect request.
-fn logged_in_redirect(_session: &Session) -> Option<HttpResponse> {
+// Handle logged in redirect
+fn logged_in_redirect(session: &Session) -> Option<HttpResponse> {
+    if customer_session_user_id(session).is_some() {
+        return Some(redirect("/customer/dashboard"));
+    }
+
+    if admin_session_user_id(session).is_some() {
+        return Some(redirect("/admin/dashboard"));
+    }
+
     None
 }
 
-// Renders the onboarding page
+// Handle onboarding
 pub async fn onboarding(path: web::Path<String>, session: Session) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -54,14 +66,13 @@ pub async fn onboarding(path: web::Path<String>, session: Session) -> Result<Htt
     }
 }
 
-// Handles the account creation init request
+// Handle account creation init
 pub async fn account_creation_init(
     query: web::Query<AccountCreationQueryParams>,
     data: web::Data<AppState>,
     session: Session,
 ) -> Result<HttpResponse> {
-    // Account-creation links are one-time public setup links.
-    // Do not redirect an existing admin/customer session away from this flow.
+    // Account-creation links are one-time public setup links
     match services::validate_account_creation_link(&data, &query.link).await {
         Ok(true) => {
             session.insert("account_creation_link", query.link.clone())?;
@@ -71,12 +82,12 @@ pub async fn account_creation_init(
     }
 }
 
-// Handles the account creation request
+// Handle account creation
 pub async fn account_creation(
     data: web::Data<AppState>,
     session: Session,
 ) -> Result<HttpResponse> {
-    // Keep this accessible even when an admin is signed in, so activation links can be tested directly.
+    // Keep this accessible even when an admin is signed in, so activation links can be tested directly
     let account_creation_link = match session.get::<String>("account_creation_link")? {
         Some(link) => link,
         None => return render(NotFoundTemplate),
@@ -92,7 +103,7 @@ pub async fn account_creation(
     }
 }
 
-// Handles the account creation submit request
+// Handle account creation submit
 pub async fn account_creation_submit(
     data: web::Data<AppState>,
     form: web::Form<AccountCreationForm>,
@@ -151,7 +162,7 @@ pub async fn account_creation_submit(
     }
 }
 
-// Handles the submit request
+// Handle submit
 pub async fn submit(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -181,7 +192,7 @@ pub async fn submit(data: web::Data<AppState>, session: Session) -> Result<HttpR
     }
 }
 
-// Handles the step1 post request
+// Handle step1 post
 pub async fn step1_post(session: Session, form: web::Form<Step1Form>) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -221,7 +232,7 @@ pub async fn step1_post(session: Session, form: web::Form<Step1Form>) -> Result<
     Ok(redirect("/onboarding/personal"))
 }
 
-// Handles the step2 post request
+// Handle step2 post
 pub async fn step2_post(session: Session, form: web::Form<Step2Form>) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -276,7 +287,7 @@ pub async fn step2_post(session: Session, form: web::Form<Step2Form>) -> Result<
     Ok(redirect("/onboarding/contact"))
 }
 
-// Handles the step3 post request
+// Handle step3 post
 pub async fn step3_post(session: Session, form: web::Form<Step3Form>) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -305,7 +316,7 @@ pub async fn step3_post(session: Session, form: web::Form<Step3Form>) -> Result<
     Ok(redirect("/onboarding/employment"))
 }
 
-// Handles the step4 post request
+// Handle step4 post
 pub async fn step4_post(session: Session, form: web::Form<Step4Form>) -> Result<HttpResponse> {
     if let Some(response) = logged_in_redirect(&session) {
         return Ok(response);
@@ -334,7 +345,7 @@ pub async fn step4_post(session: Session, form: web::Form<Step4Form>) -> Result<
     Ok(redirect("/onboarding/review"))
 }
 
-// Handles the render form request
+// Render form
 async fn render_form(
     form_data: OnboardingForm,
     form_path: String,
@@ -350,7 +361,7 @@ async fn render_form(
     }
 }
 
-// Handles the get path template request
+// Handle get path template
 fn get_path_template(
     id: &str,
     form_data: OnboardingForm,
@@ -440,7 +451,7 @@ fn get_path_template(
     }
 }
 
-// Handles the account type label request
+// Handle account type label
 fn account_type_label(value: &str) -> &'static str {
     match value {
         "high_yield_savings" => "RustToGold High Yield Savings Account",
@@ -448,7 +459,7 @@ fn account_type_label(value: &str) -> &'static str {
     }
 }
 
-// Handles the clean text request
+// Handle clean text
 fn clean_text(value: String) -> String {
     value.trim().to_string()
 }

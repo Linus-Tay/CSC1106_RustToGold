@@ -28,12 +28,12 @@ pub struct Customer {
 }
 
 impl Customer {
-    // Formats the value for display
+    // Format date of birth display
     pub fn date_of_birth_display(&self) -> String {
         self.date_of_birth.format("%d %b %Y").to_string()
     }
 
-    // Formats the value for display
+    // Format joined display
     pub fn joined_display(&self) -> String {
         self.created_at.format("%d %b %Y").to_string()
     }

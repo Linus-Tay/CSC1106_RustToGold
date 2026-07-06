@@ -1,4 +1,3 @@
-// Application configuration loaded from environment variables.
 
 use std::env;
 
@@ -12,7 +11,7 @@ pub struct Config {
 }
 
 impl Config {
-    // Builds configuration value for from env.
+    // Handle from env
     pub fn from_env() -> Self {
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env");
         let session_secret =
@@ -40,7 +39,7 @@ impl Config {
         }
     }
 
-    // Builds configuration value for bind address.
+    // Handle bind address
     pub fn bind_address(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }

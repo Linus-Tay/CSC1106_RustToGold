@@ -1,4 +1,3 @@
-// Service layer: keeps banking validation and workflow rules away from templates and SQL.
 
 use crate::forms::{HomeLoanApplicationForm, HomeLoanPaymentForm};
 use crate::models::{AdminHomeLoanRecord, HomeLoanApplication, HomeLoanSummary, Money, Product};
@@ -6,7 +5,6 @@ use crate::repositories::{admin_repository, home_loan_repository, product_reposi
 use sqlx::PgPool;
 use uuid::Uuid;
 
-// Data carrier for the HomeLoanDashboard workflow.
 pub struct HomeLoanDashboard {
     pub account: Product,
     pub accounts: Vec<Product>,
@@ -14,7 +12,7 @@ pub struct HomeLoanDashboard {
     pub applications: Vec<HomeLoanApplication>,
 }
 
-// Loads home loan dashboard data and applies page-level business rules.
+// Load load home loan dashboard
 pub async fn load_home_loan_dashboard(
     db: &PgPool,
     customer_id: Uuid,
@@ -42,7 +40,7 @@ pub async fn load_home_loan_dashboard(
     })
 }
 
-// Validates and coordinates the submit home loan application workflow.
+// Handle submit home loan application
 pub async fn submit_home_loan_application(
     db: &PgPool,
     customer_id: Uuid,
@@ -109,7 +107,7 @@ pub async fn submit_home_loan_application(
     })
 }
 
-// Validates and coordinates the pay home loan workflow.
+// Handle pay home loan
 pub async fn pay_home_loan(
     db: &PgPool,
     customer_id: Uuid,
@@ -155,7 +153,7 @@ pub async fn pay_home_loan(
         })
 }
 
-// Returns admin home loans records in the shape needed by the UI.
+// Load list admin home loans
 pub async fn list_admin_home_loans(db: &PgPool) -> Result<Vec<AdminHomeLoanRecord>, String> {
     admin_repository::list_home_loans(db)
         .await
@@ -165,7 +163,7 @@ pub async fn list_admin_home_loans(db: &PgPool) -> Result<Vec<AdminHomeLoanRecor
         })
 }
 
-// Validates and coordinates the approve home loan workflow.
+// Handle approve home loan
 pub async fn approve_home_loan(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -191,7 +189,7 @@ pub async fn approve_home_loan(
     Ok(approved)
 }
 
-// Validates and coordinates the reject home loan workflow.
+// Handle reject home loan
 pub async fn reject_home_loan(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -217,7 +215,7 @@ pub async fn reject_home_loan(
     Ok(rejected)
 }
 
-// Returns the stored money amount in cents.
+// Process estimated monthly payment cents
 fn estimated_monthly_payment_cents(principal_cents: i64, annual_rate_bps: i32, term_months: i32) -> i64 {
     let months = term_months.max(1) as i64;
     let simple_interest = principal_cents

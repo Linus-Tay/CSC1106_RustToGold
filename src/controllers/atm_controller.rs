@@ -10,12 +10,12 @@ use crate::AppState;
 use actix_session::Session;
 use actix_web::{web, HttpResponse, Result};
 
-// Renders the index ATM page.
+// Render atm page
 pub async fn atm_page() -> Result<HttpResponse> {
     render_index(false, String::new())
 }
 
-// Handles card insertion flow.
+// Handle card validation
 pub async fn card_validation(
     data: web::Data<AppState>,
     session: Session,
@@ -35,7 +35,7 @@ pub async fn card_validation(
     }
 }
 
-// Renders the ATM pin page.
+// Render pin page
 pub async fn pin_page(session: Session) -> Result<HttpResponse> {
     if let Ok(Some(card_number)) = session.get::<String>("card_number") {
         render(ATMPinTemplate {
@@ -50,7 +50,7 @@ pub async fn pin_page(session: Session) -> Result<HttpResponse> {
 
 }
 
-// Handles pin validation flow.
+// Handle pin validation
 pub async fn pin_validation(
     data: web::Data<AppState>,
     session: Session,
@@ -79,7 +79,7 @@ pub async fn pin_validation(
     }
 }
 
-// Renders the ATM menu page.
+// Render menu page
 pub async fn menu_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
      if let Ok(Some(card_id)) = session.get::<String>("card_id") {
         let card_id = match uuid::Uuid::parse_str(&card_id) {
@@ -111,13 +111,13 @@ pub async fn menu_page(data: web::Data<AppState>, session: Session) -> Result<Ht
      }
 }
 
-// Handles card ejection and purge the session
+// Handle eject
 pub async fn eject(session: Session) -> Result<HttpResponse> {
     session.purge();
     Ok(redirect("/"))
 }
 
-// Renders the ATM deposit page.
+// Render atm deposit page
 pub async fn atm_deposit_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     if let Ok(Some(card_id)) = session.get::<String>("card_id") {
 
@@ -144,7 +144,7 @@ pub async fn atm_deposit_page(data: web::Data<AppState>, session: Session) -> Re
     }
 }
 
-// Handles atm deposit logic
+// Handle atm deposit
 pub async fn atm_deposit(data: web::Data<AppState>, form: web::Form<ATMDepositForm>, session: Session) -> Result<HttpResponse> {
     let form = form.into_inner();
     let amount = form.amount;
@@ -183,7 +183,7 @@ pub async fn atm_deposit(data: web::Data<AppState>, form: web::Form<ATMDepositFo
     }
 }
 
-// Renders the ATM withdrawal page.
+// Render atm withdrawal page
 pub async fn atm_withdrawal_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     if let Ok(Some(card_id)) = session.get::<String>("card_id") {
 
@@ -219,7 +219,7 @@ pub async fn atm_withdrawal_page(data: web::Data<AppState>, session: Session) ->
     }
 }
 
-// Handles atm withdrawal logic
+// Handle atm withdraw
 pub async fn atm_withdraw(data: web::Data<AppState>, form: web::Form<ATMDepositForm>, session: Session) -> Result<HttpResponse> {
     let form = form.into_inner();
     let amount = form.amount;
@@ -266,8 +266,7 @@ pub async fn atm_withdraw(data: web::Data<AppState>, form: web::Form<ATMDepositF
     }
 }
 
-
-// Renders the index page
+// Render index
 fn render_index(has_error: bool, error_message: String) -> Result<HttpResponse> {
     return render(ATMPageTemplate {
         has_error: has_error,

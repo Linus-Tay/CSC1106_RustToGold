@@ -10,16 +10,16 @@ use sqlx::PgPool;
 use std::env;
 use uuid::Uuid;
 
-// Ensure the onboarding url is clean and valid, otherwise redirect to main page
-fn onboarding_base_url() -> String {
-    env::var("ONBOARDING_BASE_URL").or_else(|_| env::var("APP_BASE_URL"))
+// Process onboarding base url
+fn APP_BASE_URL() -> String {
+    env::var("APP_BASE_URL")
         .ok()
         .map(|value| value.trim().trim_end_matches('/').to_string())
         .filter(|value| !value.is_empty())
         .unwrap_or_else(|| "http://127.0.0.1:3000".to_string())
 }
 
-// Calls the repo to create a customer with linked product info
+// Handle create customer with product
 pub async fn create_customer_with_product(
     db: &PgPool,
     form: &OnboardingForm,
@@ -30,12 +30,30 @@ pub async fn create_customer_with_product(
     let step3 = form.step3.as_ref().ok_or("Missing contact details")?;
     let step4 = form.step4.as_ref().ok_or("Missing employment details")?;
 
+    // Older local databases may still have hard UNIQUE constraints on NRIC/email
+    // Before inserting a fresh application, make sure old rejected records no longer
+    // hold the applicant's current NRIC/email values
+    customer_repository::release_rejected_customer_identity_conflicts(db, &step2.nric, &step3.email)
+        .await
+        .map_err(|error| {
+            eprintln!("Could not release rejected customer identity values: {error:?}");
+            "Could not prepare this account application. Please try again later.".to_string()
+        })?;
+
     if customer_repository::get_non_rejected_customer_by_nric(db, &step2.nric)
         .await
         .map_err(|error| error.to_string())?
         .is_some()
     {
-        return Err("We are unable to perform this action at this moment. Please try again later.".to_string());
+        return Err("An active or pending application already exists for this NRIC/FIN.".to_string());
+    }
+
+    if customer_repository::get_non_rejected_customer_by_email(db, &step3.email)
+        .await
+        .map_err(|error| error.to_string())?
+        .is_some()
+    {
+        return Err("An active or pending application already exists for this email address.".to_string());
     }
 
     let dob = NaiveDate::parse_from_str(&step2.dob, "%Y-%m-%d")
@@ -104,7 +122,7 @@ pub async fn create_customer_with_product(
     Ok(result)
 }
 
-// Approve customer and the linked product
+// Handle approve customer with product
 pub async fn approve_customer_with_product(
     app_state: &AppState,
     customer_id: Uuid,
@@ -142,7 +160,7 @@ pub async fn approve_customer_with_product(
 
     let activation_url = format!(
         "{}/account-creation/init?link={}",
-        onboarding_base_url(),
+        APP_BASE_URL(),
         account_creation_link.get_link()
     );
 
@@ -168,7 +186,7 @@ pub async fn approve_customer_with_product(
     Ok((customer, product))
 }
 
-// Calls repo to check if the account creation link is valid
+// Validate validate account creation link
 pub async fn validate_account_creation_link(
     app_state: &AppState,
     account_creation_link: &str,
@@ -189,7 +207,7 @@ pub async fn validate_account_creation_link(
     Ok(link.is_valid())
 }
 
-// Gets the customer info using account creation link
+// Process get customer by account creation link
 pub async fn get_customer_by_account_creation_link(
     app_state: &AppState,
     account_creation_link: &str,
@@ -217,7 +235,7 @@ pub async fn get_customer_by_account_creation_link(
         })
 }
 
-// Calls the repo to invalidate the account creation link once used
+// Process invalidate account creation link
 pub async fn invalidate_account_creation_link(
     app_state: &AppState,
     account_creation_link: &str,

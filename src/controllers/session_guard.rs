@@ -1,4 +1,3 @@
-// Controller layer: handles HTTP/session flow and delegates business rules to services.
 
 use crate::models::User;
 use crate::repositories::user_repository;
@@ -12,7 +11,7 @@ const CUSTOMER_ROLE_KEY: &str = "customer_role";
 const ADMIN_USER_ID_KEY: &str = "admin_user_id";
 const ADMIN_ROLE_KEY: &str = "admin_role";
 
-// Handles the require customer request.
+// Handle require customer
 pub async fn require_customer(
     data: &web::Data<AppState>,
     session: &Session,
@@ -27,7 +26,7 @@ pub async fn require_customer(
     Ok(user)
 }
 
-// Handles the require admin request.
+// Handle require admin
 pub async fn require_admin(
     data: &web::Data<AppState>,
     session: &Session,
@@ -42,7 +41,7 @@ pub async fn require_admin(
     Ok(user)
 }
 
-// Handles the require active user request.
+// Handle require active user
 async fn require_active_user(
     data: &web::Data<AppState>,
     session: &Session,
@@ -70,43 +69,43 @@ async fn require_active_user(
     Ok(user)
 }
 
-// Handles customer session user id session flow.
+// Handle customer session user id
 pub fn customer_session_user_id(session: &Session) -> Option<Uuid> {
     session_uuid(session, CUSTOMER_USER_ID_KEY)
 }
 
-// Handles admin session user id session flow.
+// Handle admin session user id
 pub fn admin_session_user_id(session: &Session) -> Option<Uuid> {
     session_uuid(session, ADMIN_USER_ID_KEY)
 }
 
-// Handles store customer session session flow.
+// Handle store customer session
 pub fn store_customer_session(session: &Session, user: &User) -> Result<()> {
     session.insert(CUSTOMER_USER_ID_KEY, user.id.to_string())?;
     session.insert(CUSTOMER_ROLE_KEY, user.role.clone())?;
     Ok(())
 }
 
-// Handles store admin session session flow.
+// Handle store admin session
 pub fn store_admin_session(session: &Session, user: &User) -> Result<()> {
     session.insert(ADMIN_USER_ID_KEY, user.id.to_string())?;
     session.insert(ADMIN_ROLE_KEY, user.role.clone())?;
     Ok(())
 }
 
-// Handles clear customer session session flow.
+// Handle clear customer session
 pub fn clear_customer_session(session: &Session) {
     session.remove(CUSTOMER_USER_ID_KEY);
     session.remove(CUSTOMER_ROLE_KEY);
 }
 
-// Handles clear admin session session flow.
+// Handle clear admin session
 pub fn clear_admin_session(session: &Session) {
     session.remove(ADMIN_USER_ID_KEY);
     session.remove(ADMIN_ROLE_KEY);
 }
 
-// Handles session uuid session flow.
+// Handle session uuid
 fn session_uuid(session: &Session, key: &str) -> Option<Uuid> {
     session
         .get::<String>(key)
@@ -115,7 +114,7 @@ fn session_uuid(session: &Session, key: &str) -> Option<Uuid> {
         .and_then(|value| Uuid::parse_str(&value).ok())
 }
 
-// Handles clear session key session flow.
+// Handle clear session key
 fn clear_session_key(session: &Session, key: &str) {
     if key == CUSTOMER_USER_ID_KEY {
         clear_customer_session(session);
@@ -126,8 +125,7 @@ fn clear_session_key(session: &Session, key: &str) {
     }
 }
 
-
-// Handles the redirect request.
+// Handle redirect
 pub fn redirect(path: &str) -> HttpResponse {
     HttpResponse::SeeOther()
         .append_header((header::LOCATION, path))

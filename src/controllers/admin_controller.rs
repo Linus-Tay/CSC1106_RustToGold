@@ -1,4 +1,3 @@
-// Controller layer: handles HTTP/session flow and delegates business rules to services.
 
 use crate::controllers::error_controller::render_error;
 use crate::controllers::session_guard::{redirect, require_admin};
@@ -16,7 +15,6 @@ use serde::Deserialize;
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
-// Data carrier for the StaffCreateForm workflow.
 pub struct StaffCreateForm {
     pub username: String,
     pub full_name: String,
@@ -27,7 +25,6 @@ pub struct StaffCreateForm {
 }
 
 #[derive(Debug, Deserialize)]
-// Data carrier for the StaffUpdateForm workflow.
 pub struct StaffUpdateForm {
     pub full_name: String,
     pub email: String,
@@ -37,7 +34,7 @@ pub struct StaffUpdateForm {
     pub password: Option<String>,
 }
 
-// Handles the admin dashboard request.
+// Render admin dashboard
 pub async fn admin_dashboard(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     if let Err(response) = require_admin(&data, &session).await {
         return Ok(response);
@@ -49,7 +46,7 @@ pub async fn admin_dashboard(data: web::Data<AppState>, session: Session) -> Res
     }
 }
 
-// Renders the admin signups page screen with data prepared by the service layer.
+// Render admin signups page
 pub async fn admin_signups_page(
     data: web::Data<AppState>,
     session: Session,
@@ -74,7 +71,7 @@ pub async fn admin_signups_page(
     }
 }
 
-// Handles the approve customer application form action and redirects after the service result.
+// Handle approve customer application
 pub async fn approve_customer_application(
     data: web::Data<AppState>,
     session: Session,
@@ -96,7 +93,7 @@ pub async fn approve_customer_application(
     }
 }
 
-// Handles the reject customer application form action and redirects after the service result.
+// Handle reject customer application
 pub async fn reject_customer_application(
     data: web::Data<AppState>,
     session: Session,
@@ -118,7 +115,7 @@ pub async fn reject_customer_application(
     }
 }
 
-// Renders the admin personal loans page screen with data prepared by the service layer.
+// Render admin personal loans page
 pub async fn admin_personal_loans_page(
     data: web::Data<AppState>,
     session: Session,
@@ -143,7 +140,7 @@ pub async fn admin_personal_loans_page(
     }
 }
 
-// Handles the approve personal loan form action and redirects after the service result.
+// Handle approve personal loan
 pub async fn approve_personal_loan(
     data: web::Data<AppState>,
     session: Session,
@@ -165,7 +162,7 @@ pub async fn approve_personal_loan(
     }
 }
 
-// Handles the reject personal loan form action and redirects after the service result.
+// Handle reject personal loan
 pub async fn reject_personal_loan(
     data: web::Data<AppState>,
     session: Session,
@@ -187,8 +184,7 @@ pub async fn reject_personal_loan(
     }
 }
 
-
-// Renders the admin high value monitoring page screen with data prepared by the service layer.
+// Render admin high value monitoring page
 pub async fn admin_high_value_monitoring_page(
     data: web::Data<AppState>,
     session: Session,
@@ -219,7 +215,7 @@ pub async fn admin_high_value_monitoring_page(
     }
 }
 
-// Handles the update high value alert status form action and redirects after the service result.
+// Handle update high value alert status
 pub async fn update_high_value_alert_status(
     data: web::Data<AppState>,
     session: Session,
@@ -242,7 +238,7 @@ pub async fn update_high_value_alert_status(
     }
 }
 
-// Renders the admin staff page screen with data prepared by the service layer.
+// Render admin staff page
 pub async fn admin_staff_page(data: web::Data<AppState>, session: Session) -> Result<HttpResponse> {
     let user = match require_admin(&data, &session).await {
         Ok(user) => user,
@@ -269,7 +265,7 @@ pub async fn admin_staff_page(data: web::Data<AppState>, session: Session) -> Re
     }
 }
 
-// Handles the create staff user form action and redirects after the service result.
+// Handle create staff user
 pub async fn create_staff_user(
     data: web::Data<AppState>,
     session: Session,
@@ -301,7 +297,7 @@ pub async fn create_staff_user(
     }
 }
 
-// Handles the update staff user form action and redirects after the service result.
+// Handle update staff user
 pub async fn update_staff_user(
     data: web::Data<AppState>,
     session: Session,
@@ -339,7 +335,7 @@ pub async fn update_staff_user(
     }
 }
 
-// Handles the delete staff user form action and redirects after the service result.
+// Handle delete staff user
 pub async fn delete_staff_user(
     data: web::Data<AppState>,
     session: Session,
@@ -364,7 +360,7 @@ pub async fn delete_staff_user(
     }
 }
 
-// Renders the admin customer accounts page screen with data prepared by the service layer.
+// Render admin customer accounts page
 pub async fn admin_customer_accounts_page(
     data: web::Data<AppState>,
     session: Session,
@@ -389,7 +385,7 @@ pub async fn admin_customer_accounts_page(
     }
 }
 
-// Handles the suspend customer user form action and redirects after the service result.
+// Handle suspend customer user
 pub async fn suspend_customer_user(
     data: web::Data<AppState>,
     session: Session,
@@ -402,7 +398,7 @@ pub async fn suspend_customer_user(
     set_customer_user_status(data, session, target_user_id, "suspended").await
 }
 
-// Handles the activate customer user form action and redirects after the service result.
+// Handle activate customer user
 pub async fn activate_customer_user(
     data: web::Data<AppState>,
     session: Session,
@@ -415,7 +411,7 @@ pub async fn activate_customer_user(
     set_customer_user_status(data, session, target_user_id, "active").await
 }
 
-// Handles the set customer user status request.
+// Handle set customer user status
 async fn set_customer_user_status(
     data: web::Data<AppState>,
     session: Session,
@@ -433,7 +429,7 @@ async fn set_customer_user_status(
     }
 }
 
-// Handles the activate customer product form action and redirects after the service result.
+// Handle activate customer product
 pub async fn activate_customer_product(
     data: web::Data<AppState>,
     session: Session,
@@ -442,7 +438,7 @@ pub async fn activate_customer_product(
     set_customer_product_status(data, session, path.into_inner(), "active").await
 }
 
-// Handles the freeze customer product form action and redirects after the service result.
+// Handle freeze customer product
 pub async fn freeze_customer_product(
     data: web::Data<AppState>,
     session: Session,
@@ -451,7 +447,7 @@ pub async fn freeze_customer_product(
     set_customer_product_status(data, session, path.into_inner(), "frozen").await
 }
 
-// Handles the close customer product form action and redirects after the service result.
+// Handle close customer product
 pub async fn close_customer_product(
     data: web::Data<AppState>,
     session: Session,
@@ -460,7 +456,7 @@ pub async fn close_customer_product(
     set_customer_product_status(data, session, path.into_inner(), "closed").await
 }
 
-// Handles the set customer product status request.
+// Handle set customer product status
 async fn set_customer_product_status(
     data: web::Data<AppState>,
     session: Session,
@@ -483,7 +479,7 @@ async fn set_customer_product_status(
     }
 }
 
-// Renders the admin audit log page screen with data prepared by the service layer.
+// Render admin audit log page
 pub async fn admin_audit_log_page(
     data: web::Data<AppState>,
     session: Session,
@@ -508,7 +504,7 @@ pub async fn admin_audit_log_page(
     }
 }
 
-// Handles the render staff with message request.
+// Render staff with message
 async fn render_staff_with_message(
     data: &web::Data<AppState>,
     current_admin_id: Uuid,
@@ -526,7 +522,7 @@ async fn render_staff_with_message(
     })
 }
 
-// Parses uuid from form input into a safer internal value.
+// Handle parse uuid
 fn parse_uuid(value: String) -> Result<Uuid, HttpResponse> {
     Uuid::parse_str(&value).map_err(|_| redirect("/admin/dashboard"))
 }

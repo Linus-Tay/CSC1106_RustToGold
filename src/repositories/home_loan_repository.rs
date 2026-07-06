@@ -1,10 +1,9 @@
-// Repository layer: isolates SQLx queries so services do not depend on raw database code.
 
 use crate::models::{HomeLoanApplication, Product, Transaction};
 use sqlx::{PgPool, Postgres, Transaction as DbTransaction};
 use uuid::Uuid;
 
-// Reads list home loans by customer data from the database.
+// Query list home loans by customer
 pub async fn list_home_loans_by_customer(
     db: &PgPool,
     customer_id: Uuid,
@@ -25,7 +24,7 @@ pub async fn list_home_loans_by_customer(
     .await
 }
 
-// Reads list all home loans data from the database.
+// Query list all home loans
 pub async fn list_all_home_loans(db: &PgPool) -> Result<Vec<HomeLoanApplication>, sqlx::Error> {
     sqlx::query_as::<_, HomeLoanApplication>(
         r#"
@@ -41,7 +40,7 @@ pub async fn list_all_home_loans(db: &PgPool) -> Result<Vec<HomeLoanApplication>
     .await
 }
 
-// Persists the create home loan application database change.
+// Persist create home loan application
 pub async fn create_home_loan_application(
     db: &PgPool,
     customer_id: Uuid,
@@ -59,7 +58,6 @@ pub async fn create_home_loan_application(
     let product = lock_product_by_id(&mut tx, customer_id, product_id).await?;
     let new_balance = product.balance_cents - down_payment_cents;
 
-    // The 20% down payment is locked immediately so the customer cannot spend it elsewhere while the loan is pending.
     sqlx::query(
         r#"
         UPDATE customer_products
@@ -113,7 +111,7 @@ pub async fn create_home_loan_application(
     Ok(application)
 }
 
-// Persists the approve home loan database change.
+// Persist approve home loan
 pub async fn approve_home_loan(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -140,7 +138,7 @@ pub async fn approve_home_loan(
     .await
 }
 
-// Persists the reject home loan database change.
+// Persist reject home loan
 pub async fn reject_home_loan(
     db: &PgPool,
     staff_user_id: Uuid,
@@ -167,7 +165,6 @@ pub async fn reject_home_loan(
         let product = lock_product_by_id(&mut tx, application.customer_id, product_id).await?;
         let new_balance = product.balance_cents + application.down_payment_cents;
 
-        // Rejected applications release the reserved down payment back into the same account.
         sqlx::query(
             r#"
             UPDATE customer_products
@@ -212,7 +209,7 @@ pub async fn reject_home_loan(
     Ok(rejected)
 }
 
-// Persists the pay home loan database change.
+// Query pay home loan
 pub async fn pay_home_loan(
     db: &PgPool,
     customer_id: Uuid,
@@ -292,7 +289,7 @@ pub async fn pay_home_loan(
     Ok(updated)
 }
 
-// Persists the lock product by id database change.
+// Persist lock product by id
 async fn lock_product_by_id(
     tx: &mut DbTransaction<'_, Postgres>,
     customer_id: Uuid,
@@ -312,7 +309,7 @@ async fn lock_product_by_id(
     .await
 }
 
-// Persists the insert product transaction database change.
+// Persist insert product transaction
 async fn insert_product_transaction(
     tx: &mut DbTransaction<'_, Postgres>,
     product_id: Uuid,

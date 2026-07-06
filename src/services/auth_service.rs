@@ -1,4 +1,3 @@
-// Service layer: keeps banking validation and workflow rules away from templates and SQL.
 
 use crate::forms::{AccountCreationForm, LoginForm};
 use crate::models::{KnownDevice, User};
@@ -15,7 +14,7 @@ use sha2::{Sha256, Digest};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-// Validates and coordinates the register user workflow.
+// Handle register user
 pub async fn register_user(
     db: &PgPool,
     customer_id: &Uuid,
@@ -64,7 +63,7 @@ pub async fn register_user(
     })
 }
 
-// Runs business logic for authenticate user.
+// Process authenticate user
 pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, String> {
     let login = form.username.trim().to_lowercase();
 
@@ -96,7 +95,7 @@ pub async fn authenticate_user(db: &PgPool, form: LoginForm) -> Result<User, Str
 
     Ok(user)
 }
-// Runs business logic for authenticate device.
+// Process authenticate device
 pub async fn authenticate_device(db: &PgPool, raw_token: &str) -> Result<KnownDevice, String> {
     let hashed_token = hash_device_token(raw_token);
     println!("{}", hashed_token);
@@ -126,7 +125,7 @@ pub async fn authenticate_device(db: &PgPool, raw_token: &str) -> Result<KnownDe
     Ok(device)
 }
 
-// Runs business logic to add trusted device.
+// Process add trusted device
 pub async fn add_trusted_device(db: &PgPool, user_id: &Uuid, raw_token: &str) -> Result<KnownDevice, String> {
     let hashed_token = hash_device_token(raw_token);
     let device = customer_repository::create_known_device(db,  user_id, &hashed_token)
@@ -139,8 +138,7 @@ pub async fn add_trusted_device(db: &PgPool, user_id: &Uuid, raw_token: &str) ->
     Ok(device)
 }
 
-
-// Runs business logic to trigger 2FA email.
+// Build generate and send 2fa
 pub async fn generate_and_send_2fa(db: &PgPool, user_id: &Uuid) -> Result<(), String> {
     let mut rng = rand::rng();
     let verification_code: String = (0..6)
@@ -154,7 +152,6 @@ pub async fn generate_and_send_2fa(db: &PgPool, user_id: &Uuid) -> Result<(), St
         "Could not load your account.".to_string()
     })?
     .ok_or_else(|| "Not known device".to_string())?;
-
 
     let email_to_send = user.email.clone();
     let subject_to_send = format!(
@@ -184,7 +181,7 @@ pub async fn generate_and_send_2fa(db: &PgPool, user_id: &Uuid) -> Result<(), St
     Ok(())
 }
 
-// Runs business logic to trigger 2FA email.
+// Handle verify 2fa
 pub async fn verify_2fa(db: &PgPool, otp_code: &str, user_id: &Uuid) -> Result<(), String> {
     
     let otp_code = customer_repository::get_otp_code(db, otp_code)
@@ -213,7 +210,7 @@ pub async fn verify_2fa(db: &PgPool, otp_code: &str, user_id: &Uuid) -> Result<(
     Ok(())
 }
 
-// Hashes sensitive input before it is stored.
+// Process hash password
 fn hash_password(password: &str) -> Result<String, Error> {
     let salt = SaltString::generate(&mut OsRng);
     let hash = Argon2::default()
@@ -222,7 +219,7 @@ fn hash_password(password: &str) -> Result<String, Error> {
     Ok(hash.to_string())
 }
 
-// Verifies sensitive input against its stored hash.
+// Handle verify password
 fn verify_password(password: &str, password_hash: &str) -> bool {
     PasswordHash::new(password_hash)
         .ok()
@@ -234,12 +231,11 @@ fn verify_password(password: &str, password_hash: &str) -> bool {
         .is_some()
 }
 
-// When you generate the UUID and want to save it to the DB:
+// Process hash device token
 pub fn hash_device_token(raw_token: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(raw_token.as_bytes());
     let result = hasher.finalize();
     
-    // Use the hex crate to encode the byte array into a String
     hex::encode(result) 
 }
